@@ -1,0 +1,17 @@
+# Normalize text files to LF in the repo and keep LF in the working tree on every OS.
+* text=auto eol=lf
+
+# Binary assets: never diff or line-ending-convert these.
+*.glb binary
+*.blend binary
+*.blend1 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ogg binary
+*.mp3 binary
+*.wav binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
