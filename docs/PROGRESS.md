@@ -45,13 +45,19 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **HUD:** hint "E · Nói chuyện với …" (chỉ hiện khi không cảm ứng và không có hội thoại), panel hội thoại dưới màn hình (chạm để tiếp tục, chọn lựa chọn, E/Enter/Space để tiếp tục, Escape hoặc "Đóng" để đóng), nút cảm ứng đổi nhãn và ẩn khi hội thoại mở.
 - **Khoá:** mở hội thoại thì đẩy blocker `dialogue` (chặn di chuyển và tương tác); đóng thì gỡ.
 
+### Thay đổi HUD: chặn bôi đen và yêu cầu xoay ngang trên điện thoại
+- **Không bôi đen:** toàn bộ UI (`body, body *`) có `user-select: none`. Ô nhập liệu (nếu có sau này) vẫn chọn được chữ (D-025).
+- **Xoay ngang:** điện thoại hoặc máy tính bảng ở chế độ dọc (`pointer: coarse` và `orientation: portrait`) thấy màn hình "Xoay ngang thiết bị để chơi". Overlay chặn chạm và khoá gameplay. Xoay ngang thì tiếp tục (D-024).
+- **Kiểm tra tự động:** `localeKeys.test.ts` (hai test) kiểm tra khoá locale.
+- Các thay đổi này không thuộc module nào trong roadmap. Commit riêng.
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 16 file, 122 test, tất cả đạt |
-| `npm run build` | Đạt. `index-*.js` 2,341.07 kB (gzip 617.07 kB) |
+| `npm test` | 17 file, 124 test, tất cả đạt |
+| `npm run build` | Đạt. `index-*.js` 2,342.28 kB (gzip 617.56 kB) |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–02:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`.
@@ -96,6 +102,7 @@ Lưu ý về công cụ kiểm tra: đường đi trong các bước trên dùng
 - **Giữ joystick lâu:** công cụ kéo chuột chỉ có down → move → up nhanh (vẫn đúng ở Module 02).
 - **Pinch zoom, tạm dừng khi ẩn tab, thiết bị cảm ứng thật, FPS trên GPU thật:** như Module 02.
 - **Panel lỗi WebGL2 trên trình duyệt thật:** chỉ có test logic.
+- **Xoay ngang và chặn bôi đen trên điện thoại thật:** chỉ kiểm chứng trên giả lập viewport. Chưa thử Safari iOS và Chrome Android thật, chưa thử nhấn giữ thật (long-press).
 
 ## Vấn đề đã biết
 1. **Nội dung hội thoại là bản nháp:** Câu thoại viết để kiểm chứng cơ chế. Module 12 (biên tập văn hoá) sẽ sửa, kèm `status` cho từng thẻ.
@@ -125,3 +132,5 @@ Lưu ý về công cụ kiểm tra: đường đi trong các bước trên dùng
 - [ ] Nhấn E khi đang hội thoại: lời thoại tiếp tục. Ở lời cuối thì đóng và không mở lại ngay.
 - [ ] Qua cầu (từ phía bắc) đến Ông Độ và Bấc. Mỗi NPC đều có hội thoại đúng tên.
 - [ ] Trên điện thoại: nút "Nói chuyện" xuất hiện khi gần NPC, chạm để mở. Joystick ẩn khi hội thoại mở, và hiện lại khi đóng.
+- [ ] Điện thoại cầm dọc: thấy màn hình "Xoay ngang thiết bị để chơi", chạm không xuống được game. Xoay ngang: overlay biến mất, chơi tiếp được.
+- [ ] Chữ trong HUD (hội thoại, hint, nhãn nút) không bôi đen được bằng nhấp đúp, nhấp ba lần, hoặc nhấn giữ trên điện thoại.

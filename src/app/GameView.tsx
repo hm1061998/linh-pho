@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { DialoguePanel } from '../ui/dialogue/DialoguePanel';
 import { InteractionHint } from '../ui/hud/InteractionHint';
+import { OrientationGate } from '../ui/hud/OrientationGate';
 import { StartupErrorPanel, type StartupErrorReason } from '../ui/hud/StartupErrorPanel';
 import { TouchControls } from '../ui/hud/TouchControls';
 import { GameApp } from './GameApp';
@@ -88,6 +89,7 @@ export function GameView() {
           </>
         )}
         {state.status === 'error' && <StartupErrorPanel reason={state.reason} />}
+        <OrientationGate game={state.status === 'ready' ? state.game : null} />
       </div>
     </div>
   );

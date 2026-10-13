@@ -30,5 +30,8 @@
   "ui.key.interact": "E",
   "ui.dialogue.label": "Hội thoại",
   "ui.dialogue.continue": "Chạm hoặc nhấn E để tiếp tục",
-  "ui.dialogue.close": "Đóng"
+  "ui.dialogue.close": "Đóng",
+
+  "ui.rotate.title": "Xoay ngang thiết bị để chơi",
+  "ui.rotate.body": "Linh Phố được thiết kế để chơi ở chế độ ngang. Hãy xoay điện thoại sang ngang."
 }

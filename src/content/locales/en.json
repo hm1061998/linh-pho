@@ -30,5 +30,8 @@
   "ui.key.interact": "E",
   "ui.dialogue.label": "Dialogue",
   "ui.dialogue.continue": "Tap or press E to continue",
-  "ui.dialogue.close": "Close"
+  "ui.dialogue.close": "Close",
+
+  "ui.rotate.title": "Rotate your device to play",
+  "ui.rotate.body": "Linh Pho is designed for landscape. Please turn your phone sideways."
 }

@@ -160,3 +160,18 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Vị trí:** Bà Nghiêm trên quảng trường, Cô Lam trước xưởng, Ông Độ bờ nam (qua cầu), Bấc trên quảng trường. Chưa kiểm tra có hệ thống rằng vị trí không chặn đường đi; mới kiểm chứng bằng đường đi thử trong trình duyệt.
 - **Quay mặt:** NPC quay về người chơi khi hội thoại mở (`faceToward`). Không quay liên tục.
 - **Lý do:** Art Bible §5 cho phép Bấc không có rig. Capsule là placeholder, GLB thay ở Module 09.
+
+## D-024 — Thiết bị cảm ứng phải xoay ngang
+
+- **Chọn:** Khi `(pointer: coarse) and (orientation: portrait)` (điện thoại hoặc máy tính bảng cầm dọc), `OrientationGate` phủ toàn màn hình bằng thông báo "Xoay ngang thiết bị để chơi". Overlay có `pointer-events: auto` và `touch-action: none` nên chạm không xuống canvas (đã kiểm chứng: phần tử ở giữa màn hình là overlay). Trong lúc overlay hiện, `pushBlocker('orientation')` khoá input gameplay. Xoay ngang thì gỡ overlay và gỡ blocker.
+- **Vì sao không dùng `screen.orientation.lock`:** Chỉ hoạt động khi đang toàn màn hình (một số nền tảng) và Safari iOS không hỗ trợ. Không thể bắt trình duyệt xoay máy. Overlay là cơ chế thực thi.
+- **Phạm vi:** Cùng một media query trong TypeScript (`PORTRAIT_TOUCH_QUERY`). Không có bản sao trong CSS, nên không lệch giữa hai nơi. Máy tính bảng cầm dọc cũng bị chặn, vì điều kiện là `pointer: coarse`. Nếu chỉ muốn chặn điện thoại, thu hẹp truy vấn (ví dụ thêm `max-width`).
+- **Việc sau này:** Khi có PWA (Module 11), khai báo `orientation: "landscape"` trong manifest để lúc cài đặt cũng hướng ngang.
+- **Kiểm chứng:** 375×812 hiện overlay, input khoá, nhân vật không đi. 740×360 ẩn overlay, input mở, đi được 2.98 m. Overlay chặn chạm xuống canvas.
+
+## D-025 — Không bôi đen chữ trong HUD
+
+- **Chọn:** `body, body *` có `user-select: none` và `-webkit-touch-callout: none`. Trường nhập liệu (`input`, `textarea`, `contenteditable`) được giữ `user-select: text`, để khi có form (ví dụ đặt tên) vẫn gõ và chọn chữ được.
+- **Phạm vi:** Áp dụng cho mọi phần tử HUD và overlay. Chữ trong panel hội thoại, nhãn nút, hint đều không chọn được (đã kiểm chứng: nhấp ba lần không chọn gì).
+- **Lưu ý:** Nhấp ba lần lên thân hội thoại vẫn đi tiếp hội thoại, vì đó là chạm để tiếp tục (đúng thiết kế, không phải lỗi bôi đen).
+- **Kiểm tra tự động:** `localeKeys.test.ts` đảm bảo mọi chuỗi `t('...')` trong code đều có trong `vi.json`, và hai locale có cùng tập khoá. Overlay mới được bắt bởi test này.
