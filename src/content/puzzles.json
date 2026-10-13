@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "puzzles": [
+    {
+      "id": "puzzle_glyph_order",
+      "stationId": "station_engraving",
+      "glyphs": ["glyph_gate", "glyph_bridge", "glyph_signboard"],
+      "solution": ["glyph_bridge", "glyph_gate", "glyph_signboard"],
+      "unlockFlag": "recipe_spirit_lantern_known",
+      "hints": [
+        { "afterAttempts": 1, "textKey": "puzzle.hint.1" },
+        { "afterAttempts": 3, "textKey": "puzzle.hint.2" }
+      ]
+    }
+  ]
+}

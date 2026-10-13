@@ -1,10 +1,11 @@
 import * as pc from 'playcanvas';
 import { CONTENT_ISSUES, GAME_CONTENT, findNpc, t } from '../content';
-import { GameSession, type PanelState, type SessionSnapshot } from '../domain/GameSession';
+import { GameSession, type SessionSnapshot } from '../domain/GameSession';
 import type { DialogueSystem } from '../domain/dialogue/DialogueSystem';
 import { CameraController } from '../engine/camera/CameraController';
 import { InputService } from '../engine/input/InputService';
 import { InteractionSystem } from '../engine/interaction/InteractionSystem';
+import { SpiritBurst } from '../engine/fx/SpiritBurst';
 import { NpcRenderer } from '../engine/npc/NpcRenderer';
 import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
@@ -34,18 +35,19 @@ export interface GameDebugSnapshot {
   readonly activeQuest: string | null;
   readonly panel: string | null;
   readonly inventory: Record<string, number>;
+  readonly lantern: string;
 }
 
 /** Blocker names. Each one locks gameplay input while it is active. */
 const DIALOGUE_BLOCKER = 'dialogue';
 const PANEL_BLOCKER = 'panel';
 
-type TargetKind = 'npc' | 'pickup' | 'station' | 'placement';
+type TargetKind = 'npc' | 'pickup' | 'station' | 'placement' | 'glyph';
 
 /**
  * Owns the PlayCanvas Application lifecycle (device, canvas sizing, visibility pause, teardown), the per-frame
- * gameplay loop (input, player, camera, NPCs, interaction), and the connections between the engine and the
- * game session. Rules live in the session, so this class only turns engine events into session calls.
+ * gameplay loop (input, player, camera, NPCs, lantern, interaction), and the connections between the engine and
+ * the game session. Rules live in the session, so this class only turns engine events into session calls.
  */
 export class GameApp {
   private readonly app: pc.Application;
@@ -55,10 +57,12 @@ export class GameApp {
   private readonly interactionSystem: InteractionSystem;
   private readonly npcs: NpcRenderer;
   private readonly world: WorldView;
+  private readonly fx: SpiritBurst;
   private readonly player: PlayerController;
   private readonly camera: CameraController;
   private readonly targetKinds = new Map<string, TargetKind>();
   private readonly cleanups: Array<() => void> = [];
+  private reducedVfx = false;
   private disposed = false;
 
   private constructor(app: pc.Application, canvas: HTMLCanvasElement, container: HTMLElement) {
@@ -75,6 +79,7 @@ export class GameApp {
     this.interactionSystem = new InteractionSystem();
     this.npcs = new NpcRenderer(app.root, GAME_CONTENT.npcs, HUB_WORLD);
     this.world = new WorldView(app.root, GAME_CONTENT, HUB_WORLD);
+    this.fx = new SpiritBurst(app.root);
     this.player = new PlayerController(app.root, HUB_WORLD);
     this.camera = new CameraController(app.root, this.player.groundPosition, HUB_WORLD.bounds);
 
@@ -88,7 +93,7 @@ export class GameApp {
       () => this.camera.dispose(),
       this.sessionState.events.on('panel.opened', () => this.inputService.pushBlocker(PANEL_BLOCKER)),
       this.sessionState.events.on('panel.closed', () => this.inputService.popBlocker(PANEL_BLOCKER)),
-      this.sessionState.events.on('changed', () => this.world.sync(this.sessionState.snapshot())),
+      this.sessionState.events.on('changed', () => this.syncWorld()),
       this.interactionSystem.events.on('interaction.triggered', (event) => this.routeInteraction(event.targetId)),
       this.sessionState.dialogue.events.on('dialogue.opened', (event) => {
         this.inputService.pushBlocker(DIALOGUE_BLOCKER);
@@ -99,8 +104,8 @@ export class GameApp {
   }
 
   /**
-   * Creates the WebGL2 device, builds the hub with the player, camera, NPCs, and world objects, and starts the
-   * loop. Rejects with GameStartupError so the caller can show a specific message.
+   * Creates the WebGL2 device, builds the hub with the player, camera, NPCs, lantern, and world objects, and starts
+   * the loop. Rejects with GameStartupError so the caller can show a specific message.
    */
   static async create({ canvas, container }: GameAppOptions): Promise<GameApp> {
     let device: pc.GraphicsDevice;
@@ -149,7 +154,7 @@ export class GameApp {
     return game;
   }
 
-  /** Input service for HUD controls (joystick, interact button) and modal blockers. */
+  /** Input service for HUD controls (joystick, interact and lantern buttons) and modal blockers. */
   get input(): InputService {
     return this.inputService;
   }
@@ -166,6 +171,11 @@ export class GameApp {
 
   get interaction(): InteractionSystem {
     return this.interactionSystem;
+  }
+
+  /** Reduced effects: no lantern burst. Module 08 saves this as a setting. */
+  setReducedVfx(reduced: boolean): void {
+    this.reducedVfx = reduced;
   }
 
   /** Stops the loop, removes listeners, and destroys the engine and its graphics device. Safe to call twice. */
@@ -201,6 +211,7 @@ export class GameApp {
       activeQuest: snap.activeQuest?.id ?? null,
       panel: snap.panel?.kind ?? null,
       inventory: Object.fromEntries(snap.inventory.map((stack) => [stack.itemId, stack.count])),
+      lantern: snap.lantern.phase,
     };
   }
 
@@ -214,13 +225,19 @@ export class GameApp {
     this.app.on('update', this.tick);
     this.cleanups.push(() => this.app.off('update', this.tick));
     this.sessionState.start();
-    this.world.sync(this.sessionState.snapshot());
+    this.syncWorld();
     this.app.start();
   }
 
   /** One gameplay frame. `dt` is already clamped by the engine to 0.1 s, so a tab switch cannot teleport the player. */
   private readonly tick = (dt: number): void => {
     const frame = this.inputService.frame();
+    if (frame.lanternPressed && this.sessionState.toggleLantern().ok) {
+      const { x, z } = this.player.groundPosition;
+      this.fx.trigger(x, 0, z, this.reducedVfx);
+    }
+    this.sessionState.updateLantern(dt);
+    this.fx.update(dt);
     this.player.update(dt, frame.move, this.camera.yawRadians);
     this.camera.update(dt, this.player.groundPosition, frame.yawDelta, frame.zoomDelta);
     this.npcs.update(dt);
@@ -229,6 +246,18 @@ export class GameApp {
       this.interactionSystem.press();
     }
   };
+
+  /** Brings the world objects and the glyph hints in line with the session. Runs on every session change. */
+  private syncWorld(): void {
+    const snap = this.sessionState.snapshot();
+    this.world.sync(snap);
+    const spirit = snap.lantern.phase === 'spirit';
+    for (const [id, kind] of this.targetKinds) {
+      if (kind === 'glyph') {
+        this.interactionSystem.setEnabled(id, spirit);
+      }
+    }
+  }
 
   /** Registers every interactable from content. Each one shows a hint when the player is close. */
   private registerTargets(): void {
@@ -245,6 +274,11 @@ export class GameApp {
     for (const placement of GAME_CONTENT.placements) {
       this.addTarget(placement.id, 'placement', placement.labelKey, placement.position, 'ui.action.place');
     }
+    for (const glyph of GAME_CONTENT.glyphs) {
+      this.addTarget(glyph.id, 'glyph', glyph.labelKey, glyph.position, 'ui.action.scan');
+      // Glyphs exist only in spirit phase, so they start hidden. syncWorld turns them on.
+      this.interactionSystem.setEnabled(glyph.id, false);
+    }
   }
 
   private addTarget(
@@ -259,8 +293,8 @@ export class GameApp {
   }
 
   /**
-   * Maps a pressed target to its action. Results that the player needs to know about already produce
-   * session notices. Here we only log content problems and unregister targets that are used up.
+   * Maps a pressed target to its action. Results that the player needs to know about already produce session
+   * notices. Here we only log content problems, and unregister targets that are used up.
    */
   private routeInteraction(targetId: string): void {
     const kind = this.targetKinds.get(targetId);
@@ -284,13 +318,9 @@ export class GameApp {
         }
         return;
       }
-      case 'station': {
-        const station = this.sessionState.stationById(targetId);
-        if (station) {
-          this.sessionState.openPanel({ kind: 'craft', stationId: station.id } satisfies PanelState);
-        }
+      case 'station':
+        this.sessionState.interactStation(targetId);
         return;
-      }
       case 'placement': {
         const result = this.sessionState.placeItem(targetId);
         if (result.ok) {
@@ -298,6 +328,9 @@ export class GameApp {
         }
         return;
       }
+      case 'glyph':
+        this.sessionState.scanGlyph(targetId);
+        return;
       default:
         console.error(`[Interaction] Target "${targetId}" has no action; nothing happened (${t('error.generic')})`);
     }

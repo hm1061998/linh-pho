@@ -3,6 +3,7 @@ import { DialoguePanel } from '../ui/dialogue/DialoguePanel';
 import { PanelHost } from '../ui/panels/PanelHost';
 import { CurrencyBar, QuestTracker } from '../ui/hud/HudBars';
 import { InteractionHint } from '../ui/hud/InteractionHint';
+import { LanternHud } from '../ui/hud/LanternHud';
 import { NoticeStack } from '../ui/hud/NoticeStack';
 import { OrientationGate } from '../ui/hud/OrientationGate';
 import { StartupErrorPanel, type StartupErrorReason } from '../ui/hud/StartupErrorPanel';
@@ -86,6 +87,7 @@ export function GameView() {
         )}
         {state.status === 'ready' && (
           <>
+            <LanternHud game={state.game} />
             <CurrencyBar game={state.game} />
             <QuestTracker game={state.game} />
             <NoticeStack game={state.game} />

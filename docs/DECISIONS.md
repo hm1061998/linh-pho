@@ -215,3 +215,29 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 
 - Ở phiên kiểm thử Module 04, pane trình duyệt cho khung hình chỉ khoảng 3 lần/giây. Đã kiểm tra: GPU rảnh, luồng chính không bị chặn (độ trễ timer bình thường), iframe trống cũng 3 lần/giây, và scene rỗng cũng chậm. Lỗi nằm ở môi trường, không ở game.
 - Khi khung hình thấp, `dt` bị giới hạn ở 0.1 s nên nhân vật đi chậm hơn. Trong phiên kiểm thử đã tăng `app.maxDeltaTime` lên 0.5 s **chỉ trong trình duyệt** để rút ngắn thời gian. Đây không phải thay đổi code, và không có trong bản build.
+
+## D-033 — Đèn Soi Linh: máy trạng thái hai pha, chuyển tiếp 0.35 s (Module 05)
+
+- **Chọn:** `domain/lantern/LanternPhase.ts` giữ bốn pha `real`, `to_spirit`, `spirit`, `to_real`. Chuyển tiếp mất `LANTERN_TRANSITION_S` = 0.35 s, tính bằng `dt` của engine. `spiritAmount` là smoothstep của tiến độ, dùng cho hình ảnh.
+- **Hàng đợi:** Nhấn Q trong lúc đang chuyển tiếp chỉ xếp hàng đúng một lần. Các lần nhấn thêm bị bỏ qua, nên nhấn liên tục không lật đèn nhiều lần.
+- **Cập nhật hình ảnh:** Phiên phát `changed` khi đổi pha, và ở mỗi khung hình trong lúc chuyển tiếp, vì ký hiệu và tint đọc `spiritAmount` theo từng khung (`GameSession.updateLantern`). Khi đã ổn định thì không phát nữa.
+- **Đầu vào:** Phím Q (`LANTERN_KEYS`) và nút đổi đèn trên cảm ứng gọi cùng một đường `pressLantern()`, không có đường riêng.
+
+## D-034 — Ký hiệu chỉ tồn tại ở Đèn Soi Linh
+
+- **Hiển thị:** `WorldView.sync` bật các ký hiệu khi `spiritAmount` > 0, nên chúng hiện dần theo chuyển tiếp.
+- **Tương tác:** Ký hiệu chỉ nhận focus và hint khi pha đã là `spirit` ổn định (`InteractionSystem.setEnabled`). Trong pha `real` chúng không có hint.
+- **Quy tắc ở domain:** `scanGlyph` tự kiểm tra `isSpirit` và trả `not_spirit`. Engine không được phép quyết định việc quét. Thông báo `error.not_spirit` là lỗi được hiển thị cho người chơi.
+
+## D-035 — Puzzle thứ tự: sai thì xoá mục nhập, không mất gì
+
+- **Chọn:** `domain/puzzle/GlyphPuzzle.ts`. Người chơi chọn đủ ba ký hiệu rồi khắc. Chọn trùng, chọn ký hiệu không thuộc puzzle, chọn khi đã đủ, hoặc chọn khi đã giải đều bị từ chối.
+- **Sai thứ tự:** Xoá mục nhập và tăng `attempts`. Không tiêu nguyên liệu, vì mục nhập không phải tài nguyên.
+- **Gợi ý mở dần** (`puzzles.json`): `puzzle.hint.1` sau 1 lần thử, `puzzle.hint.2` sau 3 lần. Panel hiện gợi ý ở cấp cao nhất đã mở.
+- **Giải đúng:** Đặt cờ `recipe_spirit_lantern_known` (mở công thức Đèn Vân Linh) và tính mục tiêu `puzzle` của nhiệm vụ. Puzzle đã giải không mở lại.
+
+## D-036 — Hiệu ứng: tint bằng CSS, hạt có pool, cầu dùng material riêng
+
+- **Tint:** Một `div` có `opacity` = `spiritAmount`, với transition CSS 0.35 s. Không vẽ lại canvas.
+- **Hạt `SpiritBurst`:** Tám hạt cố định, dùng lại, sống 0.45 s. Không tạo entity mới mỗi lần bật đèn. Khi `setReducedVfx(true)` thì không phát hạt. Tint và ký hiệu vẫn hiện vì đó là phản hồi chức năng.
+- **Cầu sáng:** `ENV_Bridge_Deck` dùng chung material với các vật gỗ khác trong blockout. `WorldView` clone material một lần rồi chỉ chỉnh bản clone, nên sáng cầu không làm sáng gỗ khác. Cầu sáng khi cờ `bridge_glow` bật (đặt khi Q01 hoàn thành).

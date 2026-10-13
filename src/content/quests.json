@@ -16,6 +16,22 @@
       ],
       "rewards": { "coins": 30, "reputation": 0 },
       "unlocks": { "flags": ["q00_complete", "shop_lamp_lit"], "shopLevel": 1 }
+    },
+    {
+      "id": "q01_net_muc",
+      "titleKey": "quest.q01.title",
+      "autoStart": true,
+      "prerequisites": ["q00_dem_mo_cho"],
+      "objectives": [
+        { "id": "talk_co_lam", "type": "talk", "targetId": "npc_co_lam", "count": 1, "textKey": "quest.q01.obj.talk" },
+        { "id": "scan_gate", "type": "scan", "targetId": "glyph_gate", "count": 1, "textKey": "quest.q01.obj.scan_gate" },
+        { "id": "scan_bridge", "type": "scan", "targetId": "glyph_bridge", "count": 1, "textKey": "quest.q01.obj.scan_bridge" },
+        { "id": "scan_signboard", "type": "scan", "targetId": "glyph_signboard", "count": 1, "textKey": "quest.q01.obj.scan_signboard" },
+        { "id": "solve_puzzle", "type": "puzzle", "targetId": "puzzle_glyph_order", "count": 1, "textKey": "quest.q01.obj.puzzle" },
+        { "id": "craft_spirit", "type": "craft", "targetId": "recipe_spirit_lantern", "count": 1, "textKey": "quest.q01.obj.craft" }
+      ],
+      "rewards": { "coins": 0, "reputation": 10 },
+      "unlocks": { "flags": ["q01_complete", "bridge_glow"], "shopLevel": null }
     }
   ]
 }

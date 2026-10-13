@@ -1,17 +1,28 @@
 import { EventBus } from '../shared/events/EventBus';
 import type { DialogueFile, NpcDefinition } from './content/types';
-import type { ItemDef, PickupDef, PlacementDef, QuestDef, RecipeDef, StationDef } from './content/gameplayTypes';
+import type {
+  GlyphDef,
+  ItemDef,
+  PickupDef,
+  PlacementDef,
+  PuzzleDef,
+  QuestDef,
+  Quality,
+  RecipeDef,
+  StationDef,
+} from './content/gameplayTypes';
 import { CraftingSystem, type CraftSession } from './crafting/CraftingSystem';
 import { DialogueSystem, type DialogueEvent } from './dialogue/DialogueSystem';
 import { FlagStore } from './flags/FlagStore';
 import { Inventory, type StackView } from './inventory/Inventory';
+import { LanternPhase, type LanternSnapshot } from './lantern/LanternPhase';
+import { GlyphPuzzle, type PuzzleResult, type PuzzleView } from './puzzle/GlyphPuzzle';
 import { QuestSystem, type QuestSystemEvent, type QuestView } from './quests/QuestSystem';
-import type { Quality } from './content/gameplayTypes';
 
 /**
  * The game state for one playthrough, with no engine code. It connects the domain systems and applies rewards
- * exactly once. The engine sends interactions in (collect, craft, place, talk). It reads snapshots out and
- * listens to events (notices, panels, world changes).
+ * exactly once. The engine sends interactions in (collect, craft, place, talk, scan, puzzle). It reads snapshots
+ * out and listens to events (notices, panels, world changes).
  */
 
 export interface SessionContent {
@@ -23,6 +34,8 @@ export interface SessionContent {
   readonly pickups: readonly PickupDef[];
   readonly stations: readonly StationDef[];
   readonly placements: readonly PlacementDef[];
+  readonly glyphs: readonly GlyphDef[];
+  readonly puzzles: readonly PuzzleDef[];
 }
 
 const PLAYER_FACING_REFUSALS: ReadonlySet<string> = new Set([
@@ -31,9 +44,13 @@ const PLAYER_FACING_REFUSALS: ReadonlySet<string> = new Set([
   'busy',
   'locked',
   'wrong_station',
+  'not_spirit',
 ]);
 
-export type PanelState ={ readonly kind: 'craft'; readonly stationId: string } | { readonly kind: 'inventory' };
+export type PanelState =
+  | { readonly kind: 'craft'; readonly stationId: string }
+  | { readonly kind: 'puzzle'; readonly stationId: string; readonly puzzleId: string }
+  | { readonly kind: 'inventory' };
 
 export type SessionEvent =
   | { readonly type: 'changed' }
@@ -55,6 +72,8 @@ export interface SessionSnapshot {
   readonly flags: Readonly<Record<string, boolean>>;
   readonly collectedPickups: readonly string[];
   readonly placed: readonly string[];
+  readonly lantern: LanternSnapshot;
+  readonly puzzles: readonly PuzzleView[];
 }
 
 export class GameSession {
@@ -64,24 +83,30 @@ export class GameSession {
   readonly inventory: Inventory;
   readonly crafting: CraftingSystem;
   readonly quests: QuestSystem;
+  readonly lantern = new LanternPhase();
   private readonly content: SessionContent;
   private readonly itemNames: ReadonlyMap<string, string>;
   private readonly pickupById: ReadonlyMap<string, PickupDef>;
   private readonly placementById: ReadonlyMap<string, PlacementDef>;
+  private readonly glyphById: ReadonlyMap<string, GlyphDef>;
   private readonly npcByDialogue: ReadonlyMap<string, string>;
+  private readonly puzzles: ReadonlyMap<string, GlyphPuzzle>;
   private readonly collected = new Set<string>();
   private readonly placed = new Set<string>();
   private coins = 0;
   private reputation = 0;
   private shopLevel = 0;
   private panel: PanelState | null = null;
+  private lastLanternPhase: string = 'real';
 
   constructor(content: SessionContent) {
     this.content = content;
     this.itemNames = new Map(content.items.map((item) => [item.id, item.nameKey]));
     this.pickupById = new Map(content.pickups.map((pickup) => [pickup.id, pickup]));
     this.placementById = new Map(content.placements.map((placement) => [placement.id, placement]));
+    this.glyphById = new Map(content.glyphs.map((glyph) => [glyph.id, glyph]));
     this.npcByDialogue = new Map(content.npcs.map((npc) => [npc.dialogueId, npc.id]));
+    this.puzzles = new Map(content.puzzles.map((puzzle) => [puzzle.id, new GlyphPuzzle(puzzle)]));
 
     this.dialogue = new DialogueSystem(content.dialogues, this.flags);
     this.inventory = new Inventory(content.items);
@@ -132,6 +157,21 @@ export class GameSession {
     return this.placeAt(this.placementById.get(placementId), placementId);
   }
 
+  /** Opens the right panel for a station. An unsolved engraving table opens its puzzle first. */
+  interactStation(stationId: string): ActionResult {
+    const station = this.stationById(stationId);
+    if (!station) {
+      return this.fail('station_unknown');
+    }
+    const puzzle = [...this.puzzles.values()].find((candidate) => candidate.stationId === stationId && !candidate.isSolved);
+    if (puzzle) {
+      this.openPanel({ kind: 'puzzle', stationId, puzzleId: puzzle.id });
+    } else {
+      this.openPanel({ kind: 'craft', stationId });
+    }
+    return { ok: true };
+  }
+
   /** Opens a panel. Only one panel can be open, so opening another one replaces it. */
   openPanel(panel: PanelState): void {
     this.panel = panel;
@@ -139,13 +179,97 @@ export class GameSession {
     this.emitChanged();
   }
 
+  /** Closing a panel never loses materials: a craft in progress is cancelled first. */
   closePanel(): void {
     if (!this.panel) {
       return;
     }
+    this.crafting.cancel();
     this.panel = null;
     this.events.emit({ type: 'panel.closed' });
     this.emitChanged();
+  }
+
+  // ---------- Đèn Soi Linh and glyphs ----------
+
+  /** Starts a lantern toggle. Taps during a transition queue one toggle. Returns false only if the queue is full. */
+  toggleLantern(): ActionResult {
+    const wasSpirit = this.lantern.isSpirit;
+    if (!this.lantern.toggle()) {
+      return this.fail('lantern_busy');
+    }
+    this.notice(wasSpirit ? 'notice.lantern_off' : 'notice.lantern_on', {});
+    this.emitChanged();
+    return { ok: true };
+  }
+
+  /**
+   * Advances the lantern transition. The engine calls this every frame. Emits when the phase changes, and on every
+   * frame of a transition, because the glyph glow and the HUD tint read `spiritAmount`, which moves each frame.
+   */
+  updateLantern(dt: number): void {
+    this.lantern.update(dt);
+    const phase = this.lantern.snapshot.phase;
+    if (phase !== this.lastLanternPhase || this.lantern.isTransitioning) {
+      this.lastLanternPhase = phase;
+      this.emitChanged();
+    }
+  }
+
+  /** Scans a glyph. Only possible in spirit phase. Scanning counts toward the quest objective for that glyph. */
+  scanGlyph(glyphId: string): ActionResult {
+    const glyph = this.glyphById.get(glyphId);
+    if (!glyph) {
+      return this.fail('glyph_unknown');
+    }
+    if (!this.lantern.isSpirit) {
+      return this.fail('not_spirit');
+    }
+    this.quests.handle({ type: 'scan', targetId: glyphId, sourceId: glyphId });
+    this.notice('notice.scanned', { nameKey: glyph.symbolKey });
+    this.emitChanged();
+    return { ok: true };
+  }
+
+  // ---------- puzzle at the engraving table ----------
+
+  pickGlyph(puzzleId: string, glyphId: string): PuzzleResult {
+    const puzzle = this.puzzles.get(puzzleId);
+    if (!puzzle) {
+      return { ok: false, reason: 'unknown_glyph' };
+    }
+    const result = puzzle.pick(glyphId);
+    this.emitChanged();
+    return result;
+  }
+
+  undoGlyph(puzzleId: string): void {
+    this.puzzles.get(puzzleId)?.undo();
+    this.emitChanged();
+  }
+
+  clearGlyphs(puzzleId: string): void {
+    this.puzzles.get(puzzleId)?.clear();
+    this.emitChanged();
+  }
+
+  /**
+   * Submits the entry. A right order solves the puzzle: it unlocks the recipe that depends on it and counts toward
+   * the quest. A wrong order only clears the entry and counts one attempt.
+   */
+  submitPuzzle(puzzleId: string): PuzzleResult {
+    const puzzle = this.puzzles.get(puzzleId);
+    if (!puzzle) {
+      return { ok: false, reason: 'unknown_glyph' };
+    }
+    const result = puzzle.submit();
+    if (result.ok) {
+      this.flags.set(puzzle.unlockFlag, true);
+      this.quests.handle({ type: 'puzzle', targetId: puzzleId, sourceId: puzzleId });
+      this.notice('notice.puzzle_solved', {});
+    }
+    this.emitChanged();
+    return result;
   }
 
   // ---------- crafting ----------
@@ -200,6 +324,8 @@ export class GameSession {
       flags: this.flags.snapshot(),
       collectedPickups: [...this.collected],
       placed: [...this.placed],
+      lantern: this.lantern.snapshot,
+      puzzles: [...this.puzzles.values()].map((puzzle) => puzzle.view()),
     };
   }
 
@@ -280,4 +406,3 @@ export class GameSession {
     return { ok: false, reason };
   }
 }
-

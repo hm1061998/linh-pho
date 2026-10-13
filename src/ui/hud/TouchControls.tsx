@@ -24,6 +24,9 @@ export function TouchControls({ game }: { readonly game: GameApp }) {
   return (
     <div className="touch-controls">
       <Joystick input={game.input} />
+      <button type="button" className="lantern-button" onClick={() => game.input.pressLantern()}>
+        {t('ui.lantern.toggle')}
+      </button>
       <button type="button" className="interact-button" onClick={() => game.input.pressInteract()}>
         {focus ? t('ui.talk') : t('ui.interact')}
       </button>

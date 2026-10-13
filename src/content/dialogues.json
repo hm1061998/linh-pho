@@ -45,8 +45,16 @@
       }
     },
     "dlg_co_lam": {
-      "entries": [{ "node": "greet" }],
+      "entries": [
+        { "when": [{ "flag": "q00_complete", "equals": true }], "node": "q01" },
+        { "node": "greet" }
+      ],
       "nodes": {
+        "q01": {
+          "speaker": "npc_co_lam",
+          "textKey": "dlg.co_lam.q01",
+          "next": null
+        },
         "greet": {
           "speaker": "npc_co_lam",
           "textKey": "dlg.co_lam.greet",

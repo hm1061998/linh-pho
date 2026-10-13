@@ -9,6 +9,7 @@ import enLocale from './locales/en.json';
 import viLocale from './locales/vi.json';
 import itemsJson from './items.json';
 import npcsJson from './npcs.json';
+import puzzlesJson from './puzzles.json';
 import questsJson from './quests.json';
 import recipesJson from './recipes.json';
 import worldJson from './world.json';
@@ -26,21 +27,28 @@ const npcResult = validateContent({
 });
 const npcIds = new Set(npcResult.content.npcs.map((npc) => npc.id));
 const placementIds = new Set(worldJson.placements.map((placement) => placement.id));
+const glyphIds = new Set(worldJson.glyphs.map((glyph) => glyph.id));
+const puzzleIds = new Set(puzzlesJson.puzzles.map((puzzle) => puzzle.id));
 
 const gameplayResult = validateGameplay(
-  { items: itemsJson, recipes: recipesJson, quests: questsJson, world: worldJson },
+  { items: itemsJson, recipes: recipesJson, quests: questsJson, world: worldJson, puzzles: puzzlesJson },
   {
     npcIds,
     hasTextKey,
     targetExists: (type: ObjectiveType, targetId: string) => {
-      if (type === 'talk') {
-        return npcIds.has(targetId);
+      switch (type) {
+        case 'talk':
+          return npcIds.has(targetId);
+        case 'place':
+          return placementIds.has(targetId);
+        case 'scan':
+          return glyphIds.has(targetId);
+        case 'puzzle':
+          return puzzleIds.has(targetId);
+        default:
+          // Accept/deliver/buy get targets in Module 07. Until then, quests that use them are reported.
+          return false;
       }
-      if (type === 'place') {
-        return placementIds.has(targetId);
-      }
-      // Other objective types get targets in later modules. Until then, quests that use them are reported.
-      return false;
     },
   },
 );

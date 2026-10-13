@@ -527,3 +527,104 @@ textarea,
   margin-left: auto;
   color: var(--lantern-gold);
 }
+
+/* Đèn Soi Linh: a soft jade tint in spirit phase, and a badge that names the lamp in use. */
+.spirit-tint {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(101, 212, 189, 0.22), rgba(16, 24, 38, 0.35));
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.lantern-badge {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 56px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.lantern-badge kbd {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--lantern-gold);
+  color: var(--night-navy);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+
+.lantern-badge .lantern-hint {
+  opacity: 0.7;
+}
+
+.lantern-button {
+  position: absolute;
+  right: calc(env(safe-area-inset-right, 0px) + 140px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  min-width: 88px;
+  min-height: 64px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 32px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+/* Engraving puzzle. */
+.puzzle-picks,
+.puzzle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.puzzle-picks button,
+.puzzle-actions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
+
+.puzzle-picks button:disabled,
+.puzzle-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.panel-card .entered {
+  margin: 8px 0 0;
+  font-size: 15px;
+}
+
+.panel-card .hint {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(242, 183, 89, 0.12);
+  font-size: 14px;
+}
+
+.panel-card .feedback {
+  margin: 10px 0 0;
+  color: var(--lantern-gold);
+  font-size: 14px;
+}

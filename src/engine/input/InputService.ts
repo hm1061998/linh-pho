@@ -1,4 +1,4 @@
-import { shouldQueueInteract } from './interactPolicy';
+import { shouldQueueInteract, shouldQueueLantern } from './interactPolicy';
 import { BOUND_KEY_CODES } from './keyBindings';
 import { KeyboardState } from './KeyboardState';
 import { addMoveInputs, applyDeadzone, clampMagnitude, NO_MOVE, type MoveInput } from './moveInput';
@@ -13,6 +13,8 @@ export interface InputFrame {
   readonly zoomDelta: number;
   /** True only on the frame an interact press began. */
   readonly interactPressed: boolean;
+  /** True only on the frame a lantern toggle press began (Q key or the touch button). */
+  readonly lanternPressed: boolean;
 }
 
 /** Radians per pixel of horizontal drag. 0.008 rad ≈ 0.46° per pixel. */
@@ -51,6 +53,7 @@ export class InputService {
   private pendingZoom = 0;
   private pinchDistance: number | null = null;
   private interactQueued = false;
+  private lanternQueued = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -100,6 +103,13 @@ export class InputService {
     }
   }
 
+  /** Queues one lantern toggle. Also called by the touch lantern button. */
+  pressLantern(): void {
+    if (!this.isBlocked) {
+      this.lanternQueued = true;
+    }
+  }
+
   /** Reads and resets the per-frame input. Call exactly once per update. */
   frame(): InputFrame {
     const blocked = this.isBlocked;
@@ -110,10 +120,12 @@ export class InputService {
       yawDelta: blocked ? 0 : this.pendingYaw,
       zoomDelta: blocked ? 0 : this.pendingZoom,
       interactPressed: !blocked && this.interactQueued,
+      lanternPressed: !blocked && this.lanternQueued,
     };
     this.pendingYaw = 0;
     this.pendingZoom = 0;
     this.interactQueued = false;
+    this.lanternQueued = false;
     return frame;
   }
 
@@ -133,6 +145,7 @@ export class InputService {
     this.pendingYaw = 0;
     this.pendingZoom = 0;
     this.interactQueued = false;
+    this.lanternQueued = false;
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
@@ -151,8 +164,12 @@ export class InputService {
     const handledByUi = event.defaultPrevented;
     // Stop arrow keys from scrolling the page.
     event.preventDefault();
-    if (shouldQueueInteract({ code: event.code, repeat: event.repeat, defaultPrevented: handledByUi }, this.isBlocked)) {
+    const press = { code: event.code, repeat: event.repeat, defaultPrevented: handledByUi };
+    if (shouldQueueInteract(press, this.isBlocked)) {
       this.interactQueued = true;
+    }
+    if (shouldQueueLantern(press, this.isBlocked)) {
+      this.lanternQueued = true;
     }
     this.keys.press(event.code);
   };

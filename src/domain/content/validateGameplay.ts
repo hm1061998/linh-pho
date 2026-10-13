@@ -1,5 +1,6 @@
 import type { ContentIssue } from './types';
 import type {
+  GlyphDef,
   ItemAmount,
   ItemDef,
   MiniGameKind,
@@ -7,6 +8,8 @@ import type {
   ObjectiveType,
   PickupDef,
   PlacementDef,
+  PuzzleDef,
+  PuzzleHint,
   QuestDef,
   Quality,
   RecipeDef,
@@ -25,6 +28,7 @@ export interface GameplayRaw {
   readonly recipes: unknown;
   readonly quests: unknown;
   readonly world: unknown;
+  readonly puzzles: unknown;
 }
 
 export interface GameplayContext {
@@ -421,6 +425,92 @@ function parsePlacement(
   return { id: raw.id, labelKey: raw.labelKey as string, position, acceptsItemId: raw.acceptsItemId as string };
 }
 
+function parseGlyph(raw: unknown, source: string, ctx: GameplayContext, issues: ContentIssue[]): GlyphDef | null {
+  if (!isRecord(raw) || !isNonEmptyString(raw.id)) {
+    issues.push(error(source, 'expected an object with a non-empty "id"'));
+    return null;
+  }
+  const where = `glyphs.${raw.id}`;
+  const before = issues.length;
+  const position = parsePosition(raw.position);
+  if (!isNonEmptyString(raw.symbolKey) || !ctx.hasTextKey(raw.symbolKey)) {
+    issues.push(error(where, `symbolKey "${String(raw.symbolKey)}" is missing from the primary locale`));
+  }
+  if (!isNonEmptyString(raw.labelKey) || !ctx.hasTextKey(raw.labelKey)) {
+    issues.push(error(where, `labelKey "${String(raw.labelKey)}" is missing from the primary locale`));
+  }
+  if (!position) {
+    issues.push(error(where, 'position must be { "x": number, "z": number }'));
+  }
+  if (issues.length > before || !position) {
+    return null;
+  }
+  return {
+    id: raw.id,
+    symbolKey: raw.symbolKey as string,
+    labelKey: raw.labelKey as string,
+    position,
+  };
+}
+
+function parsePuzzle(
+  raw: unknown,
+  source: string,
+  stations: ReadonlyMap<string, StationDef>,
+  glyphIds: ReadonlySet<string>,
+  ctx: GameplayContext,
+  issues: ContentIssue[],
+): PuzzleDef | null {
+  if (!isRecord(raw) || !isNonEmptyString(raw.id)) {
+    issues.push(error(source, 'expected an object with a non-empty "id"'));
+    return null;
+  }
+  const where = `puzzles.${raw.id}`;
+  const before = issues.length;
+  const station = isNonEmptyString(raw.stationId) ? stations.get(raw.stationId) : undefined;
+  if (!station || station.kind !== 'engraving') {
+    issues.push(error(where, '"stationId" must name an engraving station'));
+  }
+  const glyphs = Array.isArray(raw.glyphs) ? raw.glyphs : [];
+  if (glyphs.length < 2 || !glyphs.every((id) => isNonEmptyString(id) && glyphIds.has(id))) {
+    issues.push(error(where, '"glyphs" must list at least two existing glyph ids'));
+  }
+  const solution = Array.isArray(raw.solution) ? raw.solution : [];
+  const isPermutation =
+    solution.length === glyphs.length &&
+    glyphs.every((id) => solution.includes(id)) &&
+    new Set(solution).size === solution.length;
+  if (!isPermutation) {
+    issues.push(error(where, '"solution" must use each glyph in "glyphs" exactly once'));
+  }
+  if (!isNonEmptyString(raw.unlockFlag)) {
+    issues.push(error(where, '"unlockFlag" must be a flag name'));
+  }
+  const hints: PuzzleHint[] = [];
+  if (!Array.isArray(raw.hints)) {
+    issues.push(error(where, '"hints" must be an array'));
+  } else {
+    for (const [index, hint] of raw.hints.entries()) {
+      if (!isRecord(hint) || !isNonNegativeInteger(hint.afterAttempts) || !isNonEmptyString(hint.textKey) || !ctx.hasTextKey(hint.textKey)) {
+        issues.push(error(`${where}.hints[${index}]`, 'expected { "afterAttempts": whole number >= 0, "textKey": known key }'));
+        continue;
+      }
+      hints.push({ afterAttempts: hint.afterAttempts, textKey: hint.textKey });
+    }
+  }
+  if (issues.length > before) {
+    return null;
+  }
+  return {
+    id: raw.id,
+    stationId: raw.stationId as string,
+    glyphs: glyphs as string[],
+    solution: solution as string[],
+    unlockFlag: raw.unlockFlag as string,
+    hints,
+  };
+}
+
 export function validateGameplay(raw: GameplayRaw, ctx: GameplayContext): ValidatedGameplay {
   const issues: ContentIssue[] = [];
 
@@ -444,10 +534,18 @@ export function validateGameplay(raw: GameplayRaw, ctx: GameplayContext): Valida
   const placements = parseAll(placementsRaw, 'placements', (item, source, local) =>
     parsePlacement(item, source, ctx, itemMap, local),
   issues);
+  const glyphs = parseAll(readList(worldRaw, 'glyphs', issues), 'glyphs', (item, source, local) =>
+    parseGlyph(item, source, ctx, local),
+  issues);
+  const glyphIds = new Set(glyphs.map((glyph) => glyph.id));
+  const stationMap = new Map(stations.map((station) => [station.id, station]));
+  const puzzles = parseAll(readList(raw.puzzles, 'puzzles', issues), 'puzzles', (item, source, local) =>
+    parsePuzzle(item, source, stationMap, glyphIds, ctx, local),
+  issues);
 
   // Interactable IDs share one namespace, so a pickup cannot have the same ID as a station.
   const interactableIds = new Set<string>();
-  for (const id of [...pickups, ...stations, ...placements].map((entry) => entry.id)) {
+  for (const id of [...pickups, ...stations, ...placements, ...glyphs].map((entry) => entry.id)) {
     if (interactableIds.has(id)) {
       issues.push(error(`world.${id}`, 'interactable id is used more than once'));
     }
@@ -473,7 +571,7 @@ export function validateGameplay(raw: GameplayRaw, ctx: GameplayContext): Valida
   });
 
   return {
-    content: { items, recipes, quests, pickups, stations, placements },
+    content: { items, recipes, quests, pickups, stations, placements, glyphs, puzzles },
     issues,
   };
 }

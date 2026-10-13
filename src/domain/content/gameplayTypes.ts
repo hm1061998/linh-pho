@@ -87,6 +87,31 @@ export interface PlacementDef {
   readonly acceptsItemId: string;
 }
 
+/** A mark on the world that only shows in spirit phase (Đèn Soi Linh). Scanning it counts toward a quest. */
+export interface GlyphDef {
+  readonly id: string;
+  readonly symbolKey: string;
+  readonly labelKey: string;
+  readonly position: { readonly x: number; readonly z: number };
+}
+
+export interface PuzzleHint {
+  /** Shown once the player has failed this many times. */
+  readonly afterAttempts: number;
+  readonly textKey: string;
+}
+
+/** An ordering puzzle. `solution` is a permutation of `glyphs`. Wrong attempts reset input with no penalty. */
+export interface PuzzleDef {
+  readonly id: string;
+  readonly stationId: string;
+  readonly glyphs: readonly string[];
+  readonly solution: readonly string[];
+  /** Set when the puzzle is solved, so the recipe that depends on it becomes known. */
+  readonly unlockFlag: string;
+  readonly hints: readonly PuzzleHint[];
+}
+
 export interface GameplayContent {
   readonly items: readonly ItemDef[];
   readonly recipes: readonly RecipeDef[];
@@ -94,4 +119,6 @@ export interface GameplayContent {
   readonly pickups: readonly PickupDef[];
   readonly stations: readonly StationDef[];
   readonly placements: readonly PlacementDef[];
+  readonly glyphs: readonly GlyphDef[];
+  readonly puzzles: readonly PuzzleDef[];
 }

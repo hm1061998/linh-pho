@@ -30,6 +30,26 @@
       "position": { "x": 6.5, "z": -12 }
     }
   ],
+  "glyphs": [
+    {
+      "id": "glyph_gate",
+      "symbolKey": "symbol.gate.name",
+      "labelKey": "glyph.gate.label",
+      "position": { "x": 12.5, "z": -19.8 }
+    },
+    {
+      "id": "glyph_bridge",
+      "symbolKey": "symbol.bridge.name",
+      "labelKey": "glyph.bridge.label",
+      "position": { "x": 8, "z": 17.2 }
+    },
+    {
+      "id": "glyph_signboard",
+      "symbolKey": "symbol.signboard.name",
+      "labelKey": "glyph.signboard.label",
+      "position": { "x": -19.5, "z": 14.6 }
+    }
+  ],
   "placements": [
     {
       "id": "shop_lamp",

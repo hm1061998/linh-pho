@@ -127,6 +127,28 @@ describe('InteractionSystem press', () => {
   });
 });
 
+describe('InteractionSystem enable and disable', () => {
+  it('never focuses a disabled target, and drops focus when a target is switched off', () => {
+    const system = new InteractionSystem();
+    system.register({ id: 'glyph', labelKey: 'k', position: { x: 0, z: 0 } });
+    system.update({ x: 0, z: 0 });
+    expect(system.focus?.id).toBe('glyph');
+
+    system.setEnabled('glyph', false);
+    system.update({ x: 0, z: 0 });
+    expect(system.focus).toBeNull();
+
+    system.setEnabled('glyph', true);
+    system.update({ x: 0, z: 0 });
+    expect(system.focus?.id).toBe('glyph');
+  });
+
+  it('ignores enable and disable for an unknown ID', () => {
+    const system = new InteractionSystem();
+    expect(() => system.setEnabled('nope', false)).not.toThrow();
+  });
+});
+
 describe('InteractionSystem registration', () => {
   it('rejects a duplicate ID and keeps the first target', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});

@@ -34,6 +34,8 @@ interface RegisteredTarget {
   readonly actionKey: string;
   readonly position: GroundPoint;
   readonly range: number;
+  /** Disabled targets are invisible to the player: they never take focus, and they never show a hint. */
+  enabled: boolean;
 }
 
 /**
@@ -63,8 +65,20 @@ export class InteractionSystem {
       actionKey: target.actionKey ?? DEFAULT_ACTION_KEY,
       position: { x: target.position.x, z: target.position.z },
       range,
+      enabled: true,
     });
     return true;
+  }
+
+  /**
+   * Turns a target on or off. A disabled target that was focused loses focus at the next update. Unknown IDs are
+   * ignored, so a save that refers to a removed target does not crash.
+   */
+  setEnabled(targetId: string, enabled: boolean): void {
+    const target = this.targets.get(targetId);
+    if (target) {
+      target.enabled = enabled;
+    }
   }
 
   /** Removes a target. If it was focused, focus is cleared and listeners are told. */
@@ -117,6 +131,9 @@ export class InteractionSystem {
     let bestId: string | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
     for (const target of this.targets.values()) {
+      if (!target.enabled) {
+        continue;
+      }
       const distance = Math.hypot(target.position.x - player.x, target.position.z - player.z);
       if (distance <= target.range && distance < bestDistance) {
         bestId = target.id;

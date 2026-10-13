@@ -11,12 +11,16 @@ export const MOVE_BINDINGS = {
 
 export const INTERACT_KEYS: readonly string[] = ['KeyE'];
 
+/** Đèn Soi Linh toggle. Q is the key the GDD lists for changing the lantern mode. */
+export const LANTERN_KEYS: readonly string[] = ['KeyQ'];
+
 const ALL_BOUND_CODES: readonly string[] = [
   ...MOVE_BINDINGS.forward,
   ...MOVE_BINDINGS.back,
   ...MOVE_BINDINGS.left,
   ...MOVE_BINDINGS.right,
   ...INTERACT_KEYS,
+  ...LANTERN_KEYS,
 ];
 
 export const BOUND_KEY_CODES: ReadonlySet<string> = new Set(ALL_BOUND_CODES);

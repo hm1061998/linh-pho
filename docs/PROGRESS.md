@@ -12,7 +12,8 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `9aeb7ff` | `feat(module-02)`: nhân vật, camera, input, va chạm |
 | `35ca79b` | `feat(module-03)`: tương tác, hội thoại, 4 NPC placeholder |
 | `033e3f0` | `feat(hud)`: chặn bôi đen và yêu cầu xoay ngang trên điện thoại |
-| (module-04) | `feat(module-04)`: kho đồ, công thức, nhiệm vụ, Q00 đầy đủ |
+| `cb90832` | `feat(module-04)`: kho đồ, công thức, nhiệm vụ, Q00 đầy đủ |
+| (module-05) | `feat(module-05)`: Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01 |
 
 ## Đã hoàn thành
 
@@ -54,15 +55,22 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Engine:** `WorldView` vẽ vật nhặt được (hộp theo màu vật phẩm), trạm (vạch sáng dưới đất), điểm đặt (bệ đèn, đầu đèn sáng khi đã đặt). `GameApp` định tuyến tương tác theo loại (`npc`, `pickup`, `station`, `placement`) (D-030).
 - **HUD:** thanh tiền và uy tín (góc trên phải), bảng nhiệm vụ hiện tại (góc trên trái), thông báo ngắn, panel bàn nghề (xác nhận tạm thời, D-031), kho đồ (phím I).
 - **Q00 đầy đủ:** nói chuyện với Bà Nghiêm → nhặt 2 tre, 1 giấy dó, 1 dây gai → chế tạo Đèn Mộc ở bàn nghề → đặt lên chân đèn trước tiệm → nhận 30 Xu Đèn đúng một lần, đặt cờ `q00_complete` và `shop_lamp_lit`, cấp shop level 1.
-- Q01 và Q02 chưa có nội dung. Module 05 và 07 sẽ thêm.
+### Module 05 — Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01
+- **Đèn Soi Linh (`domain/lantern/LanternPhase.ts`):** hai trạng thái REAL và SPIRIT, chuyển tiếp 0.35 s, nhấn Q trong lúc chuyển tiếp chỉ xếp hàng một lần (D-033). Phím Q và nút trên cảm ứng cùng đi qua `pressLantern()`.
+- **Ký hiệu:** ba ký hiệu (Vòng ở cổng, Sóng trên cầu, Lửa ở bảng hiệu) chỉ hiện và nhận tương tác ở pha SPIRIT. Quét ngoài pha này bị domain từ chối (D-034).
+- **Puzzle (`domain/puzzle/GlyphPuzzle.ts`):** chọn ba ký hiệu theo đúng thứ tự Sóng → Vòng → Lửa, rồi khắc tại bàn khắc. Sai thứ tự thì xoá mục nhập, không mất nguyên liệu, và gợi ý của Bấc mở dần theo số lần thử (D-035).
+- **Q01 "Nét Mực Thất Lạc":** hỏi Cô Lam về các dấu vết → quét ba ký hiệu → khắc đúng thứ tự → chế tạo Đèn Vân Linh. Khi xong, cầu sáng (`bridge_glow`) và nhiệm vụ kết thúc (cờ `q01_complete`).
+- **Hiệu ứng (D-036):** tint CSS theo `spiritAmount`, 8 hạt có pool (tắt khi giảm hiệu ứng), cầu dùng material clone để không làm sáng gỗ khác.
+- **Sửa khi kiểm tra:** `updateLantern` chỉ phát `changed` khi đổi pha, nên ký hiệu không hiện dần. Đã sửa để phát mỗi khung hình trong lúc chuyển tiếp (test `lanternSession`). Lỗi typecheck trong `WorldView`: truy cập `.render` trên `GraphNode` đã sửa bằng kiểm tra `instanceof pc.Entity`.
+- Q02 chưa có nội dung. Module 07 sẽ thêm.
 
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 22 file, 169 test, tất cả đạt |
-| `npm run build` | Đạt. `index-*.js` 2,375.28 kB (gzip 626.81 kB). Hook dev không có trong bundle |
+| `npm test` | 26 file, 195 test, tất cả đạt |
+| `npm run build` | Đạt. `index-*.js` 2,392.23 kB (gzip 631.20 kB). Hook dev không có trong bundle |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -72,6 +80,12 @@ Test thuần (chạy trong Node), theo nhóm:
   - `questSystem`: kích hoạt, mục tiêu đếm nguồn riêng biệt, thưởng đúng một lần, khôi phục save không thưởng lại.
   - `gameSession`: Q00 chạy đầu đến cuối với nội dung thật (30 xu một lần), thiếu nguyên liệu không giữ chỗ, huỷ trả nguyên liệu, thông báo khi đặt thiếu đèn.
   - `gameplayContent`: nội dung thật không có lỗi, mọi vị trí tương tác nằm trong hub và không chồng vật cản, các lỗi tham chiếu bị loại đúng chỗ.
+- **Module 05:**
+  - `lanternPhase`: chuyển tiếp đủ 0.35 s, spiritAmount đi từ 0 đến 1 theo smoothstep, nhấn trong lúc chuyển tiếp xếp hàng đúng một lần, khôi phục save.
+  - `glyphPuzzle`: từ chối chọn trùng, chọn lạ, chọn khi đã đủ hoặc đã giải. Sai thứ tự xoá mục nhập và tăng số lần thử. Gợi ý mở đúng ngưỡng.
+  - `lanternSession`: mỗi khung hình trong chuyển tiếp đều phát `changed`, và ngừng khi ổn định.
+  - `q01`: Q01 chạy đầu đến cuối với nội dung thật, mở công thức, đặt `bridge_glow` và `q01_complete` đúng lúc.
+  - `interactionSystem`: `setEnabled` ẩn mục tiêu khỏi focus và hint.
 
 ### Kiểm tra trong trình duyệt (Q00 đầy đủ, bằng phím và chuột thật khi có thể)
 
@@ -85,11 +99,25 @@ Test thuần (chạy trong Node), theo nhóm:
 | Bảng nhiệm vụ | Không còn nhiệm vụ hiện tại (Q01 chưa có) |
 | Console | Không có lỗi mới. Lỗi `npc_ghost` còn lại là bài kiểm tra có chủ đích từ Module 03 |
 
+### Kiểm tra trong trình duyệt (Module 05: đèn, puzzle, sau khi khởi động lại dev server)
+
+| Bước | Kết quả |
+|---|---|
+| Nhấn Q (keydown `KeyQ`) | Pha `real` → `to_spirit` → `spirit`. Lớp tint hiện, huy hiệu đổi thành "Đèn Soi Linh" |
+| Mở bàn khắc (`interactStation`) | Panel "Bàn khắc": ba mục Vòng, Sóng, Lửa; "Đã chọn 0/3"; các nút Bỏ dấu cuối, Xoá hết, Khắc |
+| Chọn Vòng → Sóng → Lửa, bấm Khắc (bằng click) | "Chưa đúng thứ tự. Thử lại từ đầu, không mất nguyên liệu." Gợi ý `puzzle.hint.1` hiện. Mục nhập xoá sạch, số lần thử = 1 |
+| Chọn Sóng → Vòng → Lửa, bấm Khắc (bằng click) | "Đã khắc đúng! Đèn Vân Linh đã được mở." Cờ `recipe_spirit_lantern_known` = true. Mục nhập "Sóng → Vòng → Lửa" |
+| Đóng panel | Panel về `null` |
+| Console | Không có lỗi mới sau khi khởi động lại. Lỗi `LanternHud is not defined` còn trong buffer là của phiên HMR cũ |
+
+Lỗi phát hiện khi kiểm tra: chọn bằng toạ độ thay vì ref đã bấm nhầm vùng trống. Đây là lỗi thao tác kiểm thử, không phải lỗi game. Sau đó dùng ref và kết quả đúng.
+
 Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang cho khung hình chỉ khoảng 3 lần/giây, kể cả iframe trống (D-032). Vì vậy các bước đi bộ được thực hiện với thời gian chờ dài hơn, và `maxDeltaTime` được tăng lên 0.5 s **chỉ trong trình duyệt** để rút ngắn. Logic gameplay không thay đổi.
 
 ## Chưa kiểm chứng (phải nói rõ)
 - **FPS thực tế:** không đo được trong pane lúc này. Cần kiểm tra lại trên máy thật khi môi trường ổn định.
 - **Panel chế tạo bằng minigame:** chưa có, hiện là nút xác nhận tạm (Module 06).
+- **Module 05 trong trình duyệt:** chưa thấy bằng mắt ba ký hiệu 3D và bước chuyển sáng của chúng, chưa quét ký hiệu bằng tay, chưa đi hết Q01 trong trình duyệt (chỉ có test đơn vị với nội dung thật), chưa thấy cầu sáng và hạt, chưa thử nút Q trên cảm ứng.
 - **Lưu và tải tiến trình:** chưa có. Mất khi tải lại trang (Module 08).
 - **Đọc bằng trình đọc màn hình, giữ joystick lâu, pinch zoom, tạm dừng khi ẩn tab, thiết bị thật:** như các module trước.
 
@@ -100,11 +128,21 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 4. **Lồng đèn soi vết** trong GDD được ánh xạ thành Đèn Vân Linh (D-026).
 5. **`speed` là vận tốc dự định** (D-014). Không ảnh hưởng vị trí.
 6. **Mất WebGL context** (GPU reset): chưa xử lý, chỉ có log lỗi.
-7. **Bundle 2.38 MB minify, 627 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
+7. **Bundle 2.39 MB minify, 631 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
 8. **Copy tiếng Việt còn hard-code** trong `StartupErrorPanel.tsx` và `TouchControls.tsx`. Sẽ chuyển sang locale ở Module 08.
 
 ## Việc tiếp theo
-- **Module 05:** máy trạng thái Đèn Soi Linh (REAL/SPIRIT, khoá chuyển đổi, hàng đợi một lần, nút Q và cảm ứng), hiệu ứng tint và hạt sprite (có tắt VFX), 3 ký hiệu (cổng, cầu, bảng hiệu) chỉ hiện ở SPIRIT, puzzle thứ tự 3 ký hiệu với gợi ý từ Bấc theo cấp, Q01 đầy đủ (kích hoạt sau Q00 + nói chuyện Cô Lam; mở công thức Đèn Vân Linh khi giải đúng).
+- **Module 06:** minigame lắp khung và khắc (kéo/chạm, phản hồi khi khớp, chất lượng Thường/Đẹp/Hoàn Mỹ, huỷ an toàn, xác nhận khi thay thế). Thay nút "Lắp" tạm (D-031). Nguyên liệu vẫn giữ chỗ như hiện tại.
+- Sau đó: Module 07 (cửa hàng, hai đơn hàng, Q02, màn hình kết thúc), Module 08 (lưu và tải, cài đặt, menu tạm dừng).
+
+## Checklist kiểm thử thủ công (Module 05, Q01)
+- [ ] Sau khi xong Q00, nói chuyện với Cô Lam. Nhiệm vụ "Nét Mực Thất Lạc" bắt đầu.
+- [ ] Nhấn Q: đèn chuyển sang Đèn Soi Linh, màn hình ánh ngọc nhẹ. Nhấn Q lần nữa để tắt.
+- [ ] Ở pha Đèn thường, không có ký hiệu nào hiện và không có gợi ý tương tác cho chúng.
+- [ ] Ở pha Đèn Soi Linh, đến gần cổng, cầu, bảng hiệu: hiện "Soi ..." và quét được. Thông báo "Đã soi ...".
+- [ ] Bàn khắc (`station_engraving`, toạ độ x 6.5, z -12 trong `world.json`): sai thứ tự, thông báo sai và gợi ý mở dần sau lần thử đầu và lần thứ ba.
+- [ ] Khắc đúng Sóng → Vòng → Lửa: thông báo, công thức Đèn Vân Linh mở. Chế tạo ở bàn khắc hoàn tất Q01: cầu sáng, nhiệm vụ kết thúc.
+- [ ] Trên điện thoại: nút Đổi đèn và nút Tương tác không che nhau, không che bảng nhiệm vụ.
 
 ## Checklist kiểm thử thủ công (Q00)
 - [ ] `npm run dev`, mở http://localhost:5173. Không có lỗi trong console.

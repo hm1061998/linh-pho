@@ -48,7 +48,9 @@ const BASE_RAW: GameplayRaw = {
     pickups: [{ id: 'pk1', itemId: 'bamboo', position: { x: 1, z: 1 } }],
     stations: [{ id: 'st1', kind: 'workbench', labelKey: 'k', position: { x: 2, z: 2 } }],
     placements: [{ id: 'lamp', labelKey: 'k', position: { x: 3, z: 3 }, acceptsItemId: 'lantern' }],
+    glyphs: [],
   },
+  puzzles: { puzzles: [] },
 };
 
 describe('shipped gameplay content', () => {
@@ -59,7 +61,7 @@ describe('shipped gameplay content', () => {
   it('has the Module 04 pieces: items, recipes, Q00, and world interactables', () => {
     expect(GAME_CONTENT.items.map((item) => item.id)).toContain('wooden_lantern');
     expect(GAME_CONTENT.recipes.map((recipe) => recipe.id)).toContain('recipe_wooden_lantern');
-    expect(GAME_CONTENT.quests.map((quest) => quest.id)).toEqual(['q00_dem_mo_cho']);
+    expect(GAME_CONTENT.quests.map((quest) => quest.id)).toEqual(['q00_dem_mo_cho', 'q01_net_muc']);
     expect(GAME_CONTENT.stations.length).toBeGreaterThan(0);
     expect(GAME_CONTENT.placements.length).toBeGreaterThan(0);
   });
@@ -157,6 +159,7 @@ describe('gameplay validation drops bad entries and reports them', () => {
         ],
         stations: [{ id: 'st1', kind: 'workbench', labelKey: 'k', position: { x: 2, z: 2 } }],
         placements: [],
+        glyphs: [],
       },
     };
     const result = validateGameplay(raw, CTX);
@@ -171,6 +174,7 @@ describe('gameplay validation drops bad entries and reports them', () => {
         pickups: [],
         stations: [{ id: 'st9', kind: 'cauldron', labelKey: 'k', position: { x: 2, z: 2 } }],
         placements: [],
+        glyphs: [],
       },
     };
     expect(validateGameplay(raw, CTX).content.stations).toEqual([]);
