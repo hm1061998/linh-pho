@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../content';
 import { GameSession, type SessionEvent } from '../domain/GameSession';
+import { fitFrame } from './craftHelpers';
 
 function newSession(): { session: GameSession; notices: string[] } {
   const session = new GameSession(GAME_CONTENT);
@@ -31,10 +32,11 @@ describe('Q00 (Đêm Mở Chợ) with the shipped content', () => {
     expect(session.collectPickup('pk_rope_1').ok).toBe(true);
     expect(session.snapshot().activeQuest?.objectives.every((objective) => objective.done)).toBe(false);
 
-    // Craft at the workbench. The inputs move into the output.
+    // Craft at the workbench. Fitting the frame finishes the craft and moves the inputs into the output.
     expect(session.beginCraft('recipe_wooden_lantern', 'station_workbench').ok).toBe(true);
-    expect(session.completeCraft('normal').ok).toBe(true);
-    expect(session.completeCraft().ok).toBe(false);
+    fitFrame(session);
+    expect(session.activeCraft).toBeNull();
+    expect(session.assemblyPlace('socket_a', 0)).toEqual({ ok: false, reason: 'no_minigame' });
 
     // Place the lantern on the shop lamp. This completes the quest.
     expect(session.placeItem('shop_lamp').ok).toBe(true);

@@ -4,6 +4,7 @@ import { GAME_CONTENT, t } from '../../content';
 import type { SessionSnapshot } from '../../domain/GameSession';
 import { useDialogueView } from '../state/useGameplayState';
 import { qualityLabel, useSessionSnapshot } from '../state/useSession';
+import { MiniGame } from './MiniGames';
 
 /**
  * Hosts the one panel the session has open: the crafting table, the engraving puzzle, or the inventory. Panels
@@ -25,6 +26,10 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
         game.session.closePanel();
       } else if (event.code === 'KeyI') {
         event.preventDefault();
+        // The inventory would end a craft in progress. Keep the minigame open until the player finishes or cancels it.
+        if (game.session.activeCraft) {
+          return;
+        }
         if (panel?.kind === 'inventory') {
           game.session.closePanel();
         } else {
@@ -66,6 +71,10 @@ function CloseButton({ game }: { readonly game: GameApp }) {
   );
 }
 
+/**
+ * The recipe list. Starting a recipe reserves its inputs and opens its minigame in this same panel. The inputs are
+ * spent only when the minigame completes. Cancelling returns them and goes back to this list.
+ */
 function CraftPanel({
   game,
   stationId,
@@ -77,14 +86,8 @@ function CraftPanel({
 }) {
   const statuses = game.session.crafting.recipesAt(stationId);
   const busy = snap.craft !== null;
+  const craftHere = snap.craft?.stationId === stationId;
   const itemName = (itemId: string) => t(GAME_CONTENT.items.find((item) => item.id === itemId)?.nameKey ?? itemId);
-
-  // Placeholder confirm. Module 06 replaces this with the assembly and engraving minigames.
-  const craftNow = (recipeId: string) => {
-    if (game.session.beginCraft(recipeId, stationId).ok) {
-      game.session.completeCraft('normal');
-    }
-  };
 
   return (
     <>
@@ -92,7 +95,14 @@ function CraftPanel({
         <h2>{panelTitle(snap)}</h2>
         <CloseButton game={game} />
       </header>
-      {statuses.length === 0 ? (
+      {craftHere && snap.miniGame ? (
+        <>
+          <MiniGame game={game} view={snap.miniGame} />
+          <button type="button" className="craft-cancel" onClick={() => game.session.cancelCraft()}>
+            {t('ui.craft.cancel')}
+          </button>
+        </>
+      ) : statuses.length === 0 ? (
         <p>{t('ui.craft.none')}</p>
       ) : (
         <ul className="recipe-list">
@@ -109,8 +119,12 @@ function CraftPanel({
                   .join(', ')}
               </p>
               {known ? (
-                <button type="button" disabled={!affordable || busy} onClick={() => craftNow(recipe.id)}>
-                  {t('ui.craft.confirm')}
+                <button
+                  type="button"
+                  disabled={!affordable || busy}
+                  onClick={() => game.session.beginCraft(recipe.id, stationId)}
+                >
+                  {t('ui.craft.start')}
                 </button>
               ) : (
                 <p className="locked">{t('ui.craft.locked')}</p>

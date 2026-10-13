@@ -209,7 +209,7 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 
 ## D-031 — Minigame chế tạo là placeholder xác nhận (tạm thời)
 
-- Module 04 chỉ có nút "Lắp" để chế tạo ngay, để kiểm chứng luồng kho và nhiệm vụ. Module 06 thay bằng minigame lắp khung và khắc, theo Prompt 06. `recipe.miniGame` đã có trong dữ liệu để đổi mà không sửa phiên.
+- Module 04 chỉ có nút "Lắp" để chế tạo ngay, để kiểm chứng luồng kho và nhiệm vụ. Module 06 thay bằng minigame lắp khung và khắc, theo Prompt 06. `recipe.miniGame` đã có trong dữ liệu để đổi mà không sửa phiên. **Đã thay ở Module 06 (D-037 đến D-040).**
 
 ## D-032 — Đo khung hình trong pane trình duyệt không đáng tin lúc này
 
@@ -241,3 +241,30 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Tint:** Một `div` có `opacity` = `spiritAmount`, với transition CSS 0.35 s. Không vẽ lại canvas.
 - **Hạt `SpiritBurst`:** Tám hạt cố định, dùng lại, sống 0.45 s. Không tạo entity mới mỗi lần bật đèn. Khi `setReducedVfx(true)` thì không phát hạt. Tint và ký hiệu vẫn hiện vì đó là phản hồi chức năng.
 - **Cầu sáng:** `ENV_Bridge_Deck` dùng chung material với các vật gỗ khác trong blockout. `WorldView` clone material một lần rồi chỉ chỉnh bản clone, nên sáng cầu không làm sáng gỗ khác. Cầu sáng khi cờ `bridge_glow` bật (đặt khi Q01 hoàn thành).
+
+## D-037 — Minigame là đối tượng riêng, không đụng kho (Module 06)
+
+- **Chọn:** `domain/minigame/`: `AssemblyGame` (ba ô, mỗi ô nhận một thanh tre) và `EngravingGame` (ba dấu, theo thứ tự). Trạng thái minigame không nằm trong kho. Kho chỉ được giữ chỗ khi bắt đầu chế tạo, và commit hoặc release khi kết thúc (`CraftingSystem`).
+- **Hoàn tất tự động:** Khi minigame báo `complete`, `GameSession` gọi `CraftingSystem.complete` với chất lượng do minigame tính. `completeCraft(quality)` đã bị bỏ. Không còn đường nào để giao chất lượng từ bên ngoài, nên UI không thể tự cấp Đẹp hay Hoàn Mỹ.
+- **Chỉ một lần:** Sau khi hoàn tất, craft và minigame được xoá cùng lúc. Các lần chạm sau đó trả `no_minigame`, không thêm đồ.
+- **Vòng đời craft:** Craft chỉ tồn tại khi panel chế tạo của nó đang mở. Rời panel (đổi sang kho, nhấn Escape, đóng panel) thì huỷ craft và trả nguyên liệu. Phím I bị chặn khi đang craft, để không mất minigame vô tình.
+- **Engraving gọi ngược về puzzle:** Thứ tự khắc là thứ tự của puzzle đã giải tại trạm. Không có puzzle đã giải thì công thức báo `locked` trước khi giữ chỗ.
+
+## D-038 — Chất lượng theo điểm, ngưỡng rộng
+
+- **Ngưỡng:** Good từ 0.6, Perfect từ 0.8 (`domain/minigame/quality.ts`). Dưới 0.6 vẫn là Thường: một món hoàn tất không bao giờ là thất bại.
+- **Lắp khung:** Độ chính xác của mỗi lần gắn là `1 - 0.5 × offset`, với offset tính bằng bán kính ô (0 là tâm, 1 là mép). Mép vẫn được một nửa điểm. Mỗi lần thả trượt trừ 0.05 điểm, và không bao giờ rút lại thanh đã gắn.
+- **Khắc:** Điểm là `1 - 0.25 × số lần sai`. Không sai là Hoàn Mỹ (perfect), sai một lần là Đẹp (good), sai hai lần trở lên là Thường.
+- **Không dùng thời gian:** Prompt cho phép chính xác hoặc thời gian. Chọn chính xác, vì thời gian làm khó người chơi cảm ứng mà không thêm thông tin.
+
+## D-039 — Khắc không lộ thứ tự, sai không reset
+
+- Giao diện chỉ hiện ba dấu theo thứ tự hiển thị cố định. Thứ tự đúng không được gửi đến UI (`MiniGameView` không có trường `order`, có test kiểm tra). Người chơi phải nhớ thứ tự đã tìm ở Q01.
+- Chạm sai không xoá các dấu đã sáng. Chạm lại dấu đã sáng tính là một lần sai. UI khoá dấu đã sáng để không chạm nhầm.
+
+## D-040 — Giao diện minigame là placeholder HTML, chưa phải 3D
+
+- **Khung lắp:** Vẽ bằng HTML và CSS, ba ô tròn trên một vòng đứt nét. Chưa có khung 3D và chưa có xoay vật thể (GDD, phần «Lắp Khung Đèn»). Hai phần này chờ Module 09 khi có asset.
+- **Cách chọn:** Chạm thanh tre rồi chạm ô; hoặc kéo thả vào ô gần nhất. Bàn phím dùng nút thường. Chạm hoặc kéo ra ngoài mọi ô tính là một lần trượt.
+- **Phản hồi:** Ô sáng lên bằng animation CSS 450 ms và rung ngắn (`navigator.vibrate`, nếu trình duyệt hỗ trợ). Chưa có tiếng «tách», để Module 08 làm cùng SFX tổng hợp.
+- **Giảm chuyển động:** `prefers-reduced-motion` tắt animation.

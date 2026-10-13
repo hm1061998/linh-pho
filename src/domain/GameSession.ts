@@ -7,7 +7,6 @@ import type {
   PlacementDef,
   PuzzleDef,
   QuestDef,
-  Quality,
   RecipeDef,
   StationDef,
 } from './content/gameplayTypes';
@@ -16,6 +15,10 @@ import { DialogueSystem, type DialogueEvent } from './dialogue/DialogueSystem';
 import { FlagStore } from './flags/FlagStore';
 import { Inventory, type StackView } from './inventory/Inventory';
 import { LanternPhase, type LanternSnapshot } from './lantern/LanternPhase';
+import { AssemblyGame, ASSEMBLY_SOCKET_IDS } from './minigame/AssemblyGame';
+import { EngravingGame } from './minigame/EngravingGame';
+import { ConfirmGame, type MiniGame } from './minigame/MiniGame';
+import type { MiniGameStatus, MiniGameStep } from './minigame/types';
 import { GlyphPuzzle, type PuzzleResult, type PuzzleView } from './puzzle/GlyphPuzzle';
 import { QuestSystem, type QuestSystemEvent, type QuestView } from './quests/QuestSystem';
 
@@ -60,6 +63,23 @@ export type SessionEvent =
 
 export type ActionResult = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 
+/** What the minigame panel needs to draw. Read-only: it never includes anything the player has not found yet. */
+export type MiniGameView =
+  | {
+      readonly kind: 'assembly';
+      readonly status: MiniGameStatus;
+      readonly sockets: readonly { readonly id: string; readonly filled: boolean }[];
+      readonly misses: number;
+    }
+  | {
+      readonly kind: 'engraving';
+      readonly status: MiniGameStatus;
+      /** The ring in display order. `step` is set once a mark is lit. The order itself is never shown. */
+      readonly marks: readonly { readonly id: string; readonly symbolKey: string; readonly step: number | null }[];
+      readonly mistakes: number;
+    }
+  | { readonly kind: 'confirm'; readonly status: MiniGameStatus };
+
 export interface SessionSnapshot {
   readonly coins: number;
   readonly reputation: number;
@@ -74,6 +94,7 @@ export interface SessionSnapshot {
   readonly placed: readonly string[];
   readonly lantern: LanternSnapshot;
   readonly puzzles: readonly PuzzleView[];
+  readonly miniGame: MiniGameView | null;
 }
 
 export class GameSession {
@@ -97,6 +118,7 @@ export class GameSession {
   private reputation = 0;
   private shopLevel = 0;
   private panel: PanelState | null = null;
+  private miniGame: MiniGame | null = null;
   private lastLanternPhase: string = 'real';
 
   constructor(content: SessionContent) {
@@ -172,8 +194,15 @@ export class GameSession {
     return { ok: true };
   }
 
-  /** Opens a panel. Only one panel can be open, so opening another one replaces it. */
+  /**
+   * Opens a panel. Only one panel can be open, so opening another one replaces it. A craft lives only while its own
+   * craft panel is open: leaving that panel ends the craft and returns its inputs.
+   */
   openPanel(panel: PanelState): void {
+    const craft = this.crafting.current;
+    if (craft && !(panel.kind === 'craft' && panel.stationId === craft.stationId)) {
+      this.cancelCraft();
+    }
     this.panel = panel;
     this.events.emit({ type: 'panel.opened', panel });
     this.emitChanged();
@@ -184,7 +213,7 @@ export class GameSession {
     if (!this.panel) {
       return;
     }
-    this.crafting.cancel();
+    this.cancelCraft();
     this.panel = null;
     this.events.emit({ type: 'panel.closed' });
     this.emitChanged();
@@ -274,30 +303,110 @@ export class GameSession {
 
   // ---------- crafting ----------
 
+  /**
+   * Reserves the inputs and opens the minigame for the recipe. The inputs are spent only when the minigame completes.
+   * A recipe with a confirm-only minigame completes at once.
+   */
   beginCraft(recipeId: string, stationId: string): ActionResult {
     const start = this.crafting.begin(recipeId, stationId);
     if (!start.ok) {
       return this.fail(start.reason);
     }
-    this.emitChanged();
-    return { ok: true };
-  }
-
-  /** Finishes the active craft with the given quality. The output goes to the inventory, and quests count it. */
-  completeCraft(quality: Quality = 'normal'): ActionResult {
-    const done = this.crafting.complete(quality);
-    if (!done.ok) {
-      return this.fail(done.reason);
+    const recipe = this.content.recipes.find((candidate) => candidate.id === recipeId);
+    const game = recipe ? this.createMiniGame(recipe.miniGame, stationId) : null;
+    if (!game) {
+      this.crafting.cancel();
+      return this.fail('locked');
     }
-    this.quests.handle({ type: 'craft', targetId: done.recipeId, sourceId: done.craftId });
-    this.notice('notice.crafted', { itemKey: this.itemName(done.outputItemId) });
+    this.miniGame = game;
+    this.finishIfComplete();
     this.emitChanged();
     return { ok: true };
   }
 
+  /** Fits one bamboo part into a socket. `offset` is the drop distance in snap radii. Completing the frame finishes the craft. */
+  assemblyPlace(socketId: string, offset: number): MiniGameStep {
+    const game = this.miniGame;
+    if (game?.kind !== 'assembly') {
+      return { ok: false, reason: 'no_minigame' };
+    }
+    const step = game.place(socketId, offset);
+    this.finishIfComplete();
+    this.emitChanged();
+    return step;
+  }
+
+  /** Lights one engraving mark. A wrong mark counts a mistake and changes nothing else. */
+  engravingTap(markId: string): MiniGameStep {
+    const game = this.miniGame;
+    if (game?.kind !== 'engraving') {
+      return { ok: false, reason: 'no_minigame' };
+    }
+    const step = game.tap(markId);
+    this.finishIfComplete();
+    this.emitChanged();
+    return step;
+  }
+
+  /**
+   * Ends the craft and returns the reserved inputs. The minigame goes with it, so nothing is lost and nothing is
+   * duplicated. The craft panel stays open, back at the recipe list.
+   */
   cancelCraft(): void {
     this.crafting.cancel();
+    this.miniGame = null;
     this.emitChanged();
+  }
+
+  /** The minigame kind for a recipe. Engraving follows the solved puzzle at the station, so its order is the one the player found. */
+  private createMiniGame(kind: RecipeDef['miniGame'], stationId: string): MiniGame | null {
+    if (kind === 'assembly') {
+      return new AssemblyGame(ASSEMBLY_SOCKET_IDS);
+    }
+    if (kind === 'confirm') {
+      return new ConfirmGame();
+    }
+    const solved = [...this.puzzles.values()].find((puzzle) => puzzle.stationId === stationId && puzzle.isSolved);
+    return solved ? new EngravingGame(solved.glyphIds, solved.solution) : null;
+  }
+
+  /** Completes the craft once its minigame is complete. The craft and the minigame are cleared together, so this runs once. */
+  private finishIfComplete(): void {
+    const game = this.miniGame;
+    if (!game || game.status !== 'complete' || !game.quality) {
+      return;
+    }
+    const done = this.crafting.complete(game.quality);
+    this.miniGame = null;
+    if (!done.ok) {
+      return;
+    }
+    this.quests.handle({ type: 'craft', targetId: done.recipeId, sourceId: done.craftId });
+    const itemKey = this.itemName(done.outputItemId);
+    if (done.quality) {
+      this.notice('notice.crafted_quality', { itemKey, qualityKey: `quality.${done.quality}` });
+    } else {
+      this.notice('notice.crafted', { itemKey });
+    }
+  }
+
+  private miniGameView(): MiniGameView | null {
+    const game = this.miniGame;
+    if (!game) {
+      return null;
+    }
+    if (game.kind === 'assembly') {
+      return { kind: 'assembly', status: game.status, sockets: game.sockets(), misses: game.misses };
+    }
+    if (game.kind === 'engraving') {
+      const marks = game.ring().map(({ id, step }) => ({
+        id,
+        symbolKey: this.glyphById.get(id)?.symbolKey ?? id,
+        step,
+      }));
+      return { kind: 'engraving', status: game.status, marks, mistakes: game.mistakes };
+    }
+    return { kind: 'confirm', status: game.status };
   }
 
   /** The active craft, if any. The minigame reads it to know what it is making. */
@@ -326,6 +435,7 @@ export class GameSession {
       placed: [...this.placed],
       lantern: this.lantern.snapshot,
       puzzles: [...this.puzzles.values()].map((puzzle) => puzzle.view()),
+      miniGame: this.miniGameView(),
     };
   }
 

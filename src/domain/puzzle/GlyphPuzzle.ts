@@ -42,6 +42,16 @@ export class GlyphPuzzle {
     return this.def.unlockFlag;
   }
 
+  /** The glyphs as shown, in display order. */
+  get glyphIds(): readonly string[] {
+    return this.def.glyphs;
+  }
+
+  /** The right order. The engraving minigame lights its marks in this order, once the puzzle is solved. */
+  get solution(): readonly string[] {
+    return this.def.solution;
+  }
+
   get isSolved(): boolean {
     return this.solvedNow;
   }

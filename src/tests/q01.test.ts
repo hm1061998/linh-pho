@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../content';
 import { GameSession } from '../domain/GameSession';
 import { LANTERN_TRANSITION_S } from '../domain/lantern/LanternPhase';
+import { engraveInSolvedOrder, fitFrame } from './craftHelpers';
 
 /** Plays Q00 to its end with the shipped content, so Q01 is active for the tests below. */
 function sessionAfterQ00(): GameSession {
@@ -13,7 +14,7 @@ function sessionAfterQ00(): GameSession {
     session.collectPickup(pickup);
   }
   session.beginCraft('recipe_wooden_lantern', 'station_workbench');
-  session.completeCraft();
+  fitFrame(session);
   session.placeItem('shop_lamp');
   return session;
 }
@@ -95,9 +96,10 @@ describe('Q01 (Nét Mực Thất Lạc) with the shipped content', () => {
       expect(session.collectPickup(pickup).ok).toBe(true);
     }
     session.beginCraft('recipe_wooden_lantern', 'station_workbench');
-    session.completeCraft();
+    fitFrame(session);
     expect(session.beginCraft('recipe_spirit_lantern', 'station_engraving').ok).toBe(true);
-    session.completeCraft('perfect');
+    // Lighting the marks in the solved order, with no mistakes, gives Perfect.
+    engraveInSolvedOrder(session, 'station_engraving');
 
     expect(session.quests.statusOf('q01_net_muc')).toBe('completed');
     const snapshot = session.snapshot();
@@ -106,8 +108,8 @@ describe('Q01 (Nét Mực Thất Lạc) with the shipped content', () => {
     expect(snapshot.flags).toMatchObject({ q01_complete: true, bridge_glow: true });
     expect(session.inventory.available('spirit_lantern', 'perfect')).toBe(1);
 
-    // Finishing again must not pay out again.
-    session.completeCraft();
+    // Finishing again must not pay out again: the minigame is gone, so there is nothing left to complete.
+    expect(session.engravingTap('glyph_bridge')).toEqual({ ok: false, reason: 'no_minigame' });
     expect(session.snapshot().reputation).toBe(10);
   });
 

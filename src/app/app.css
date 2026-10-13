@@ -628,3 +628,188 @@ textarea,
   color: var(--lantern-gold);
   font-size: 14px;
 }
+
+/* Crafting minigames. Placeholder art: shapes and text carry the state, colour only adds to it. */
+.craft-cancel {
+  margin-top: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
+
+.minigame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.minigame p {
+  margin: 0;
+  text-align: center;
+}
+
+.minigame-status {
+  min-height: 1.4em;
+  font-size: 14px;
+  color: var(--lantern-gold);
+}
+
+.frame {
+  position: relative;
+  width: min(60vw, 280px);
+  aspect-ratio: 1;
+  border: 2px dashed var(--parchment);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(101, 212, 189, 0.08), transparent 70%);
+}
+
+.socket {
+  position: absolute;
+  width: 17%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--parchment);
+  border-radius: 50%;
+  background: rgba(24, 40, 59, 0.6);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.socket.target {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 4px rgba(101, 212, 189, 0.25);
+}
+
+.socket.filled {
+  border-style: solid;
+  background: var(--lantern-gold);
+  cursor: default;
+}
+
+.socket.snapped {
+  animation: socket-snap 0.45s ease-out;
+}
+
+.socket:disabled {
+  opacity: 1;
+}
+
+.part-token {
+  min-width: 120px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--parchment);
+  border-radius: 12px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  touch-action: none;
+  cursor: grab;
+}
+
+.part-token.selected {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgba(101, 212, 189, 0.35);
+}
+
+.ring {
+  position: relative;
+  width: min(60vw, 280px);
+  aspect-ratio: 1;
+  border: 2px dashed var(--parchment);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(101, 212, 189, 0.08), transparent 70%);
+}
+
+.ring-light {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ring-light polyline {
+  fill: none;
+  stroke: var(--focus-ring);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px var(--focus-ring));
+}
+
+.mark {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 96px;
+  min-height: 44px;
+  padding: 0 12px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--parchment);
+  border-radius: 999px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mark.lit {
+  border-color: var(--focus-ring);
+  background: rgba(101, 212, 189, 0.22);
+}
+
+.mark.wrong {
+  animation: mark-shake 0.4s ease-in-out;
+}
+
+.mark:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.mark-check {
+  font-weight: 700;
+  color: var(--focus-ring);
+}
+
+@keyframes socket-snap {
+  0% {
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes mark-shake {
+  0%,
+  100% {
+    transform: translate(-50%, -50%);
+  }
+  25% {
+    transform: translate(calc(-50% - 4px), -50%);
+  }
+  75% {
+    transform: translate(calc(-50% + 4px), -50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socket.snapped,
+  .mark.wrong {
+    animation: none;
+  }
+}

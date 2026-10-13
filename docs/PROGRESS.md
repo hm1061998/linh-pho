@@ -13,7 +13,8 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `35ca79b` | `feat(module-03)`: tương tác, hội thoại, 4 NPC placeholder |
 | `033e3f0` | `feat(hud)`: chặn bôi đen và yêu cầu xoay ngang trên điện thoại |
 | `cb90832` | `feat(module-04)`: kho đồ, công thức, nhiệm vụ, Q00 đầy đủ |
-| (module-05) | `feat(module-05)`: Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01 |
+| `47bde1a` | `feat(module-05)`: Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01 |
+| (module-06) | `feat(module-06)`: minigame lắp khung và khắc, chất lượng Thường/Đẹp/Hoàn Mỹ |
 
 ## Đã hoàn thành
 
@@ -64,13 +65,22 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Sửa khi kiểm tra:** `updateLantern` chỉ phát `changed` khi đổi pha, nên ký hiệu không hiện dần. Đã sửa để phát mỗi khung hình trong lúc chuyển tiếp (test `lanternSession`). Lỗi typecheck trong `WorldView`: truy cập `.render` trên `GraphNode` đã sửa bằng kiểm tra `instanceof pc.Entity`.
 - Q02 chưa có nội dung. Module 07 sẽ thêm.
 
+### Module 06 — Minigame lắp khung và khắc
+- **Thay nút "Lắp" tạm (D-031).** Chế tạo giờ là: bắt đầu → chơi minigame → hoàn tất tự động. Nguyên liệu được giữ chỗ khi bắt đầu, và chỉ bị tiêu khi minigame hoàn tất.
+- **Lắp khung (`AssemblyGame`):** ba ô, chạm thanh tre rồi chạm ô, hoặc kéo thả vào ô gần nhất. Thả ra ngoài là một lần trượt, không làm mất gì. Chất lượng theo độ chính xác của từng lần gắn (D-038).
+- **Khắc (`EngravingGame`):** chạm ba dấu theo thứ tự đã tìm ở Q01. Thứ tự không được hiện ra (D-039). Sai thì không reset, chỉ tính một lần sai.
+- **Hoàn tất một lần:** craft và minigame bị xoá cùng lúc, nên chạm thêm sau khi xong không thêm đồ. Rời panel hoặc Escape thì huỷ và trả nguyên liệu (D-037).
+- **Chất lượng từ minigame, không từ người gọi.** `completeCraft(quality)` đã bị bỏ.
+- **Thông báo:** "Đã làm xong Đèn Vân Linh (Đẹp)" nêu chất lượng; món không có chất lượng giữ thông báo cũ.
+- **Giao diện (placeholder HTML, D-040):** khung hai chiều và vòng khắc; chạm để chọn rồi chạm ô, kéo thả, và nút thường cho bàn phím. Không có 3D, không xoay, không tiếng.
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 26 file, 195 test, tất cả đạt |
-| `npm run build` | Đạt. `index-*.js` 2,392.23 kB (gzip 631.20 kB). Hook dev không có trong bundle |
+| `npm test` | 29 file, 220 test, tất cả đạt |
+| `npm run build` | Đạt. `index-*.js` 2,401.89 kB (gzip 633.87 kB). Hook dev không có trong bundle |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -86,6 +96,11 @@ Test thuần (chạy trong Node), theo nhóm:
   - `lanternSession`: mỗi khung hình trong chuyển tiếp đều phát `changed`, và ngừng khi ổn định.
   - `q01`: Q01 chạy đầu đến cuối với nội dung thật, mở công thức, đặt `bridge_glow` và `q01_complete` đúng lúc.
   - `interactionSystem`: `setEnabled` ẩn mục tiêu khỏi focus và hint.
+- **Module 06:**
+  - `assemblyGame`: lắp đúng ba ô, từ chối ô lạ và ô đã lắp, thả ra ngoài và NaN là trượt, sau khi xong không nhận thêm, chất lượng theo tâm và mép.
+  - `engravingGame`: đúng thứ tự thì hoàn tất, sai không reset và tính một lần sai, chạm lại dấu đã sáng là sai, dấu lạ không tính sai, sau khi xong không nhận thêm.
+  - `craftMinigame` (session): giữ chỗ khi bắt đầu, trả khi huỷ, tiêu một lần khi hoàn tất, chất lượng từ minigame, rời panel thì huỷ craft, khoá engraving tới khi giải puzzle, view không lộ thứ tự, confirm-only hoàn tất ngay.
+  - `q01` và `gameSession` đổi sang chơi minigame thật qua `craftHelpers.ts`, không còn gọi trực tiếp.
 
 ### Kiểm tra trong trình duyệt (Q00 đầy đủ, bằng phím và chuột thật khi có thể)
 
@@ -110,13 +125,30 @@ Test thuần (chạy trong Node), theo nhóm:
 | Đóng panel | Panel về `null` |
 | Console | Không có lỗi mới sau khi khởi động lại. Lỗi `LanternHud is not defined` còn trong buffer là của phiên HMR cũ |
 
-Lỗi phát hiện khi kiểm tra: chọn bằng toạ độ thay vì ref đã bấm nhầm vùng trống. Đây là lỗi thao tác kiểm thử, không phải lỗi game. Sau đó dùng ref và kết quả đúng.
+Lỗi thao tác khi kiểm tra Module 05 (không phải lỗi game): chọn bằng toạ độ thay vì ref đã bấm nhầm vùng trống. Sau đó dùng ref và kết quả đúng.
+
+### Kiểm tra trong trình duyệt (Module 06: minigame chế tạo, bằng click thật)
+
+| Bước | Kết quả |
+|---|---|
+| Bắt đầu Đèn Mộc ở bàn nghề | Panel chuyển sang khung lắp: ba ô, một thanh tre, "Đã gắn 0/3", nút Huỷ. Tre còn 0 khả dụng (đã giữ chỗ) |
+| Chạm thanh tre, chạm ô 1 | Ô 1 được gắn, "Đã gắn 1/3", không trượt |
+| Kéo thanh tre vào ô 2 | Ô 2 được gắn bằng kéo thả |
+| Thả thanh tre ra ngoài khung | Tính một trượt (`misses` = 1). Thanh tre vẫn ở khay, ô 1 và 2 vẫn gắn |
+| Chạm thanh tre, chạm ô 3 | Craft hoàn tất: tre bị tiêu (0), có một Đèn Mộc Hoàn Mỹ, panel trở về danh sách công thức |
+| Bắt đầu Đèn Vân Linh ở bàn khắc (sau khi giải puzzle) | Ring có ba dấu Vòng, Sóng, Lửa, "Đã khắc 0/3", không lộ thứ tự |
+| Chạm Lửa trước | Không sáng, "Chưa đúng thứ tự…" hiện. Số lần sai = 1. Mực, giấy, đèn vẫn được giữ |
+| Chạm Sóng → Vòng → Lửa | Hoàn tất. Đèn Vân Linh chất lượng Đẹp (một lần sai), nguyên liệu tiêu đúng một lần, thông báo "Đã làm xong Đèn Vân Linh (Đẹp)" |
+| Bắt đầu lần nữa rồi bấm Huỷ | Cả ba nguyên liệu trở về khả dụng (1 mỗi loại), craft kết thúc, về danh sách |
+| Console | Không có lỗi |
+
+Lỗi thao tác khi kiểm tra (không phải lỗi game): toạ độ kéo dùng khung ảnh 800×542, không phải viewport 1348×914. Sau khi chỉnh, kéo thả chạy đúng.
 
 Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang cho khung hình chỉ khoảng 3 lần/giây, kể cả iframe trống (D-032). Vì vậy các bước đi bộ được thực hiện với thời gian chờ dài hơn, và `maxDeltaTime` được tăng lên 0.5 s **chỉ trong trình duyệt** để rút ngắn. Logic gameplay không thay đổi.
 
 ## Chưa kiểm chứng (phải nói rõ)
 - **FPS thực tế:** không đo được trong pane lúc này. Cần kiểm tra lại trên máy thật khi môi trường ổn định.
-- **Panel chế tạo bằng minigame:** chưa có, hiện là nút xác nhận tạm (Module 06).
+- **Minigame chế tạo là placeholder HTML:** chưa có khung 3D, chưa xoay vật thể, chưa có tiếng «tách» (D-040). Kéo thả bằng cảm ứng thật chưa được thử trên thiết bị. Chỉ thử bằng chuột và click ref trong trình duyệt.
 - **Module 05 trong trình duyệt:** chưa thấy bằng mắt ba ký hiệu 3D và bước chuyển sáng của chúng, chưa quét ký hiệu bằng tay, chưa đi hết Q01 trong trình duyệt (chỉ có test đơn vị với nội dung thật), chưa thấy cầu sáng và hạt, chưa thử nút Q trên cảm ứng.
 - **Lưu và tải tiến trình:** chưa có. Mất khi tải lại trang (Module 08).
 - **Đọc bằng trình đọc màn hình, giữ joystick lâu, pinch zoom, tạm dừng khi ẩn tab, thiết bị thật:** như các module trước.
@@ -128,12 +160,12 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 4. **Lồng đèn soi vết** trong GDD được ánh xạ thành Đèn Vân Linh (D-026).
 5. **`speed` là vận tốc dự định** (D-014). Không ảnh hưởng vị trí.
 6. **Mất WebGL context** (GPU reset): chưa xử lý, chỉ có log lỗi.
-7. **Bundle 2.39 MB minify, 631 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
+7. **Bundle 2.40 MB minify, 634 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
 8. **Copy tiếng Việt còn hard-code** trong `StartupErrorPanel.tsx` và `TouchControls.tsx`. Sẽ chuyển sang locale ở Module 08.
 
 ## Việc tiếp theo
-- **Module 06:** minigame lắp khung và khắc (kéo/chạm, phản hồi khi khớp, chất lượng Thường/Đẹp/Hoàn Mỹ, huỷ an toàn, xác nhận khi thay thế). Thay nút "Lắp" tạm (D-031). Nguyên liệu vẫn giữ chỗ như hiện tại.
-- Sau đó: Module 07 (cửa hàng, hai đơn hàng, Q02, màn hình kết thúc), Module 08 (lưu và tải, cài đặt, menu tạm dừng).
+- **Module 07:** cửa hàng (ba ô trang trí, năm món nội thất trong JSON, mua bằng xu đã kiếm, cấp cửa hàng, nâng cấp hiện trên cảnh), hai đơn hàng xác định (có ít nhất một món đã biết), Q02 (nhận đơn, giao, mua Kệ Đèn, đặt vào ô), màn hình kết thúc và teaser chương 2.
+- Sau đó: Module 08 (lưu và tải, cài đặt, menu tạm dừng, SFX tổng hợp kèm tiếng «tách» của minigame), rồi Module 09 đến 12.
 
 ## Checklist kiểm thử thủ công (Module 05, Q01)
 - [ ] Sau khi xong Q00, nói chuyện với Cô Lam. Nhiệm vụ "Nét Mực Thất Lạc" bắt đầu.
@@ -149,7 +181,7 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 - [ ] Bảng nhiệm vụ hiện Q00 với 6 mục tiêu ở góc trên trái.
 - [ ] Nói chuyện với Bà Nghiêm: mục tiêu đầu được đánh dấu.
 - [ ] Nhặt 2 tre, 1 giấy dó, 1 dây gai ở các vị trí khác nhau. Nhặt lại cùng vật không tăng số.
-- [ ] Mở bàn nghề (phía tây bắc, gần xưởng Cô Lam), nhấn "Lắp" khi đủ nguyên liệu. Nguyên liệu biến mất và có Đèn Mộc.
+- [ ] Mở bàn nghề (phía tây bắc, gần xưởng Cô Lam), nhấn "Bắt đầu" khi đủ nguyên liệu. Gắn đủ ba ô (chạm hoặc kéo). Khi xong, nguyên liệu biến mất và có Đèn Mộc. Nhấn "Huỷ" giữa chừng thì nguyên liệu được trả lại.
 - [ ] Đặt Đèn Mộc lên chân đèn trước tiệm (đông nam nhà tiệm). Thông báo hoàn thành và +30 Xu Đèn hiện một lần.
 - [ ] Nhấn I để mở kho đồ. Escape đóng panel. Đóng panel đang chế tạo không làm mất nguyên liệu.
 - [ ] Trên điện thoại: bảng nhiệm vụ và thanh tiền không che nút điều khiển.
