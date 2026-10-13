@@ -4,7 +4,7 @@
     { "id": "furniture.lantern_shelf", "source": null, "idleAnimation": null },
     { "id": "furniture.bamboo_vase", "source": null, "idleAnimation": null },
     { "id": "furniture.paper_painting", "source": null, "idleAnimation": null },
-    { "id": "furniture.stool", "source": null, "idleAnimation": null },
+    { "id": "furniture.stool", "source": { "kind": "url", "url": "/assets/furniture_stool.glb" }, "idleAnimation": null },
     { "id": "furniture.hanging_lamp", "source": null, "idleAnimation": null },
     { "id": "dev.test_crate", "source": { "kind": "generated", "generator": "crate" }, "idleAnimation": "idle" }
   ]

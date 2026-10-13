@@ -2,7 +2,7 @@
 
 Cập nhật: 2026-10-14. Tài liệu này là hợp đồng giữa code và Blender. Mọi model 3D phải khớp với dòng tương ứng ở đây trước khi nhập vào game.
 
-**Tình trạng hiện tại:** repo không có model 3D production nào. Mọi vật thể trong game là hình khối placeholder, vẽ từ dữ liệu (`src/content/shop.json`, `src/engine/scene/hubLayout.ts`). Duy nhất có file GLB là **test GLB** do code sinh (`dev.test_crate`, xem mục 7), chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
+**Tình trạng hiện tại:** có một model production: `furniture.stool` (`public/assets/furniture_stool.glb`, làm trong Blender, nguồn ở `assets_src/furniture_stool.blend`). Kiểm tra kích thước, pivot, ngân sách tam giác và material bằng `src/tests/furnitureModels.test.ts`. Các vật còn lại vẫn là hình khối placeholder, vẽ từ dữ liệu (`src/content/shop.json`, `src/engine/scene/hubLayout.ts`). **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
 
 ---
 
@@ -35,7 +35,7 @@ Các vật này có hình khối placeholder ngay trong JSON. Khi có model, th�
 | `furniture.lantern_shelf` | Kệ Đèn | 1.6 × 1.1 × 0.5 | 1500 | đáy giữa | không | không | placeholder |
 | `furniture.bamboo_vase` | Bình tre | 0.5 × 0.9 × 0.5 | 800 | đáy giữa | không | không | placeholder |
 | `furniture.paper_painting` | Tranh giấy dó | 1.0 × 0.8 × 0.08 | 600 | đáy giữa | không | không | placeholder |
-| `furniture.stool` | Ghế đẩu | 0.6 × 0.45 × 0.6 | 800 | đáy giữa | không | không | placeholder |
+| `furniture.stool` | Ghế đẩu | 0.6 × 0.45 × 0.6 | 800 | đáy giữa | không | không | có GLB (108 tam giác) |
 | `furniture.hanging_lamp` | Đèn treo giấy | đường kính 0.5 | 1200 | điểm treo, cách sàn 1.3 m | không | không | placeholder, cần emissive |
 
 Ô trưng bày (`shop_slot_1..3`) không cần model: là mặt đế tròn do code vẽ.
@@ -124,7 +124,8 @@ Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thê
 
 | Asset | Có GLB | Đã kiểm tra trên desktop | Đã kiểm tra trên Android |
 |---|---|---|---|
-| Năm nội thất (mục 2) | không | — | — |
+| Ghế đẩu `furniture.stool` (mục 2) | có | đã nạp trong trình duyệt desktop (dev và production) | chưa thử |
+| Bốn nội thất còn lại (mục 2) | không | — | — |
 | Hub (mục 3) | không | — | — |
 | NPC và animation (mục 4) | không | — | — |
 | `dev.test_crate` (mục 7) | sinh bằng code | đã nạp trong Chrome (dev) | chưa thử |
