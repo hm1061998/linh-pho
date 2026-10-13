@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "dialogues": {
+    "dlg_ba_nghiem": {
+      "entries": [
+        { "when": [{ "flag": "met_ba_nghiem", "equals": true }], "node": "return" },
+        { "node": "greet" }
+      ],
+      "nodes": {
+        "greet": {
+          "speaker": "npc_ba_nghiem",
+          "textKey": "dlg.ba_nghiem.greet",
+          "effects": [{ "setFlag": "met_ba_nghiem", "value": true }],
+          "next": "task"
+        },
+        "task": {
+          "speaker": "npc_ba_nghiem",
+          "textKey": "dlg.ba_nghiem.task",
+          "choices": [
+            {
+              "textKey": "dlg.choice.market",
+              "when": [{ "flag": "asked_market", "equals": false }],
+              "effects": [{ "setFlag": "asked_market", "value": true }],
+              "next": "market"
+            },
+            { "textKey": "dlg.choice.what_to_do", "next": "what_to_do" },
+            { "textKey": "dlg.choice.later", "next": null }
+          ]
+        },
+        "market": {
+          "speaker": "npc_ba_nghiem",
+          "textKey": "dlg.ba_nghiem.market",
+          "next": "task"
+        },
+        "what_to_do": {
+          "speaker": "npc_ba_nghiem",
+          "textKey": "dlg.ba_nghiem.what_to_do",
+          "next": null
+        },
+        "return": {
+          "speaker": "npc_ba_nghiem",
+          "textKey": "dlg.ba_nghiem.return",
+          "next": null
+        }
+      }
+    },
+    "dlg_co_lam": {
+      "entries": [{ "node": "greet" }],
+      "nodes": {
+        "greet": {
+          "speaker": "npc_co_lam",
+          "textKey": "dlg.co_lam.greet",
+          "next": "recipe"
+        },
+        "recipe": {
+          "speaker": "npc_co_lam",
+          "textKey": "dlg.co_lam.recipe",
+          "next": null
+        }
+      }
+    },
+    "dlg_ong_do": {
+      "entries": [{ "node": "greet" }],
+      "nodes": {
+        "greet": {
+          "speaker": "npc_ong_do",
+          "textKey": "dlg.ong_do.greet",
+          "choices": [
+            { "textKey": "dlg.choice.anything_here", "next": "materials" },
+            { "textKey": "dlg.choice.bye", "next": null }
+          ]
+        },
+        "materials": {
+          "speaker": "npc_ong_do",
+          "textKey": "dlg.ong_do.materials",
+          "next": null
+        }
+      }
+    },
+    "dlg_bac": {
+      "entries": [{ "node": "greet" }],
+      "nodes": {
+        "greet": {
+          "speaker": "npc_bac",
+          "textKey": "dlg.bac.greet",
+          "next": null
+        }
+      }
+    }
+  }
+}

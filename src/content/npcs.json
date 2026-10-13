@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "npcs": [
+    {
+      "id": "npc_ba_nghiem",
+      "kind": "human",
+      "nameKey": "npc.ba_nghiem.name",
+      "dialogueId": "dlg_ba_nghiem",
+      "position": { "x": -3, "z": -2 },
+      "color": "#7A4E3A"
+    },
+    {
+      "id": "npc_co_lam",
+      "kind": "human",
+      "nameKey": "npc.co_lam.name",
+      "dialogueId": "dlg_co_lam",
+      "position": { "x": -10, "z": -15 },
+      "color": "#4F7C6E"
+    },
+    {
+      "id": "npc_ong_do",
+      "kind": "human",
+      "nameKey": "npc.ong_do.name",
+      "dialogueId": "dlg_ong_do",
+      "position": { "x": -14, "z": 28 },
+      "color": "#5A6B8C"
+    },
+    {
+      "id": "npc_bac",
+      "kind": "spirit",
+      "nameKey": "npc.bac.name",
+      "dialogueId": "dlg_bac",
+      "position": { "x": 4, "z": -2 },
+      "hoverHeight": 1.4,
+      "color": "#F2B759"
+    }
+  ]
+}

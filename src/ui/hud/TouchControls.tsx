@@ -1,46 +1,31 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import type { GameApp } from '../../app/GameApp';
+import { t } from '../../content';
 import type { InputService } from '../../engine/input/InputService';
 import { NO_MOVE } from '../../engine/input/moveInput';
+import { useCoarsePointer } from '../state/useCoarsePointer';
+import { useDialogueView, useInteractionFocus } from '../state/useGameplayState';
 
 /** Joystick knob travel in CSS pixels from the center to full deflection. */
 const JOYSTICK_TRAVEL_PX = 56;
-const COARSE_POINTER_QUERY = '(pointer: coarse)';
-
-function useCoarsePointer(): boolean {
-  const [coarse, setCoarse] = useState(() => matchesCoarsePointer());
-
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') {
-      return;
-    }
-    const query = window.matchMedia(COARSE_POINTER_QUERY);
-    const update = () => setCoarse(query.matches);
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-
-  return coarse;
-}
-
-function matchesCoarsePointer(): boolean {
-  return typeof window.matchMedia === 'function' && window.matchMedia(COARSE_POINTER_QUERY).matches;
-}
 
 /**
  * Touch-only controls: a virtual joystick on the left and an interact button on the right.
- * They only forward intent to `InputService`. Movement and interaction logic stay in the engine.
- * Keyboard users never see them.
+ * They only forward intent to `InputService`. The button label follows the focused target. The whole
+ * group hides during dialogue, where the dialogue card has the screen. Keyboard users never see it.
  */
-export function TouchControls({ input }: { readonly input: InputService }) {
+export function TouchControls({ game }: { readonly game: GameApp }) {
   const coarse = useCoarsePointer();
-  if (!coarse) {
+  const focus = useInteractionFocus(game);
+  const dialogue = useDialogueView(game);
+  if (!coarse || dialogue) {
     return null;
   }
   return (
     <div className="touch-controls">
-      <Joystick input={input} />
-      <button type="button" className="interact-button" onClick={() => input.pressInteract()}>
-        Tương tác
+      <Joystick input={game.input} />
+      <button type="button" className="interact-button" onClick={() => game.input.pressInteract()}>
+        {focus ? t('ui.talk') : t('ui.interact')}
       </button>
     </div>
   );

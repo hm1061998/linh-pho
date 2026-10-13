@@ -1,0 +1,34 @@
+{
+  "npc.ba_nghiem.name": "Auntie Nghiêm",
+  "npc.co_lam.name": "Miss Lam",
+  "npc.ong_do.name": "Uncle Độ",
+  "npc.bac.name": "Bấc",
+
+  "dlg.ba_nghiem.greet": "You're here. Linh Pho hasn't disappeared. It just forgot how to be seen.",
+  "dlg.ba_nghiem.task": "This shop is yours now. What would you like to ask first?",
+  "dlg.ba_nghiem.market": "This is an imaginary night market. It sleeps by day and wakes when evening comes.",
+  "dlg.ba_nghiem.what_to_do": "Go to Miss Lam's workshop. She will show you how to make your first lantern.",
+  "dlg.ba_nghiem.return": "Has the lantern by the door lit up yet? If not, go see Miss Lam at the workshop.",
+
+  "dlg.co_lam.greet": "Nobody has made lanterns here for a long time. Ask me if you need anything.",
+  "dlg.co_lam.recipe": "A Wooden Lantern needs 2 bamboo, 1 dó paper and 1 hemp rope. Come back once you have them.",
+
+  "dlg.ong_do.greet": "The bridge leads to Sương Landing. There's only mist here and a few old boats.",
+  "dlg.ong_do.materials": "There's plenty of bamboo on the bank. Take only what you need and leave some for others.",
+
+  "dlg.bac.greet": "It's me, Bấc! Soon you'll have the Spirit Lamp, so you can see the faint traces here.",
+
+  "dlg.choice.market": "What kind of market is this?",
+  "dlg.choice.what_to_do": "What should I do now?",
+  "dlg.choice.later": "Later, thank you.",
+  "dlg.choice.anything_here": "Is there anything to gather here?",
+  "dlg.choice.bye": "I'll be going.",
+
+  "ui.hint.talk": "Talk to {name}",
+  "ui.talk": "Talk",
+  "ui.interact": "Interact",
+  "ui.key.interact": "E",
+  "ui.dialogue.label": "Dialogue",
+  "ui.dialogue.continue": "Tap or press E to continue",
+  "ui.dialogue.close": "Close"
+}

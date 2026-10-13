@@ -1,4 +1,5 @@
-import { BOUND_KEY_CODES, INTERACT_KEYS } from './keyBindings';
+import { shouldQueueInteract } from './interactPolicy';
+import { BOUND_KEY_CODES } from './keyBindings';
 import { KeyboardState } from './KeyboardState';
 import { addMoveInputs, applyDeadzone, clampMagnitude, NO_MOVE, type MoveInput } from './moveInput';
 
@@ -146,9 +147,11 @@ export class InputService {
     if (!BOUND_KEY_CODES.has(event.code)) {
       return;
     }
+    // Read before our own preventDefault below, so "already handled by UI" means handled by someone else.
+    const handledByUi = event.defaultPrevented;
     // Stop arrow keys from scrolling the page.
     event.preventDefault();
-    if (!event.repeat && INTERACT_KEYS.includes(event.code)) {
+    if (shouldQueueInteract({ code: event.code, repeat: event.repeat, defaultPrevented: handledByUi }, this.isBlocked)) {
       this.interactQueued = true;
     }
     this.keys.press(event.code);

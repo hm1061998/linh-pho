@@ -50,3 +50,17 @@ describe('hub collision world', () => {
     expect(HUB_WORLD.surfaceHeightAt({ x: 3, z: 23 })).toBe(0); // river is not walkable
   });
 });
+
+describe('NPC bodies in the hub', () => {
+  it('stops a walker at a standing NPC (Cô Lam at z = -15)', () => {
+    // Coming from the south, the player stops one body-width (0.35 m) past the NPC's collision edge.
+    const end = moveWithCollision({ x: -10, z: -12 }, { x: 0, z: -5 }, radius, HUB_WORLD.solids);
+    expect(end.z).toBeCloseTo(-15 + 0.35 + radius, 5);
+  });
+
+  it('lets the player walk through a floating spirit (Bấc)', () => {
+    const end = moveWithCollision({ x: 4, z: -5 }, { x: 0, z: 3 }, radius, HUB_WORLD.solids);
+    expect(end.x).toBeCloseTo(4);
+    expect(end.z).toBeCloseTo(-2);
+  });
+});

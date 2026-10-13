@@ -171,3 +171,122 @@ body {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+/* Contextual hint: small, bottom-center, shown only when a target is in range. */
+.interaction-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 32px);
+  padding: 8px 14px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--panel-bg);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.interaction-hint kbd {
+  min-width: 28px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--lantern-gold);
+  color: var(--night-navy);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Dialogue card: bottom of the screen, leaving the 3D scene visible above it. */
+.dialogue-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  width: min(calc(100% - 24px), 640px);
+  max-height: 46%;
+  overflow: auto;
+  padding: 14px 18px 16px;
+  transform: translateX(-50%);
+  border: 1px solid var(--deep-indigo);
+  border-radius: 16px;
+  background: var(--panel-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  outline: none;
+}
+
+.dialogue-panel:focus-visible {
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.dialogue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialogue-speaker {
+  margin: 0;
+  color: var(--lantern-gold);
+  font-size: 18px;
+}
+
+.dialogue-close {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dialogue-body {
+  cursor: pointer;
+}
+
+.dialogue-text {
+  margin: 10px 0 12px;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.dialogue-choices {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dialogue-choices button {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dialogue-choices button:focus-visible,
+.dialogue-close:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.dialogue-hint {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.7;
+  text-align: right;
+}

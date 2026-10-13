@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { TouchControls } from '../ui/hud/TouchControls';
+import { DialoguePanel } from '../ui/dialogue/DialoguePanel';
+import { InteractionHint } from '../ui/hud/InteractionHint';
 import { StartupErrorPanel, type StartupErrorReason } from '../ui/hud/StartupErrorPanel';
+import { TouchControls } from '../ui/hud/TouchControls';
 import { GameApp } from './GameApp';
 import { GameStartupError } from './startupErrors';
 
@@ -78,7 +80,13 @@ export function GameView() {
             Đang thắp đèn chợ…
           </p>
         )}
-        {state.status === 'ready' && <TouchControls input={state.game.input} />}
+        {state.status === 'ready' && (
+          <>
+            <InteractionHint game={state.game} />
+            <DialoguePanel game={state.game} />
+            <TouchControls game={state.game} />
+          </>
+        )}
         {state.status === 'error' && <StartupErrorPanel reason={state.reason} />}
       </div>
     </div>

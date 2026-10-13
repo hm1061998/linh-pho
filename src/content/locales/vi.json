@@ -1,0 +1,34 @@
+{
+  "npc.ba_nghiem.name": "Bà Nghiêm",
+  "npc.co_lam.name": "Cô Lam",
+  "npc.ong_do.name": "Ông Độ",
+  "npc.bac.name": "Bấc",
+
+  "dlg.ba_nghiem.greet": "Con đến rồi à. Linh Phố không biến mất đâu, chỉ là quên cách được nhìn thấy thôi.",
+  "dlg.ba_nghiem.task": "Cửa tiệm này giờ là của con. Con muốn hỏi gì trước?",
+  "dlg.ba_nghiem.market": "Đây là chợ đêm hư cấu. Ban ngày nó ngủ, tối đến mới sáng lên.",
+  "dlg.ba_nghiem.what_to_do": "Sang xưởng Cô Lam, cô ấy sẽ chỉ con cách làm chiếc đèn đầu tiên.",
+  "dlg.ba_nghiem.return": "Đèn trước cửa đã sáng chưa? Nếu chưa, con qua xưởng Cô Lam nhé.",
+
+  "dlg.co_lam.greet": "Xưởng này lâu rồi không có ai làm đèn. Con cần gì cứ hỏi cô.",
+  "dlg.co_lam.recipe": "Đèn Mộc cần 2 tre, 1 giấy dó và 1 dây gai. Gom đủ rồi quay lại đây nhé.",
+
+  "dlg.ong_do.greet": "Qua cầu là tới bến Sương. Ở đây chỉ có sương và mấy chiếc thuyền cũ thôi.",
+  "dlg.ong_do.materials": "Bụi tre bên bờ còn nhiều lắm. Lấy vừa đủ thôi, để lại cho người sau.",
+
+  "dlg.bac.greet": "Bấc đây! Lát nữa con sẽ có đèn Soi Linh để thấy những dấu vết mờ mờ đấy.",
+
+  "dlg.choice.market": "Chợ này là chợ gì vậy?",
+  "dlg.choice.what_to_do": "Con phải làm gì bây giờ?",
+  "dlg.choice.later": "Để sau đi ạ.",
+  "dlg.choice.anything_here": "Ở đây có gì để lấy không?",
+  "dlg.choice.bye": "Con đi đây.",
+
+  "ui.hint.talk": "Nói chuyện với {name}",
+  "ui.talk": "Nói chuyện",
+  "ui.interact": "Tương tác",
+  "ui.key.interact": "E",
+  "ui.dialogue.label": "Hội thoại",
+  "ui.dialogue.continue": "Chạm hoặc nhấn E để tiếp tục",
+  "ui.dialogue.close": "Đóng"
+}

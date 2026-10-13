@@ -106,3 +106,57 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Chọn:** `TouchControls` chỉ render khi `(pointer: coarse)`. Joystick đưa vector vào `InputService.setStick()`. Nút tương tác gọi `pressInteract()`.
 - **Nút tương tác là placeholder:** Module 02 chỉ đếm số lần nhấn (`interactPresses`). Module 03 (`InteractionSystem`) sẽ tiêu thụ sự kiện này.
 - **Khoá:** Joystick và nút bị bỏ qua khi có blocker (qua `frame()`).
+
+## D-017 — Sự kiện có kiểu, một bus cho mỗi hệ thống
+
+- **Chọn:** `shared/events/EventBus.ts` là bus generic. Mỗi sự kiện là một thành viên của union có trường `type`. `on(type, listener)` chỉ nhận đúng loại đã đăng ký và trả về hàm huỷ.
+- **Quy tắc:** Listener ném lỗi được `console.error` và bỏ qua, không chặn listener khác (test `keeps delivering to other listeners when one throws`).
+- **Hai bus hiện có:** `InteractionSystem.events` (`interaction.focusChanged`, `interaction.triggered`) và `DialogueSystem.events` (`dialogue.opened`, `changed`, `closed`, `error`).
+- **Lý do:** Prompt 03 yêu cầu sự kiện tương tác có kiểu và không phụ thuộc HUD. Domain không import React. HUD subscribe, không gọi ngược vào logic.
+
+## D-018 — Tương tác: một mục tiêu focus, tầm 2 m trên mặt đất
+
+- **Chọn:** Mục tiêu trong tầm (khoảng cách XZ ≤ `range`, mặc định 2 m) có thể focus. Chỉ focus mục gần nhất. Khi hoà, thắng mục đăng ký trước (`Map` giữ thứ tự chèn, nên kết quả xác định).
+- **Chiều cao bị bỏ qua:** NPC lơ lửng (Bấc) cũng dùng khoảng cách trên mặt đất, để người chơi không phải nhảy.
+- **Nhấn ngoài tầm:** `press()` trả về `false`, không phát `triggered`. Test kiểm chứng điều này.
+- **Không có hysteresis:** Hint có thể nhấp nháy khi đứng đúng ranh giới. Chưa thấy cần, nên chưa làm.
+
+## D-019 — Mô hình hội thoại: mục vào, nút, lựa chọn, hiệu ứng
+
+- **Cấu trúc JSON:** Một hội thoại có `entries` (mục vào, mục đầu tiên có điều kiện đúng thắng, mục không điều kiện là fallback) và `nodes`. Mỗi node có `speaker`, `textKey`, `effects`, `choices` và `next`.
+- **Điều kiện và hiệu ứng:** Chỉ là cờ boolean (`{flag, equals}` và `{setFlag, value}`). Cờ chưa đặt được coi là `false`. Hiệu ứng của node chạy khi node hiển thị. Hiệu ứng của lựa chọn chạy khi chọn.
+- **Chọn:** Phải chọn khi có lựa chọn hiển thị. Chạm hoặc E chỉ đi tiếp khi không có lựa chọn hiển thị.
+- **Không ngõ cụt:** Nếu mọi lựa chọn đều bị ẩn, node đi theo `next` (test `falls through`). `next: null` kết thúc hội thoại với lý do `finished`.
+- **Lỗi không ném ra ngoài:** `unknown_dialogue`, `no_matching_entry`, `unknown_node` và `already_open` đều phát `dialogue.error` và trả về `{ ok: false }`. Nếu lỗi xảy ra khi đang mở (nút đích không tồn tại), hội thoại đóng với lý do `error`.
+- **Lý do:** Prompt 03 yêu cầu nút có text locale, người nói, lựa chọn, điều kiện và hiệu ứng. Mô hình này đủ cho Q00–Q02 và giữ được logic ở domain.
+
+## D-020 — Nội dung JSON: loại bỏ mục sai, báo lỗi rõ ràng
+
+- **Chọn:** `domain/content/validate.ts` kiểm tra mọi file trước khi dùng. Lỗi cấp `error` làm loại bỏ mục đó:
+  - NPC sai kiểu, sai màu hoặc ID trùng bị bỏ.
+  - Hội thoại có nút đích không tồn tại, người nói không phải NPC, khoá locale thiếu, hoặc điều kiện sai kiểu bị bỏ.
+- **Ngoại lệ:** NPC có `dialogueId` không tồn tại vẫn được giữ, để người chơi thấy NPC và gặp lỗi an toàn khi tương tác.
+- **Cảnh báo:** Hội thoại không có mục fallback chỉ cảnh báo, không bị loại.
+- **Lý do:** Prompt 03: "missing ID/content yields safe error without crashing". Game chạy và log đủ để sửa JSON.
+- **Kiểm chứng:** Nội dung thật không có lỗi nào (test `loads with no errors or warnings`). Mỗi lỗi phổ biến có một test.
+
+## D-021 — Chuỗi hiển thị nằm trong locale, domain chỉ giữ khoá
+
+- **Chọn:** Mọi `nameKey`, `textKey`, `labelKey` là khoá dạng chấm (`dlg.ba_nghiem.greet`). `src/content/locales/vi.json` là ngôn ngữ chính, `en.json` là dự phòng. `shared/i18n/translator.ts` dịch khi render.
+- **Thiếu khoá:** Trả về `[key]` để lỗi hiện ra trên màn hình, và cảnh báo một lần trong console.
+- **Tham số:** `{name}` được thay bằng giá trị. Tham số không khớp giữ nguyên.
+- **Lý do:** Prompt 00 quy định không có chuỗi cứng trong domain và game system. Dùng khoá cũng giúp Module 08 thêm bộ chuyển ngôn ngữ mà không đổi domain.
+
+## D-022 — Phím E: một lần nhấn chỉ được dùng một lần
+
+- **Vấn đề đã gặp:** Một lần nhấn E vừa tiếp tục hội thoại vừa đặt hàng đợi tương tác. Khung hình sau, hội thoại đã đóng nên hàng đợi được xử lý, và hội thoại mở lại.
+- **Chọn:** `shouldQueueInteract` (`engine/input/interactPolicy.ts`) chỉ đặt hàng đợi khi: phím là phím tương tác, không lặp, chưa bị `preventDefault` bởi UI, và game không bị khoá.
+- **Thứ tự sự kiện:** `InputService` đăng ký trước panel, nên khi mở hội thoại nó thấy game bị khoá. Điều kiện `defaultPrevented` bảo vệ cả trường hợp ngược thứ tự.
+- **Kiểm chứng:** Test `interactPolicy` (5 test). Trong trình duyệt, E đóng hội thoại và không mở lại; E sau đó mở lại được.
+
+## D-023 — NPC placeholder có va chạm, Bấc không chặn
+
+- **Chọn:** NPC dạng người có hộp va chạm 0.7 m (bằng bán kính nhân vật × 2). `hubCollision.ts` thêm các hộp này vào `solids`. Bấc (`kind: "spirit"`) không chặn và lắc nhẹ tại chỗ (sin 2.2 rad/s, biên độ 8 cm).
+- **Vị trí:** Bà Nghiêm trên quảng trường, Cô Lam trước xưởng, Ông Độ bờ nam (qua cầu), Bấc trên quảng trường. Chưa kiểm tra có hệ thống rằng vị trí không chặn đường đi; mới kiểm chứng bằng đường đi thử trong trình duyệt.
+- **Quay mặt:** NPC quay về người chơi khi hội thoại mở (`faceToward`). Không quay liên tục.
+- **Lý do:** Art Bible §5 cho phép Bấc không có rig. Capsule là placeholder, GLB thay ở Module 09.
