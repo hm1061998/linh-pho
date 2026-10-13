@@ -114,3 +114,60 @@ body {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+/* Touch controls (shown only on coarse pointers). They sit inside the HUD root and respect safe areas. */
+.touch-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.joystick {
+  position: absolute;
+  left: calc(env(safe-area-inset-left, 0px) + 24px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  width: 140px;
+  height: 140px;
+  border: 2px solid rgba(231, 212, 173, 0.35);
+  border-radius: 50%;
+  background: rgba(16, 24, 38, 0.55);
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.joystick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: var(--parchment);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.interact-button {
+  position: absolute;
+  right: calc(env(safe-area-inset-right, 0px) + 24px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  min-width: 96px;
+  min-height: 64px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 32px;
+  background: var(--lantern-gold);
+  color: var(--night-navy);
+  font: inherit;
+  font-weight: 600;
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.interact-button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}

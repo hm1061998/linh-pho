@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { TouchControls } from '../ui/hud/TouchControls';
 import { StartupErrorPanel, type StartupErrorReason } from '../ui/hud/StartupErrorPanel';
 import { GameApp } from './GameApp';
 import { GameStartupError } from './startupErrors';
 
 type ViewState =
   | { readonly status: 'loading' }
-  | { readonly status: 'ready' }
+  | { readonly status: 'ready'; readonly game: GameApp }
   | { readonly status: 'error'; readonly reason: StartupErrorReason };
 
 /**
@@ -30,6 +31,7 @@ export function GameView() {
 
     let cancelled = false;
     let game: GameApp | null = null;
+    let removeDevHandle: (() => void) | null = null;
 
     GameApp.create({ canvas, container })
       .then((created) => {
@@ -39,7 +41,15 @@ export function GameView() {
           return;
         }
         game = created;
-        setState({ status: 'ready' });
+        if (import.meta.env.DEV) {
+          // Dev-only handle for acceptance checks in the browser console. Stripped from production builds.
+          const scope = window as Window & { __linhPho?: { game: GameApp } };
+          scope.__linhPho = { game: created };
+          removeDevHandle = () => {
+            delete scope.__linhPho;
+          };
+        }
+        setState({ status: 'ready', game: created });
       })
       .catch((error: unknown) => {
         if (cancelled) {
@@ -52,6 +62,7 @@ export function GameView() {
 
     return () => {
       cancelled = true;
+      removeDevHandle?.();
       game?.dispose();
       game = null;
       canvas.remove();
@@ -67,6 +78,7 @@ export function GameView() {
             Đang thắp đèn chợ…
           </p>
         )}
+        {state.status === 'ready' && <TouchControls input={state.game.input} />}
         {state.status === 'error' && <StartupErrorPanel reason={state.reason} />}
       </div>
     </div>

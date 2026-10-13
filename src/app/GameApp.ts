@@ -1,6 +1,11 @@
 import * as pc from 'playcanvas';
+import { CameraController } from '../engine/camera/CameraController';
+import { InputService } from '../engine/input/InputService';
+import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
+import { HUB_WORLD } from '../engine/scene/hubCollision';
 import { clampPixelRatio } from '../shared/utils/display';
+import { radToDeg } from '../shared/utils/math';
 import { GameStartupError, toGraphicsStartupError } from './startupErrors';
 
 export interface GameAppOptions {
@@ -10,24 +15,45 @@ export interface GameAppOptions {
   readonly container: HTMLElement;
 }
 
+/** Read-only state for dev tools and acceptance checks. Not used by gameplay code. */
+export interface GameDebugSnapshot {
+  readonly player: { readonly x: number; readonly z: number; readonly speed: number };
+  readonly camera: { readonly yawDeg: number; readonly distance: number };
+  readonly interactPresses: number;
+  readonly inputBlocked: boolean;
+}
+
 /**
- * Owns the PlayCanvas Application lifecycle: device creation, canvas sizing, visibility pause,
- * and teardown. Gameplay systems attach to `app` in later modules. React never touches the engine
- * beyond calling `create()` and `dispose()`.
+ * Owns the PlayCanvas Application lifecycle (device, canvas sizing, visibility pause, teardown) and
+ * the per-frame gameplay loop: input, then player, then camera. React only calls `create()`,
+ * `dispose()`, and reads `input` for HUD controls.
  */
 export class GameApp {
   private readonly app: pc.Application;
   private readonly container: HTMLElement;
+  private readonly inputService: InputService;
+  private readonly player: PlayerController;
+  private readonly camera: CameraController;
   private readonly cleanups: Array<() => void> = [];
+  private interactPresses = 0;
   private disposed = false;
 
-  private constructor(app: pc.Application, container: HTMLElement) {
+  private constructor(app: pc.Application, canvas: HTMLCanvasElement, container: HTMLElement) {
     this.app = app;
     this.container = container;
+
+    this.inputService = new InputService(canvas);
+    this.player = new PlayerController(app.root, HUB_WORLD);
+    this.camera = new CameraController(app.root, this.player.groundPosition, HUB_WORLD.bounds);
+    this.cleanups.push(
+      () => this.inputService.dispose(),
+      () => this.player.dispose(),
+      () => this.camera.dispose(),
+    );
   }
 
   /**
-   * Creates the WebGL2 device, builds the Module 01 scene, and starts the main loop.
+   * Creates the WebGL2 device, builds the hub with the player and camera, and starts the main loop.
    * Rejects with GameStartupError so the caller can show a specific message.
    */
   static async create({ canvas, container }: GameAppOptions): Promise<GameApp> {
@@ -55,15 +81,18 @@ export class GameApp {
       });
     }
 
-    const game = new GameApp(app, container);
+    let game: GameApp;
     try {
-      // Fixed-size mode: the engine sizes the canvas from the container, not from the window.
-      app.setCanvasFillMode(pc.FILLMODE_NONE);
-      app.setCanvasResolution(pc.RESOLUTION_AUTO);
-      game.resize();
-      buildHubBlockout(app);
-      game.attachLifecycle();
-      app.start();
+      game = new GameApp(app, canvas, container);
+    } catch (error) {
+      app.destroy();
+      throw new GameStartupError('engine_init_failed', 'Gameplay systems could not be created.', {
+        cause: error,
+      });
+    }
+
+    try {
+      game.start();
     } catch (error) {
       // Tear down whatever was already created so a failed start leaves no engine instance behind.
       game.dispose();
@@ -72,6 +101,11 @@ export class GameApp {
       });
     }
     return game;
+  }
+
+  /** Input service for HUD controls (joystick, interact button) and modal blockers. */
+  get input(): InputService {
+    return this.inputService;
   }
 
   /** Stops the loop, removes listeners, and destroys the engine and its graphics device. Safe to call twice. */
@@ -86,6 +120,39 @@ export class GameApp {
     // app.destroy() also cancels the requestAnimationFrame loop and destroys the device.
     this.app.destroy();
   }
+
+  debugSnapshot(): GameDebugSnapshot {
+    const { x, z } = this.player.groundPosition;
+    return {
+      player: { x, z, speed: this.player.speed },
+      camera: { yawDeg: radToDeg(this.camera.yawRadians), distance: this.camera.currentDistance },
+      interactPresses: this.interactPresses,
+      inputBlocked: this.inputService.isBlocked,
+    };
+  }
+
+  private start(): void {
+    // Fixed-size mode: the engine sizes the canvas from the container, not from the window.
+    this.app.setCanvasFillMode(pc.FILLMODE_NONE);
+    this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
+    this.resize();
+    buildHubBlockout(this.app);
+    this.attachLifecycle();
+    this.app.on('update', this.tick);
+    this.cleanups.push(() => this.app.off('update', this.tick));
+    this.app.start();
+  }
+
+  /** One gameplay frame. `dt` is already clamped by the engine to 0.1 s, so a tab switch cannot teleport the player. */
+  private readonly tick = (dt: number): void => {
+    const frame = this.inputService.frame();
+    if (frame.interactPressed) {
+      // Module 03 (InteractionSystem) will consume this. It is counted here to verify the wiring.
+      this.interactPresses += 1;
+    }
+    this.player.update(dt, frame.move, this.camera.yawRadians);
+    this.camera.update(dt, this.player.groundPosition, frame.yawDelta, frame.zoomDelta);
+  };
 
   private resize(): void {
     const { clientWidth, clientHeight } = this.container;
