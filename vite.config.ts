@@ -4,7 +4,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react()],
   test: {
-    include: ['src/tests/**/*.test.ts'],
+    // Logic tests run in plain Node. Component smoke tests opt into jsdom with a `@vitest-environment jsdom` comment.
+    include: ['src/tests/**/*.test.{ts,tsx}'],
     environment: 'node',
   },
 });

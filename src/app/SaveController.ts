@@ -146,6 +146,7 @@ export class SaveController {
   private applySettings(): void {
     setLanguage(this.settings.language);
     document.documentElement.lang = this.settings.language;
+    document.documentElement.dataset.largeText = String(this.settings.largeText);
     this.game.setReducedVfx(this.settings.reducedEffects);
     setSfxEnabled(this.settings.soundOn);
     const preset = resolveQualityPreset(this.settings.quality, isCoarsePointer());

@@ -904,6 +904,11 @@ textarea,
   opacity: 0.9;
 }
 
+/* Large text: the HUD is scaled up as a whole. Its pixel sizes are fixed, so zoom is the simplest way to grow them. */
+:root[data-large-text='true'] .hud-root {
+  zoom: 1.25;
+}
+
 /* Stats overlay (F3) and the development asset inspector (F4). Both are small and sit out of the way. */
 .stats-overlay {
   position: absolute;

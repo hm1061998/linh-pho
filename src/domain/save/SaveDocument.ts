@@ -19,9 +19,17 @@ export interface Settings {
   readonly reducedEffects: boolean;
   readonly soundOn: boolean;
   readonly quality: QualityChoice;
+  /** `large` scales the whole HUD up, for players who need bigger text and buttons. */
+  readonly largeText: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { language: 'vi', reducedEffects: false, soundOn: true, quality: 'auto' };
+export const DEFAULT_SETTINGS: Settings = {
+  language: 'vi',
+  reducedEffects: false,
+  soundOn: true,
+  quality: 'auto',
+  largeText: false,
+};
 
 const QUALITY_CHOICES: readonly QualityChoice[] = ['auto', 'low', 'mobile', 'high'];
 
@@ -34,11 +42,14 @@ export interface SaveDocument {
 
 export type ParseResult = { readonly ok: true; readonly document: SaveDocument } | { readonly ok: false; readonly reason: string };
 
+/** One step: takes a save of one version and returns the next version's shape. */
+export type Migration = (raw: Record<string, unknown>) => Record<string, unknown>;
+
 /**
  * One step per old version: `MIGRATIONS[n]` turns a version-n save into a version-(n+1) save. Version 1 is the first
  * format, so the table is empty. Add an entry here, never edit an old one, when the format changes.
  */
-const MIGRATIONS: Readonly<Record<number, (raw: Record<string, unknown>) => Record<string, unknown>>> = {};
+const MIGRATIONS: Readonly<Record<number, Migration>> = {};
 
 const QUALITIES: readonly (Quality | null)[] = [null, 'normal', 'good', 'perfect'];
 const QUEST_STATUSES = ['locked', 'active', 'completed'] as const;
@@ -174,22 +185,32 @@ export function parseSettings(value: unknown): Settings {
     reducedEffects: isBoolean(value.reducedEffects) ? value.reducedEffects : DEFAULT_SETTINGS.reducedEffects,
     soundOn: isBoolean(value.soundOn) ? value.soundOn : DEFAULT_SETTINGS.soundOn,
     quality: QUALITY_CHOICES.includes(value.quality as QualityChoice) ? (value.quality as QualityChoice) : DEFAULT_SETTINGS.quality,
+    largeText: isBoolean(value.largeText) ? value.largeText : DEFAULT_SETTINGS.largeText,
   };
 }
 
-/** Parses saved text into a checked document, running any migrations first. */
+/** Parses saved text into a checked document, running the shipped migrations first. */
 export function parseSaveDocument(raw: unknown): ParseResult {
+  return parseSaveDocumentWith(raw, MIGRATIONS);
+}
+
+/**
+ * The same as `parseSaveDocument`, with the migration table passed in. The shipped game uses its own table. Tests pass
+ * their own, so every migration step can be checked before a real format change needs it.
+ */
+export function parseSaveDocumentWith(raw: unknown, migrations: Readonly<Record<number, Migration>>): ParseResult {
   if (!isRecord(raw)) {
     return { ok: false, reason: 'not_an_object' };
   }
   let current: Record<string, unknown> = raw;
   const savedVersion = raw.version;
-  if (typeof savedVersion !== 'number' || !Number.isInteger(savedVersion) || savedVersion < 1 || savedVersion > SAVE_VERSION) {
+  // Versions below the current one are passed to the migration table. Versions above it are from a newer game.
+  if (typeof savedVersion !== 'number' || !Number.isInteger(savedVersion) || savedVersion < 0 || savedVersion > SAVE_VERSION) {
     return { ok: false, reason: 'unknown_version' };
   }
   let version: number = savedVersion;
   while (version < SAVE_VERSION) {
-    const migrate = MIGRATIONS[version];
+    const migrate = migrations[version];
     if (!migrate) {
       return { ok: false, reason: 'no_migration' };
     }

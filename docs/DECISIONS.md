@@ -353,3 +353,28 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **F3 (mọi bản):** Hiện FPS, số lệnh vẽ (draw calls), và số model đã tải. Số liệu lấy từ bộ đếm của engine (`app.stats`). Không ghi, không gửi đi đâu.
 - **F4 (chỉ dev, `import.meta.env.DEV`):** Bảng asset: trạng thái, clip, nút Tải và Đặt trước mặt. Nhãn tiếng Anh vì người chơi không thấy bảng này.
 - **Giới hạn đo:** Trong pane trình duyệt, FPS chỉ khoảng 3 (D-032). Con số đó không dùng để đánh giá hiệu năng. Đo thật trên máy thật ở Module 10.
+
+## D-053 — QA: đo được thì ghi số, không đo được thì ghi "chưa đo"
+
+- **Quy tắc:** Mọi con số trong `docs/QA_REPORT.md` đều có cách đo. FPS không đo được trong pane (D-032), nên báo cáo ghi "chưa đo" thay vì đưa ra một con số ước lượng.
+- **Đo được:** Kích thước bundle (từ đầu ra của build), tải về và thời gian tải (Resource Timing), 404 và lỗi console (kiểm tra trên bản production), số lệnh vẽ và model đã tải (bộ đếm của engine, F3).
+- **Kiểm thử tự động theo chương:** `smokeCampaign` chơi Q00 → Q01 → Q02 và lưu, tải lại giữa mỗi chặng. Đây là bài kiểm tra quan trọng nhất cho việc lưu, vì nó bắt được mất dữ liệu hoặc trả thưởng hai lần ở mọi biên chương.
+- **Giới hạn đã nêu:** Không có Android, không có Firefox, không có trình đọc màn hình. Các mục này nằm ở "chưa thử" trong báo cáo.
+
+## D-054 — Chữ lớn: phóng cả HUD bằng CSS `zoom`
+
+- **Chọn:** Cài đặt "Chữ lớn" đặt `zoom: 1.25` lên `.hud-root`. Mọi kích thước HUD đều tính bằng px, nên phóng cả khối là cách ít sửa nhất và đúng cho mọi thành phần.
+- **Lựa chọn khác bị bỏ:** Đổi `font-size` gốc không đổi được các kích thước px. Đổi từng cỡ chữ thành `rem` là việc lớn và dễ sót, và không làm được với nút và khoảng cách.
+- **Đánh đổi:** `zoom` là thuộc tính không chuẩn lâu nay. Cần kiểm tra trên Firefox trước khi phát hành. Đã ghi trong báo cáo.
+
+## D-055 — Thêm kiểm thử giao diện: jsdom và Testing Library (chỉ dev)
+
+- **Chọn:** Thêm `jsdom`, `@testing-library/react`, và `@testing-library/dom` là phụ thuộc dev. Kiểm thử logic vẫn chạy trong Node. Chỉ tệp `.tsx` có chú thích `@vitest-environment jsdom` mới dùng DOM.
+- **Smoke test thật:** `uiSmoke.test.tsx` render các thành phần HUD thật (màn lỗi khởi động, tiền, nhiệm vụ, hội thoại, kho đồ) với một phiên chơi thật. Không tải PlayCanvas. Đối tượng `game` chỉ là phần đầu vào và tương tác cần thiết.
+- **Không dùng để thay thế kiểm tra trình duyệt:** Smoke test không thấy canvas, không thấy FPS, không chạm vào cảm ứng. Các phần đó vẫn kiểm tra bằng tay.
+
+## D-056 — Migration của lưu được kiểm tra bằng bảng truyền vào
+
+- **Vấn đề:** Bảng `MIGRATIONS` là hằng số đóng, nên không thể kiểm tra từng bước khi chưa có định dạng cũ thật.
+- **Chọn:** `parseSaveDocumentWith(raw, migrations)` nhận bảng làm tham số. `parseSaveDocument` truyền bảng thật của game. Test dùng bảng riêng với một bước 0 → 1 giả lập.
+- **Đổi nhỏ:** Phiên bản 0 nay được đưa vào bảng migration (trước đó bị từ chối ngay). Phiên bản 0 không có bước nào thì vẫn báo `no_migration`, nên hành vi với bản thật không đổi.

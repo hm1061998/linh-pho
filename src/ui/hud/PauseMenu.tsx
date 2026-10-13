@@ -89,6 +89,9 @@ export function PauseMenu({ game, controller }: { readonly game: GameApp; readon
         <button type="button" aria-pressed={settings.soundOn} onClick={() => update({ soundOn: !settings.soundOn })}>
           {`${t('pause.sound')}: ${settings.soundOn ? t('pause.on') : t('pause.off')}`}
         </button>
+        <button type="button" aria-pressed={settings.largeText} onClick={() => update({ largeText: !settings.largeText })}>
+          {`${t('pause.large_text')}: ${settings.largeText ? t('pause.on') : t('pause.off')}`}
+        </button>
         <button type="button" onClick={() => update({ quality: nextQuality(settings.quality) })}>
           {`${t('pause.quality')}: ${t(`pause.quality.${settings.quality}`)}`}
         </button>

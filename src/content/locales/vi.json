@@ -217,6 +217,7 @@
   "pause.restart_confirm": "Bắt đầu lại sẽ xoá tiến trình hiện tại. Chắc chắn không?",
   "pause.restart_yes": "Có, bắt đầu lại",
   "pause.restart_no": "Huỷ",
+  "pause.large_text": "Chữ lớn",
   "pause.quality": "Chất lượng",
   "pause.quality.auto": "Tự động",
   "pause.quality.low": "Thấp",

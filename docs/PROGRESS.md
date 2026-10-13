@@ -17,7 +17,8 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `6c5d40a` | `feat(module-06)`: minigame lắp khung và khắc, chất lượng Thường/Đẹp/Hoàn Mỹ |
 | `73ee660` | `feat(module-07)`: cửa hàng, ba ô trưng bày, đơn hàng, Q02, màn hình kết thúc |
 | `b52fb0e` | `feat(module-08)`: lưu và tải, tự lưu, khôi phục, cài đặt, menu tạm dừng, âm thanh |
-| (module-09) | `feat(module-09)`: manifest tài sản, bộ nạp GLB có dự phòng, test GLB, preset chất lượng, F3/F4 |
+| `4d9a078` | `feat(module-09)`: manifest tài sản, bộ nạp GLB có dự phòng, test GLB, preset chất lượng, F3/F4 |
+| (module-10) | `feat(module-10)`: báo cáo QA, smoke test chương và HUD, migration, chữ lớn, icon nội tuyến |
 
 ## Đã hoàn thành
 
@@ -109,13 +110,23 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Dev-only:** Asset `dev.*` không được tải trong bản phát hành.
 - **Chưa làm:** Phát animation trên NPC (NPC vẫn là placeholder). Lightmap và bake. Đo số tam giác thật. Color grading (không cần ở MVP). Cuối cùng là lưới Blender thật.
 
+### Module 10 — QA, smoke test, khả năng truy cập, báo cáo bundle
+- **Báo cáo đầy đủ:** `docs/QA_REPORT.md`: bundle, tải về, 404, lỗi console, số lệnh vẽ, nhóm test, khả năng truy cập, thiết bị đã thử, và giới hạn. FPS được ghi là chưa đo (D-053).
+- **Smoke test chương:** Q00 → Q01 → Q02, với lưu và tải lại giữa mỗi chặng (`smokeCampaign`).
+- **Smoke test HUD (jsdom):** màn lỗi khởi động, tiền, nhiệm vụ đổi khi nhặt, hội thoại, kho đồ (D-055).
+- **Migration lưu có kiểm tra:** `parseSaveDocumentWith` nhận bảng truyền vào, nên mỗi bước được kiểm tra trước khi cần (D-056).
+- **Chữ lớn:** cài đặt phóng HUD 125% bằng CSS `zoom` (D-054).
+- **Icon nội tuyến:** `index.html` có icon SVG dạng data URI, nên trình duyệt không xin `/favicon.ico` (trả về 404).
+- **Bản production đã kiểm tra:** boot không lỗi console, không 404, không dev hook. Menu tạm dừng liệt kê đủ điều khiển, chữ lớn phóng HUD đúng.
+- **Chưa làm:** đổi phím (phím nằm trong một tệp, chưa có giao diện), trình đọc màn hình, đo FPS thật, thiết bị Android, Firefox và Safari.
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 38 file, 324 test, tất cả đạt |
-| `npm run build` | Đạt. `index-*.js` 2,449.03 kB (gzip 646.76 kB). Hook dev không có trong bundle |
+| `npm test` | 41 file, 340 test, tất cả đạt (có smoke test HUD bằng jsdom) |
+| `npm run build` | Đạt. `index-*.js` 2,449.45 kB (gzip 646.86 kB), `index-*.css` 15.90 kB (gzip 3.34 kB). Hook dev không có trong bundle |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -258,14 +269,16 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 4. **Lồng đèn soi vết** trong GDD được ánh xạ thành Đèn Vân Linh (D-026).
 5. **`speed` là vận tốc dự định** (D-014). Không ảnh hưởng vị trí.
 6. **Mất WebGL context** (GPU reset): chưa xử lý, chỉ có log lỗi.
-7. **Bundle 2.42 MB minify, 639 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
+7. **Bundle 2.45 MB minify, 647 kB gzip,** chủ yếu do PlayCanvas. Dưới mục tiêu 20 MB, nhưng chưa tách chunk hay tải lười. Xem `docs/QA_REPORT.md` mục 1.
 8. **Copy hard-code đã chuyển sang locale** ở Module 08. Chỉ còn tên "Tiếng Việt" và "English" trong menu là viết cứng, vì đó là tên ngôn ngữ.
 9. **Hai tab cùng mở** có thể ghi đè bản lưu của nhau. Chưa khoá đa tab, sẽ xem lại ở Module 10 nếu cần.
 10. **Bộ sinh test GLB** nằm trong bundle phát hành (vài trăm byte mã), dù asset `dev.*` không được tải. Chấp nhận được ở MVP, nhưng Module 10 có thể tách ra nếu bundle cần gọn.
 
 ## Việc tiếp theo
-- **Module 10:** QA và kiểm thử end to end (Q00 → Q01 → Q02, và lưu tải lại ở giữa mỗi chặng), kích thước bundle và hiệu năng trên thiết bị thật, kiểm tra cảm ứng (joystick, minigame kéo thả, menu), đa tab, và ghi chú cho đo FPS thật.
-- **Sau đó:** Module 11 (AnalyticsPort không làm gì, PlatformPort, ghi chú riêng tư, checklist phát hành), Module 12 (thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`, gồm teaser chương 2). Lưới Blender thật làm song song theo `docs/ASSET_MANIFEST.md`.
+- **Trước khi gọi là "chơi thử được":** Làm các việc trong mục 8 của `docs/QA_REPORT.md`. Đo FPS thật trên desktop và Android, thử cảm ứng và xoay ngang trên điện thoại, thử Firefox và Safari. Cần thiết bị thật, nên không làm được trong môi trường này.
+- **Module 11:** AnalyticsPort không làm gì, PlatformPort, ghi chú riêng tư, checklist phát hành.
+- **Module 12:** thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`. Teaser chương 2 hiện là bản nháp và phải vào thẻ này.
+- **Song song:** lưới Blender thật theo `docs/ASSET_MANIFEST.md`, bắt đầu bằng khối kiểm tra pipeline.
 
 ## Checklist kiểm thử thủ công (Module 07, Q02)
 - [ ] Hoàn thành Q01. Quầy tiệm (gần cửa tiệm) hiện Q02 "Phiên Chợ Đầu Tiên" trong bảng nhiệm vụ.

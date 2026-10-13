@@ -217,6 +217,7 @@
   "pause.restart_confirm": "Starting over erases your current progress. Are you sure?",
   "pause.restart_yes": "Yes, start over",
   "pause.restart_no": "Cancel",
+  "pause.large_text": "Large text",
   "pause.quality": "Quality",
   "pause.quality.auto": "Auto",
   "pause.quality.low": "Low",
