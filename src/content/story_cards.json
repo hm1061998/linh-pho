@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "cards": [
+    {
+      "id": "card_giay_do_material",
+      "kind": "fact",
+      "claim": "Giấy dó là giấy thủ công làm từ xơ vỏ cây dó.",
+      "status": "needs_review",
+      "usedIn": ["item.paper.name"],
+      "sources": [
+        {
+          "title": "141. Giấy dó (VNPT, tài liệu tóm tắt)",
+          "url": "https://storage-vnportal.vnpt.vn/vass/6475/FileQuanTriTinTuc/141.%20GI%E1%BA%A4Y%20D%C3%93-492441.doc"
+        },
+        {
+          "title": "Giấy dó, giấy sắc phong trong lịch sử văn hóa dân tộc",
+          "url": "https://tapchicongthuong.vn/giay-do--giay-sac-phong-trong-lich-su-van-hoa-dan-toc-van-de-khoi-phuc-vung-nguyen-lieu-va-lang-nghe-756.htm"
+        }
+      ],
+      "note": "Hai nguồn tóm tắt đồng ý. Chưa đọc toàn văn. Các nguồn không thống nhất về tên loài cây (dó và dướng), nên game không ghi tên khoa học."
+    },
+    {
+      "id": "card_harvest_season",
+      "kind": "fact",
+      "claim": "Vỏ dó thường được thu hoạch vào khoảng tháng 8 đến tháng 10 âm lịch, khi vỏ tự tróc.",
+      "status": "needs_review",
+      "usedIn": [],
+      "sources": [
+        {
+          "title": "Giữ nghề giấy dó xứ Mường (Tạp chí Công Thương)",
+          "url": "https://tapchicongthuong.vn/magazine/giu-nghe-giay-do-xu-muong-112541.htm"
+        }
+      ],
+      "note": "Chưa dùng trong game. Đọc toàn văn trước khi đưa vào."
+    },
+    {
+      "id": "card_buoi_history",
+      "kind": "fact",
+      "claim": "Làng Bưởi ở Hà Nội từng làm giấy dó để viết và in tranh dân gian.",
+      "status": "needs_review",
+      "usedIn": [],
+      "sources": [
+        {
+          "title": "Zó Project: Lưu giữ nét đẹp giấy dó Việt (Vietcetera)",
+          "url": "https://vietcetera.com/vn/zo-project-luu-giu-net-dep-giay-do-viet"
+        }
+      ],
+      "note": "Các nguồn ghi mốc thời gian khác nhau (đầu thế kỷ XV, thời Lý). Game không ghi mốc nào. Chưa dùng."
+    },
+    {
+      "id": "card_fiction_market",
+      "kind": "fiction",
+      "claim": "Chợ đêm Linh Phố là nơi hư cấu, ban ngày ngủ và tối mới sáng.",
+      "status": "verified",
+      "usedIn": ["dlg.ba_nghiem.market"],
+      "sources": [],
+      "note": "Theo GDD v1, mục C1: thế giới kỳ ảo, không phải địa danh có thật."
+    },
+    {
+      "id": "card_fiction_spirit_lamp",
+      "kind": "fiction",
+      "claim": "Đèn Soi Linh và Bấc là yếu tố hư cấu của trò chơi.",
+      "status": "verified",
+      "usedIn": ["item.spirit_lantern.name", "dlg.bac.greet"],
+      "sources": [],
+      "note": "Theo GDD v1: tông kỳ ảo, không khai thác niềm tin tín ngưỡng như sự thật khoa học."
+    },
+    {
+      "id": "card_chapter2_teaser",
+      "kind": "fiction",
+      "claim": "Chương 2 sẽ mở ngõ Giấy. Đèn Soi Linh còn chỉ ra dấu vết ở các góc phố khác.",
+      "status": "needs_review",
+      "usedIn": ["end.teaser"],
+      "sources": [],
+      "note": "Bản nháp, chưa biên tập. Nội dung chương 2 chưa có."
+    }
+  ]
+}

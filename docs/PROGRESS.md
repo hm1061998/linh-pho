@@ -18,7 +18,9 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `73ee660` | `feat(module-07)`: cửa hàng, ba ô trưng bày, đơn hàng, Q02, màn hình kết thúc |
 | `b52fb0e` | `feat(module-08)`: lưu và tải, tự lưu, khôi phục, cài đặt, menu tạm dừng, âm thanh |
 | `4d9a078` | `feat(module-09)`: manifest tài sản, bộ nạp GLB có dự phòng, test GLB, preset chất lượng, F3/F4 |
-| (module-10) | `feat(module-10)`: báo cáo QA, smoke test chương và HUD, migration, chữ lớn, icon nội tuyến |
+| `67ad06c` | `feat(module-10)`: báo cáo QA, smoke test chương và HUD, migration, chữ lớn, icon nội tuyến |
+| `bf28497` | `feat(module-11)`: cổng analytics và nền tảng, tài liệu riêng tư, checklist phát hành, ghi chú PWA |
+| (module-12) | `feat(module-12)`: thẻ câu chuyện có nguồn, kiểm tra thẻ |
 
 ## Đã hoàn thành
 
@@ -120,13 +122,26 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Bản production đã kiểm tra:** boot không lỗi console, không 404, không dev hook. Menu tạm dừng liệt kê đủ điều khiển, chữ lớn phóng HUD đúng.
 - **Chưa làm:** đổi phím (phím nằm trong một tệp, chưa có giao diện), trình đọc màn hình, đo FPS thật, thiết bị Android, Firefox và Safari.
 
+### Module 11 — Cổng analytics và nền tảng, riêng tư, phát hành
+- **AnalyticsPort:** tên sự kiện đóng, bản cài sẵn không làm gì. Màn kết thúc phát sự kiện "hoàn thành chương" qua `game.analytics` (D-057).
+- **PlatformPort:** mô tả thiết bị (cảm ứng đầu tiên, ngôn ngữ). `BrowserPlatform` đọc từ trình duyệt; lưu dùng cổng này để chọn chất lượng tự động (D-057).
+- **Riêng tư:** `docs/PRIVACY.md` là bản nháp, ghi đúng những gì code làm và nói rõ chưa phải chính sách pháp lý (D-059).
+- **Phát hành:** `docs/RELEASE_CHECKLIST.md` có các mục mã, bản production, nội dung, và thiết bị. Mục nào chưa làm thì để trống.
+- **PWA:** chưa có manifest. `docs/PWA.md` ghi các mục cần có nếu thêm sau. Hướng ngang trên điện thoại vẫn do OrientationGate trong ứng dụng đảm nhận (D-060).
+
+### Module 12 — Thẻ câu chuyện có nguồn
+- **Thẻ (`src/content/story_cards.json`):** sáu thẻ. Ba sự kiện có thật (giấy dó, thời vụ thu vỏ dó, làng Bưởi), ba hư cấu (chợ đêm, Đèn Soi Linh và Bấc, teaser chương 2).
+- **Quy tắc:** sự kiện có thật chỉ `verified` khi có nguồn https. Validator từ chối thẻ vi phạm. Thẻ trỏ tới khoá locale không có cũng bị loại (D-058).
+- **Trạng thái thật:** mọi sự kiện có thật là `needs_review`. Các nguồn tìm được chỉ là tóm tắt, và không đồng ý về loài cây, thời vụ, mốc lịch sử. Không có gì được ghi là đã kiểm chứng.
+- **Hướng dẫn:** `docs/STORY_CARDS.md` có bảng trạng thái, danh sách nguồn chưa đọc toàn văn, và cách chuyển sang `verified`.
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 41 file, 340 test, tất cả đạt (có smoke test HUD bằng jsdom) |
-| `npm run build` | Đạt. `index-*.js` 2,449.45 kB (gzip 646.86 kB), `index-*.css` 15.90 kB (gzip 3.34 kB). Hook dev không có trong bundle |
+| `npm test` | 42 file, 354 test, tất cả đạt (có smoke test HUD bằng jsdom) |
+| `npm run build` | Đạt. `index-*.js` 2,449.81 kB (gzip 647.02 kB), `index-*.css` 15.90 kB (gzip 3.34 kB). Hook dev và công cụ dev không có trong bundle. Id `dev.test_crate` nằm trong bundle như dữ liệu, không được tải |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -275,10 +290,10 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 10. **Bộ sinh test GLB** nằm trong bundle phát hành (vài trăm byte mã), dù asset `dev.*` không được tải. Chấp nhận được ở MVP, nhưng Module 10 có thể tách ra nếu bundle cần gọn.
 
 ## Việc tiếp theo
+- **Đã xong các module 00–12 theo prompt kit.** Phần còn lại không thể làm trong môi trường này: thiết bị thật, FPS thật, lưới Blender thật, và chính sách riêng tư đã duyệt.
 - **Trước khi gọi là "chơi thử được":** Làm các việc trong mục 8 của `docs/QA_REPORT.md`. Đo FPS thật trên desktop và Android, thử cảm ứng và xoay ngang trên điện thoại, thử Firefox và Safari. Cần thiết bị thật, nên không làm được trong môi trường này.
-- **Module 11:** AnalyticsPort không làm gì, PlatformPort, ghi chú riêng tư, checklist phát hành.
-- **Module 12:** thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`. Teaser chương 2 hiện là bản nháp và phải vào thẻ này.
 - **Song song:** lưới Blender thật theo `docs/ASSET_MANIFEST.md`, bắt đầu bằng khối kiểm tra pipeline.
+- **Nợ kỹ thuật đã biết:** đổi phím (chưa có giao diện), trình đọc màn hình, đa tab, tách chunk PlayCanvas.
 
 ## Checklist kiểm thử thủ công (Module 07, Q02)
 - [ ] Hoàn thành Q01. Quầy tiệm (gần cửa tiệm) hiện Q02 "Phiên Chợ Đầu Tiên" trong bảng nhiệm vụ.

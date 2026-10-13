@@ -378,3 +378,25 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Vấn đề:** Bảng `MIGRATIONS` là hằng số đóng, nên không thể kiểm tra từng bước khi chưa có định dạng cũ thật.
 - **Chọn:** `parseSaveDocumentWith(raw, migrations)` nhận bảng làm tham số. `parseSaveDocument` truyền bảng thật của game. Test dùng bảng riêng với một bước 0 → 1 giả lập.
 - **Đổi nhỏ:** Phiên bản 0 nay được đưa vào bảng migration (trước đó bị từ chối ngay). Phiên bản 0 không có bước nào thì vẫn báo `no_migration`, nên hành vi với bản thật không đổi.
+
+## D-057 — Analytics và nền tảng là cổng, bản cài sẵn không làm gì
+
+- **Analytics:** `ports/AnalyticsPort.ts` có tên sự kiện đóng (một sự kiện hiện tại: hoàn thành chương đầu). Bản cài sẵn là `NO_ANALYTICS`, không gửi gì. Màn kết thúc phát sự kiện này khi hiện, để chỗ nối đã có sẵn khi làm bản thật.
+- **Nền tảng:** `ports/PlatformPort.ts` mô tả thiết bị (cảm ứng đầu tiên, ngôn ngữ). `adapters/BrowserPlatform.ts` đọc từ trình duyệt, nhận môi trường làm tham số để test. Lưu dùng cổng này để chọn chất lượng tự động, thay vì tự đọc `matchMedia`.
+- **Vì sao làm trước khi cần:** Hai cổng này là chỗ thay thế duy nhất để thêm analytics hoặc đổi nền tảng sau này. Đặt đúng chỗ bây giờ thì không phải sửa gameplay.
+
+## D-058 — Thẻ câu chuyện: sự kiện có thật chỉ là `verified` khi có nguồn đã đọc
+
+- **Quy tắc trong validator:** Hư cấu có thể `verified` theo tài liệu thiết kế. Sự kiện có thật `verified` phải có ít nhất một nguồn https. Thiếu nguồn thì thẻ bị loại có lý do.
+- **Trạng thái thực tế:** Mọi sự kiện có thật hiện là `needs_review`. Tìm kiếm chỉ cho phần tóm tắt, và các nguồn không thống nhất về loài cây, thời vụ, mốc lịch sử. Không có sự kiện nào được ghi là đã kiểm chứng.
+- **Chỗ dùng trong game:** Chỉ "giấy dó" là sự kiện có thật được dùng, và chỉ như tên vật liệu, không kèm mô tả quy trình. Chương 2 là nháp.
+
+## D-059 — Riêng tư: tài liệu nháp, chưa phải chính sách
+
+- `docs/PRIVACY.md` ghi những gì code thật sự làm: dữ liệu chỉ ở trên thiết bị, không có máy chủ, không có SDK, không có quyền hệ thống. Đã đối chiếu bằng tìm kiếm trong `src/` (không có `fetch` ra ngoài, không có font từ bên thứ ba).
+- Tài liệu nói rõ đây không phải chính sách pháp lý, và liệt kê việc người phụ trách phải làm trước khi phát hành.
+
+## D-060 — PWA: hoãn, icon nội tuyến đủ cho tab trình duyệt
+
+- Chưa có manifest. Hướng ngang trên điện thoại được giữ bằng `OrientationGate` trong ứng dụng, không cần manifest.
+- `docs/PWA.md` ghi các mục cần có nếu thêm sau. Không thêm manifest bây giờ, vì nó cần icon PNG thật và phải thử cài đặt trên Android.
