@@ -1,6 +1,7 @@
 import { validateContent } from '../domain/content/validate';
 import { validateGameplay } from '../domain/content/validateGameplay';
 import { validateShop } from '../domain/content/validateShop';
+import { validateStoryCards } from '../domain/content/validateStoryCards';
 import type { ItemDef, ObjectiveType } from '../domain/content/gameplayTypes';
 import type { ContentIssue, NpcDefinition } from '../domain/content/types';
 import type { SessionContent } from '../domain/GameSession';
@@ -16,6 +17,7 @@ import puzzlesJson from './puzzles.json';
 import questsJson from './quests.json';
 import recipesJson from './recipes.json';
 import shopJson from './shop.json';
+import storyCardsJson from './story_cards.json';
 import worldJson from './world.json';
 
 const LOCALES = { vi: viLocale, en: enLocale };
@@ -71,12 +73,16 @@ const gameplayResult = validateGameplay(
   },
 );
 
+// Story cards need the locale keys, so they are checked last. Only the cards with `unlockedBy` are shown in the game.
+const storyResult = validateStoryCards(storyCardsJson, hasTextKey);
+
 /** Everything the game needs, validated. Invalid entries were dropped, and `CONTENT_ISSUES` says why. */
 export const GAME_CONTENT: SessionContent = {
   npcs: npcResult.content.npcs,
   dialogues: npcResult.content.dialogues,
   ...gameplayResult.content,
   shop: shopResult.content,
+  storyCards: storyResult.cards,
 };
 
 /** Problems found while loading content. The game still starts, so log them and fix the JSON. */
@@ -84,6 +90,7 @@ export const CONTENT_ISSUES: readonly ContentIssue[] = [
   ...npcResult.issues,
   ...gameplayResult.issues,
   ...shopResult.issues,
+  ...storyResult.issues,
 ];
 
 let activeLanguage: Language = PRIMARY_LOCALE;

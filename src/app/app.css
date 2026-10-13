@@ -1140,3 +1140,38 @@ textarea,
   min-height: 1.4em;
   margin: 0.25rem 0 0;
 }
+
+/* «Chuyện Đằng Sau»: the fact and the fiction are two parts with their own heading, and the fact lists its sources. */
+.story-part {
+  margin: 0.75rem 0;
+}
+
+.story-part h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95em;
+}
+
+.story-fiction {
+  font-style: italic;
+}
+
+.story-sources {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85em;
+}
+
+/* Journal: quests and story cards, each in its own section. */
+.journal-section {
+  margin: 0.75rem 0;
+}
+
+.journal-section h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95em;
+}
+
+.journal-section ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}

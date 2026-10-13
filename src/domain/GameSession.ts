@@ -1,4 +1,5 @@
 import { EventBus } from '../shared/events/EventBus';
+import type { CardSource, StoryCard } from './content/validateStoryCards';
 import type { DialogueFile, NpcDefinition } from './content/types';
 import type {
   GlyphDef,
@@ -44,6 +45,8 @@ export interface SessionContent {
   readonly glyphs: readonly GlyphDef[];
   readonly puzzles: readonly PuzzleDef[];
   readonly shop: ShopContent;
+  /** The «Chuyện Đằng Sau» cards. Optional, so a test can run with none. */
+  readonly storyCards?: readonly StoryCard[];
 }
 
 /** Set once the chapter-end card has been closed. Saved with the flags, so the card stays closed after a reload. */
@@ -70,7 +73,25 @@ export type PanelState =
   | { readonly kind: 'craft'; readonly stationId: string }
   | { readonly kind: 'puzzle'; readonly stationId: string; readonly puzzleId: string }
   | { readonly kind: 'shop' }
-  | { readonly kind: 'inventory' };
+  | { readonly kind: 'inventory' }
+  | { readonly kind: 'journal' }
+  | { readonly kind: 'story'; readonly cardId: string };
+
+/** A «Chuyện Đằng Sau» card the player can see: its quest is done. `read` is kept in the save flags. */
+export interface StoryCardView {
+  readonly id: string;
+  readonly kind: StoryCard['kind'];
+  readonly titleKey: string;
+  readonly factKey: string | null;
+  readonly fictionKey: string | null;
+  readonly sources: readonly CardSource[];
+  readonly read: boolean;
+}
+
+/** The flag that records a card as read. Set when the card is closed. */
+export function storyReadFlag(cardId: string): string {
+  return `story.read.${cardId}`;
+}
 
 export type SessionEvent =
   | { readonly type: 'changed' }
@@ -116,6 +137,8 @@ export interface SessionSnapshot {
   readonly furniture: readonly FurnitureView[];
   /** Orders as the board shows them. `open` is true only when an active quest asks for the order to be accepted. */
   readonly orders: readonly (OrderView & { readonly open: boolean })[];
+  /** The story cards whose quest is done, in content order. */
+  readonly storyCards: readonly StoryCardView[];
 }
 
 export class GameSession {
@@ -162,6 +185,8 @@ export class GameSession {
     this.orderBoard = new OrderBoard(content.shop.orders);
 
     this.quests.events.on('quest.completed', (event) => this.applyCompletion(event));
+    // A card that waited for the dialogue to end is offered once the dialogue closes.
+    this.dialogue.events.on('dialogue.closed', () => this.offerStoryCard());
     this.quests.events.on('quest.started', (event) => this.notice('notice.quest_started', { questKey: this.questTitle(event.questId) }));
     this.dialogue.events.on('dialogue.opened', (event: Extract<DialogueEvent, { type: 'dialogue.opened' }>) => {
       const npcId = this.npcByDialogue.get(event.view.dialogueId);
@@ -233,6 +258,7 @@ export class GameSession {
     this.orderBoard.restore(saved.orders);
     this.lastLanternPhase = this.lantern.snapshot.phase;
     this.quests.start();
+    this.offerStoryCard();
     this.emitChanged();
   }
 
@@ -307,15 +333,57 @@ export class GameSession {
     this.emitChanged();
   }
 
-  /** Closing a panel never loses materials: a craft in progress is cancelled first. */
+  /**
+   * Closing a panel never loses materials: a craft in progress is cancelled first. Closing a story card marks it read,
+   * and then the next unread card, if any, is offered.
+   */
   closePanel(): void {
     if (!this.panel) {
       return;
     }
+    const closed = this.panel;
     this.cancelCraft();
     this.panel = null;
+    if (closed.kind === 'story') {
+      this.flags.set(storyReadFlag(closed.cardId), true);
+    }
     this.events.emit({ type: 'panel.closed' });
+    // A card that waited for this panel to close is offered now. Nothing is offered while a panel or dialogue is open.
+    this.offerStoryCard();
     this.emitChanged();
+  }
+
+  /** The story cards the player can see: their quest is completed. Content order is kept. */
+  storyCardViews(): StoryCardView[] {
+    return (this.content.storyCards ?? [])
+      .filter((card) => card.unlockedBy !== null && this.quests.statusOf(card.unlockedBy) === 'completed')
+      .filter((card): card is StoryCard & { titleKey: string } => card.titleKey !== null)
+      .map((card) => ({
+        id: card.id,
+        kind: card.kind,
+        titleKey: card.titleKey,
+        factKey: card.factKey,
+        fictionKey: card.fictionKey,
+        sources: card.sources,
+        read: this.flags.get(storyReadFlag(card.id)),
+      }));
+  }
+
+  /**
+   * Opens the next unread story card, when nothing else is open. Not while the chapter-end card is pending, because
+   * that card comes first.
+   */
+  private offerStoryCard(): void {
+    if (this.panel || this.dialogue.isOpen) {
+      return;
+    }
+    if (this.flags.get('mvp_complete') && !this.flags.get(END_SEEN_FLAG)) {
+      return;
+    }
+    const next = this.storyCardViews().find((card) => !card.read);
+    if (next) {
+      this.openPanel({ kind: 'story', cardId: next.id });
+    }
   }
 
   // ---------- Đèn Soi Linh and glyphs ----------
@@ -631,6 +699,7 @@ export class GameSession {
         ...order,
         open: order.status === 'open' && this.orderIsRequested(order.id),
       })),
+      storyCards: this.storyCardViews(),
     };
   }
 
@@ -684,6 +753,7 @@ export class GameSession {
     if (event.rewards.coins > 0) {
       this.notice('notice.coins_gained', { amount: String(event.rewards.coins) });
     }
+    this.offerStoryCard();
     this.emitChanged();
   }
 

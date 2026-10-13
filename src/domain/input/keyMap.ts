@@ -4,7 +4,7 @@
  * always move the player and are not changed. Pure, with no DOM, so it can be tested in Node.
  */
 
-export const REMAP_ACTIONS = ['forward', 'back', 'left', 'right', 'interact', 'lantern', 'inventory'] as const;
+export const REMAP_ACTIONS = ['forward', 'back', 'left', 'right', 'interact', 'lantern', 'inventory', 'journal'] as const;
 export type RemapAction = (typeof REMAP_ACTIONS)[number];
 export type KeyMap = Readonly<Record<RemapAction, string>>;
 
@@ -16,6 +16,7 @@ export const DEFAULT_KEY_MAP: KeyMap = {
   interact: 'KeyE',
   lantern: 'KeyQ',
   inventory: 'KeyI',
+  journal: 'KeyJ',
 };
 
 /** The arrow key that also moves the player in each direction. Arrows are never reassigned, so they stay unique. */
@@ -76,27 +77,19 @@ export function assignKey(map: KeyMap, action: RemapAction, code: string): KeyMa
 }
 
 /**
- * Checks a key map read from a save. Any missing, invalid, reserved or duplicate entry replaces the whole map with the
- * defaults, so a player is never left with two actions on one key.
+ * Checks a key map read from a save. A missing or invalid entry takes the default for that action, so an older save
+ * keeps the player's other keys, and a save from before an action existed gets its default. If the result has two
+ * actions on one key, the whole map is replaced by the defaults.
  */
 export function cleanKeyMap(value: unknown): KeyMap {
-  if (typeof value !== 'object' || value === null) {
-    return DEFAULT_KEY_MAP;
-  }
-  const record = value as Record<string, unknown>;
+  const record = typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
   const map = {} as Record<RemapAction, string>;
   for (const action of REMAP_ACTIONS) {
     const code = record[action];
-    if (typeof code !== 'string' || !isKeyCode(code) || isReservedCode(code)) {
-      return DEFAULT_KEY_MAP;
-    }
-    map[action] = code;
+    map[action] = typeof code === 'string' && isKeyCode(code) && !isReservedCode(code) ? code : DEFAULT_KEY_MAP[action];
   }
   const codes = Object.values(map);
-  if (new Set(codes).size !== codes.length) {
-    return DEFAULT_KEY_MAP;
-  }
-  return map;
+  return new Set(codes).size === codes.length ? map : DEFAULT_KEY_MAP;
 }
 
 /** The short label shown on screen for a key code: W for KeyW, 1 for Digit1, and the code itself otherwise. */

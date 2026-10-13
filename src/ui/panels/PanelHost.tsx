@@ -7,6 +7,7 @@ import { qualityLabel, useSessionSnapshot } from '../state/useSession';
 import { playSfx } from '../../shared/audio/sfx';
 import { MiniGame } from './MiniGames';
 import { ShopPanel } from './ShopPanel';
+import { JournalPanel, StoryCardPanel } from './StoryPanels';
 
 /**
  * Hosts the one panel the session has open: the crafting table, the engraving puzzle, the shop, or the inventory.
@@ -24,16 +25,22 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
       }
       const panel = game.session.currentPanel;
       // Escape is the pause menu's key: it closes an open panel first, then opens the menu.
-      if (game.input.bindings.actionFor(event.code) === 'inventory') {
+      const action = game.input.bindings.actionFor(event.code);
+      // A story card is a modal like the dialogue: the panel keys wait until it is closed.
+      if (panel?.kind === 'story') {
+        return;
+      }
+      if (action === 'inventory' || action === 'journal') {
         event.preventDefault();
-        // The inventory would end a craft in progress. Keep the minigame open until the player finishes or cancels it.
+        // A panel would end a craft in progress. Keep the minigame open until the player finishes or cancels it.
         if (game.session.activeCraft) {
           return;
         }
-        if (panel?.kind === 'inventory') {
+        const wanted = action === 'inventory' ? 'inventory' : 'journal';
+        if (panel?.kind === wanted) {
           game.session.closePanel();
         } else {
-          game.session.openPanel({ kind: 'inventory' });
+          game.session.openPanel(action === 'inventory' ? { kind: 'inventory' } : { kind: 'journal' });
         }
       }
     };
@@ -76,6 +83,8 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
         </>
       ) : null}
       {panel.kind === 'inventory' ? <InventoryPanel game={game} snap={snap} /> : null}
+      {panel.kind === 'journal' ? <JournalPanel game={game} snap={snap} /> : null}
+      {panel.kind === 'story' ? <StoryCardPanel game={game} snap={snap} cardId={panel.cardId} /> : null}
     </section>
   );
 }
@@ -88,6 +97,13 @@ function panelTitle(snap: SessionSnapshot): string {
   }
   if (panel?.kind === 'shop') {
     return t(GAME_CONTENT.shop.counter?.labelKey ?? 'ui.shop.title');
+  }
+  if (panel?.kind === 'journal') {
+    return t('ui.journal.title');
+  }
+  if (panel?.kind === 'story') {
+    const card = snap.storyCards.find((candidate) => candidate.id === panel.cardId);
+    return card ? t(card.titleKey) : t('ui.story.label');
   }
   return t('ui.inventory.title');
 }

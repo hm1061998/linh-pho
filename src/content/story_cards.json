@@ -3,15 +3,15 @@
   "cards": [
     {
       "id": "card_giay_do_material",
+      "unlockedBy": "q00_dem_mo_cho",
+      "titleKey": "story.giay_do.title",
+      "factKey": "story.giay_do.fact",
+      "fictionKey": "story.giay_do.fiction",
       "kind": "fact",
       "claim": "Giấy dó là giấy thủ công làm từ vỏ cây dó.",
       "status": "verified",
       "usedIn": ["item.paper.name"],
       "sources": [
-        {
-          "title": "141. Giấy dó (VNPT, tài liệu tóm tắt)",
-          "url": "https://storage-vnportal.vnpt.vn/vass/6475/FileQuanTriTinTuc/141.%20GI%E1%BA%A4Y%20D%C3%93-492441.doc"
-        },
         {
           "title": "Giấy dó, giấy sắc phong trong lịch sử văn hóa dân tộc",
           "url": "https://tapchicongthuong.vn/giay-do--giay-sac-phong-trong-lich-su-van-hoa-dan-toc-van-de-khoi-phuc-vung-nguyen-lieu-va-lang-nghe-756.htm"
@@ -35,6 +35,9 @@
     },
     {
       "id": "card_buoi_history",
+      "unlockedBy": "q02_phien_cho_dau_tien",
+      "titleKey": "story.buoi.title",
+      "factKey": "story.buoi.fact",
       "kind": "fact",
       "claim": "Làng Bưởi ở Hà Nội làm giấy dó từ đầu thế kỷ XV.",
       "status": "verified",
@@ -49,6 +52,9 @@
     },
     {
       "id": "card_fiction_market",
+      "unlockedBy": "q00_dem_mo_cho",
+      "titleKey": "story.market.title",
+      "fictionKey": "story.market.fiction",
       "kind": "fiction",
       "claim": "Chợ đêm Linh Phố là nơi hư cấu, ban ngày ngủ và tối mới sáng.",
       "status": "verified",
@@ -58,6 +64,9 @@
     },
     {
       "id": "card_fiction_spirit_lamp",
+      "unlockedBy": "q01_net_muc",
+      "titleKey": "story.spirit_lamp.title",
+      "fictionKey": "story.spirit_lamp.fiction",
       "kind": "fiction",
       "claim": "Đèn Soi Linh và Bấc là yếu tố hư cấu của trò chơi.",
       "status": "verified",

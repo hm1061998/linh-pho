@@ -461,3 +461,12 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Quy tắc trong `STORY_CARDS.md` cho phép `verified` khi có nguồn đã đọc toàn văn và câu khớp nguồn. Hai câu đó khớp nguồn.
 - **Đánh đổi:** Công cụ trả về phần trích xuất của trang, không phải bản sao từng ký tự. File VNPT (.doc) bị lỗi mã hoá, không đọc được. Các câu được dẫn cần người phụ trách mở lại nguồn kiểm tra trước khi phát hành.
 - **Kiểm chứng:** `storyAndPlatform.test.ts` kiểm tra mọi thẻ `verified` có nguồn và ghi chú «đã đọc», và thẻ thu hoạch vẫn là `needs_review`. Typecheck sạch, 614 test pass.
+
+## D-070 — Chuyện Đằng Sau và nhật ký trong game
+
+- **Chọn:** Thẻ được mở bởi một nhiệm vụ đã xong (`unlockedBy` trong `story_cards.json`). Thẻ hiện như panel, có phần «Sự thật văn hoá» (kèm nguồn, chỉ khi thẻ đã kiểm chứng) và phần «Hư cấu trong Linh Phố», tách rõ hai loại. Đóng thẻ là đánh dấu đã đọc, và cờ `story.read.<id>` được lưu cùng các cờ khác. Phím J mở nhật ký: các nhiệm vụ với trạng thái, và các thẻ đã mở kèm đã đọc hay chưa. Phím J bị bỏ qua khi thẻ đang mở, vì thẻ là hộp thoại chặn.
+- **Lý do:** GDD B6 yêu cầu thẻ «Chuyện Đằng Sau» tách sự thật và hư cấu. GDD B2 yêu cầu phím J.
+- **Quy tắc an toàn:** `validateStoryCards` loại thẻ được hiện trong game nếu là sự kiện có thật mà chưa `verified`, hoặc thiếu tiêu đề và nội dung. Một claim chưa kiểm chứng vì vậy không thể đến tay người chơi như sự thật.
+- **Đánh đổi:** Mỗi thẻ hiện có độ dài dưới 50 từ ở phần sự thật, vì chỉ có những gì nguồn đã đọc xác nhận. Thẻ mục 50–100 từ theo GDD cần biên tập thêm, và phần đó được ghi vào checklist.
+- **Kiểm chứng:** `storyCardsGame.test.ts` (8 test: mở đúng lúc, đánh dấu đã đọc, không mở lại sau khi tải, không mở khi màn kết thúc đang chờ, validator). Trong trình duyệt: thẻ giấy dó mở sau Q00 với nguồn đã đọc; J không đổi được thẻ đang mở; Escape đánh dấu đã đọc và mở thẻ kế; nhật ký liệt kê đúng.
+- **Phím J** là hành động thứ tám của bảng phím, đổi được trong menu. Save cũ thiếu hành động này thì chỉ hành động đó lấy mặc định, các phím khác giữ nguyên (`cleanKeyMap`).
