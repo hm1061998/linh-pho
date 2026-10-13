@@ -78,7 +78,7 @@ describe('save document: settings fall back, progress does not', () => {
     const result = parseSaveDocument(document);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.document.settings).toEqual({ language: 'vi', reducedEffects: false, soundOn: false });
+      expect(result.document.settings).toEqual({ language: 'vi', reducedEffects: false, soundOn: false, quality: 'auto' });
     }
   });
 
@@ -87,7 +87,7 @@ describe('save document: settings fall back, progress does not', () => {
   });
 
   it('round-trips a non-default setting', () => {
-    const settings = { language: 'en', reducedEffects: true, soundOn: false } as const;
+    const settings = { language: 'en', reducedEffects: true, soundOn: false, quality: 'low' } as const;
     const text = serializeSaveDocument(BLANK_PROGRESS, settings, new Date(0));
     const result = parseSaveDocument(JSON.parse(text));
     expect(result.ok && result.document.settings).toEqual(settings);

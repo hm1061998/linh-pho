@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import type { FurnitureDef, FurnitureShape, GlyphDef, PickupDef, PlacementDef, ShopContent, StationDef } from '../../domain/content/gameplayTypes';
 import type { SessionSnapshot } from '../../domain/GameSession';
+import type { AssetLoader } from '../assets/AssetLoader';
 import type { WalkableWorld } from '../player/collision';
 import { colorFromHex } from '../scene/colorFromHex';
 
@@ -91,11 +92,13 @@ export class WorldView {
   private readonly slotViews = new Map<string, SlotView>();
   private readonly furnitureById = new Map<string, FurnitureDef>();
   private readonly parent: pc.Entity;
+  private readonly assets: AssetLoader;
   private bridgeMaterial: pc.StandardMaterial | null = null;
   private shopGlow: pc.StandardMaterial[] = [];
 
-  constructor(parent: pc.Entity, content: WorldContent, world: WalkableWorld) {
+  constructor(parent: pc.Entity, content: WorldContent, world: WalkableWorld, assets: AssetLoader) {
     this.parent = parent;
+    this.assets = assets;
     for (const pickup of content.pickups) {
       const entity = this.box(`PICKUP_${pickup.id}`, colorFromHex(ITEM_COLORS[pickup.itemId] ?? FALLBACK_COLOR));
       entity.setLocalScale(PICKUP_SIZE_M, PICKUP_SIZE_M, PICKUP_SIZE_M);
@@ -232,16 +235,17 @@ export class WorldView {
     }
   }
 
-  /** Builds one placed piece from its visual definition. Placeholder geometry until real models arrive. */
+  /**
+   * Builds one placed piece. The asset loader gives its model when one is loaded, and its visual placeholder when not.
+   * A hanging piece (a sphere) sits high, and anything else stands on the floor.
+   */
   private buildPiece(furnitureId: string): pc.Entity | null {
     const piece = this.furnitureById.get(furnitureId);
     if (!piece) {
       return null;
     }
-    const [width, height, depth] = piece.visual.size;
-    const entity = this.primitive(`FURNITURE_${piece.id}`, piece.visual.shape, colorFromHex(piece.visual.color), piece.visual.shape === 'sphere');
-    entity.setLocalScale(width, height, depth);
-    entity.setLocalPosition(0, piece.visual.shape === 'sphere' ? HANGING_HEIGHT_M : height / 2 + 0.05, 0);
+    const entity = this.assets.instantiate(`furniture.${piece.id}`, piece.visual);
+    entity.setLocalPosition(0, piece.visual.shape === 'sphere' ? HANGING_HEIGHT_M : piece.visual.size[1] / 2 + 0.05, 0);
     return entity;
   }
 

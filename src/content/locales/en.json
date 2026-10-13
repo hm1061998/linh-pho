@@ -217,6 +217,11 @@
   "pause.restart_confirm": "Starting over erases your current progress. Are you sure?",
   "pause.restart_yes": "Yes, start over",
   "pause.restart_no": "Cancel",
+  "pause.quality": "Quality",
+  "pause.quality.auto": "Auto",
+  "pause.quality.low": "Low",
+  "pause.quality.mobile": "Mobile",
+  "pause.quality.high": "High",
 
   "notice.save_failed": "Progress could not be saved. It will be lost if the page reloads.",
   "notice.save_unreadable": "The old progress could not be read. A copy was kept, and the game starts fresh.",

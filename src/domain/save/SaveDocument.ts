@@ -11,13 +11,19 @@ export const SAVE_VERSION = 1;
 
 export type Language = 'vi' | 'en';
 
+/** `auto` picks a preset from the device: mobile for touch screens, high otherwise. */
+export type QualityChoice = 'auto' | 'low' | 'mobile' | 'high';
+
 export interface Settings {
   readonly language: Language;
   readonly reducedEffects: boolean;
   readonly soundOn: boolean;
+  readonly quality: QualityChoice;
 }
 
-export const DEFAULT_SETTINGS: Settings = { language: 'vi', reducedEffects: false, soundOn: true };
+export const DEFAULT_SETTINGS: Settings = { language: 'vi', reducedEffects: false, soundOn: true, quality: 'auto' };
+
+const QUALITY_CHOICES: readonly QualityChoice[] = ['auto', 'low', 'mobile', 'high'];
 
 export interface SaveDocument {
   readonly version: number;
@@ -167,6 +173,7 @@ export function parseSettings(value: unknown): Settings {
     language: LANGUAGES.includes(value.language as Language) ? (value.language as Language) : DEFAULT_SETTINGS.language,
     reducedEffects: isBoolean(value.reducedEffects) ? value.reducedEffects : DEFAULT_SETTINGS.reducedEffects,
     soundOn: isBoolean(value.soundOn) ? value.soundOn : DEFAULT_SETTINGS.soundOn,
+    quality: QUALITY_CHOICES.includes(value.quality as QualityChoice) ? (value.quality as QualityChoice) : DEFAULT_SETTINGS.quality,
   };
 }
 

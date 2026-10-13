@@ -326,3 +326,30 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Không có file âm thanh:** `shared/audio/sfx.ts` tổng hợp âm bằng Web Audio API (sóng sin, tam giác, vuông). Tám âm: đèn bật, đèn tắt, nhặt, tách (gắn ô), trượt, sai, chuông, xu. Âm tiếng «tách» là thứ GDD yêu cầu cho lắp khung.
 - **Mở khoá:** `AudioContext` chỉ được tạo sau cử chỉ đầu tiên (pointerdown hoặc keydown), vì trình duyệt chặn âm thanh trước đó. Mọi lệnh phát đều là no-op khi tắt âm, khi chưa có context, hoặc khi trình duyệt chưa chạy context.
 - **Chưa kiểm chứng bằng tai:** Trình duyệt tự động không nghe được. Phần này cần kiểm tra trên máy thật.
+
+## D-049 — Bộ nạp GLB: mọi asset có dự phòng, không bao giờ bắt buộc
+
+- **Manifest:** `src/content/assets.json` được kiểm tra bởi `domain/content/validateAssets.ts`. Nguồn chỉ là `/assets/…glb` cùng gốc, hoặc một bộ sinh có tên trong danh sách. Mục hỏng bị loại có lý do, phần còn lại vẫn chạy.
+- **Dự phòng:** Một asset không có nguồn, hoặc tải lỗi, hoặc hết thời gian (8 s), thì dùng hình khối. `AssetLoader.instantiate` không bao giờ ném lỗi, nên thiếu model không làm dừng việc dựng cảnh.
+- **Tải một lần:** Mỗi model được tải một lần, nhiều lần gọi đồng thời chia sẻ cùng một lần tải. Mỗi lần dùng là một bản sao từ container.
+- **Thay một asset:** Đổi một dòng trong `assets.json`. Không sửa code gameplay (mục 8 của `docs/ASSET_MANIFEST.md`).
+- **Animation thiếu:** `resolveAnimation` chọn clip được yêu cầu nếu có, không thì `idle`, không thì không gì cả. Tên clip lấy từ track của PlayCanvas (`AnimTrack.name`). Tên asset có dạng `<file>/animation/<n>`, nên không dùng tên đó.
+- **Chỉ dev:** Các asset có id bắt đầu bằng `dev.` chỉ được tải trong chế độ phát triển. Bản phát hành không tải chúng.
+
+## D-050 — Test GLB sinh bằng code, đã nạp thành công trong trình duyệt
+
+- **Chọn:** `engine/assets/testGlb.ts` dựng một khối lập phương glTF 2.0 nhị phân với một clip `idle`. Không có file nhị phân trong repo, và không cần Blender để kiểm tra bộ nạp.
+- **Kiểm chứng:** `assetFormats.test.ts` đọc lại từng phần của file (header, chunk, accessor, chỉ số tam giác, clip). PlayCanvas nạp `dev.test_crate` thành công trong Chrome: trạng thái `loaded`, clip `idle`, và khối hiện đúng trong cảnh.
+- **Giới hạn:** Đây là asset thử, không phải model thật. Nó không chứng minh được đường nhập từ Blender (hướng, vật liệu, pivot). Mục đó vẫn chờ lần nhập đầu tiên theo mục 8 của `docs/ASSET_MANIFEST.md`.
+
+## D-051 — Preset chất lượng: hiện chỉ đổi mật độ điểm ảnh
+
+- **Chọn:** Thấp 1.0, di động 1.5, cao 2.0 (giới hạn mật độ điểm ảnh của canvas). Chế độ tự động chọn di động cho màn hình cảm ứng, cao cho còn lại. Người chơi đổi trong menu tạm dừng, lưu trong cài đặt.
+- **Vì sao chỉ một núm:** Số hạt, bóng đổ, và lightmap đều phụ thuộc asset thật, nên chưa có cách đo. Khi thêm núm nào thì đo trên thiết bị trước. Không thêm núm chỉ để điền bảng.
+- **Đổi tức thì:** `GameApp.setQuality` cập nhật thiết bị render và đo lại canvas. Không cần tải lại trang.
+
+## D-052 — Công cụ đo và kiểm tra: F3 cho mọi bản, F4 chỉ dev
+
+- **F3 (mọi bản):** Hiện FPS, số lệnh vẽ (draw calls), và số model đã tải. Số liệu lấy từ bộ đếm của engine (`app.stats`). Không ghi, không gửi đi đâu.
+- **F4 (chỉ dev, `import.meta.env.DEV`):** Bảng asset: trạng thái, clip, nút Tải và Đặt trước mặt. Nhãn tiếng Anh vì người chơi không thấy bảng này.
+- **Giới hạn đo:** Trong pane trình duyệt, FPS chỉ khoảng 3 (D-032). Con số đó không dùng để đánh giá hiệu năng. Đo thật trên máy thật ở Module 10.

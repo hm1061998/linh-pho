@@ -217,6 +217,11 @@
   "pause.restart_confirm": "Bắt đầu lại sẽ xoá tiến trình hiện tại. Chắc chắn không?",
   "pause.restart_yes": "Có, bắt đầu lại",
   "pause.restart_no": "Huỷ",
+  "pause.quality": "Chất lượng",
+  "pause.quality.auto": "Tự động",
+  "pause.quality.low": "Thấp",
+  "pause.quality.mobile": "Di động",
+  "pause.quality.high": "Cao",
 
   "notice.save_failed": "Chưa lưu được tiến trình. Tiến trình sẽ mất khi tải lại trang.",
   "notice.save_unreadable": "Không đọc được tiến trình cũ. Bản sao đã được giữ lại, và trò chơi bắt đầu lại.",

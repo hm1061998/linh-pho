@@ -11,6 +11,9 @@ import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
 import { HUB_WORLD } from '../engine/scene/hubCollision';
 import { WorldView } from '../engine/world/WorldView';
+import { AssetLoader } from '../engine/assets/AssetLoader';
+import { ASSET_MANIFEST, toAssetEntries } from '../engine/assets/manifest';
+import type { QualityProfile } from '../engine/quality/qualityPresets';
 import { playSfx } from '../shared/audio/sfx';
 import { clampPixelRatio } from '../shared/utils/display';
 import { radToDeg } from '../shared/utils/math';
@@ -58,6 +61,7 @@ export class GameApp {
   private readonly interactionSystem: InteractionSystem;
   private readonly npcs: NpcRenderer;
   private readonly world: WorldView;
+  private readonly assetLoader: AssetLoader;
   private readonly fx: SpiritBurst;
   private readonly player: PlayerController;
   private readonly camera: CameraController;
@@ -74,12 +78,16 @@ export class GameApp {
       const log = issue.level === 'error' ? console.error : console.warn;
       log(`[Content] ${issue.source}: ${issue.message}`);
     }
+    for (const issue of ASSET_MANIFEST.issues) {
+      console.warn(`[Assets] ${issue.source}: ${issue.message}`);
+    }
 
     this.inputService = new InputService(canvas);
     this.sessionState = new GameSession(GAME_CONTENT);
     this.interactionSystem = new InteractionSystem();
     this.npcs = new NpcRenderer(app.root, GAME_CONTENT.npcs, HUB_WORLD);
-    this.world = new WorldView(app.root, GAME_CONTENT, HUB_WORLD);
+    this.assetLoader = new AssetLoader(app, toAssetEntries(ASSET_MANIFEST.entries));
+    this.world = new WorldView(app.root, GAME_CONTENT, HUB_WORLD, this.assetLoader);
     this.fx = new SpiritBurst(app.root);
     this.player = new PlayerController(app.root, HUB_WORLD);
     this.camera = new CameraController(app.root, this.player.groundPosition, HUB_WORLD.bounds);
@@ -174,9 +182,33 @@ export class GameApp {
     return this.interactionSystem;
   }
 
-  /** Reduced effects: no lantern burst. Module 08 saves this as a setting. */
+  /** Reduced effects: no lantern burst. Saved as a setting. */
   setReducedVfx(reduced: boolean): void {
     this.reducedVfx = reduced;
+  }
+
+  /** Optional models, and their loading state. Every entry has a fallback, so none of them is required. */
+  get assets(): AssetLoader {
+    return this.assetLoader;
+  }
+
+  /** Applies a quality preset. The canvas is re-sized at once, so the change shows without a reload. */
+  setQuality(profile: QualityProfile): void {
+    this.app.graphicsDevice.maxPixelRatio = clampPixelRatio(window.devicePixelRatio, profile.pixelRatioCap);
+    this.resize();
+  }
+
+  /** Frame rate and draw calls from the engine's own counters, for the stats overlay. */
+  stats(): { readonly fps: number; readonly drawCalls: number } {
+    return { fps: this.app.stats.frame.fps, drawCalls: this.app.stats.drawCalls.total };
+  }
+
+  /** For the asset inspector: puts an entity on the ground two metres in front of the player. */
+  placeInFrontOfPlayer(entity: pc.Entity): void {
+    const { x, z } = this.player.groundPosition;
+    const spot = { x: x + 2, z };
+    entity.setLocalPosition(spot.x, HUB_WORLD.surfaceHeightAt(spot), spot.z);
+    this.app.root.addChild(entity);
   }
 
   /** Stops the loop, removes listeners, and destroys the engine and its graphics device. Safe to call twice. */
@@ -226,6 +258,7 @@ export class GameApp {
     this.app.on('update', this.tick);
     this.cleanups.push(() => this.app.off('update', this.tick));
     this.sessionState.start();
+    this.assetLoader.preload(import.meta.env.DEV);
     this.syncWorld();
     this.app.start();
   }

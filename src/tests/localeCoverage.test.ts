@@ -26,6 +26,10 @@ const BUILT_AT_RUNTIME = [
   'symbol.signboard.name',
   'ui.lantern.real',
   'ui.lantern.spirit',
+  'pause.quality.auto',
+  'pause.quality.low',
+  'pause.quality.mobile',
+  'pause.quality.high',
 ];
 
 describe('keys built at runtime', () => {

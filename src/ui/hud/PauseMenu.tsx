@@ -89,6 +89,9 @@ export function PauseMenu({ game, controller }: { readonly game: GameApp; readon
         <button type="button" aria-pressed={settings.soundOn} onClick={() => update({ soundOn: !settings.soundOn })}>
           {`${t('pause.sound')}: ${settings.soundOn ? t('pause.on') : t('pause.off')}`}
         </button>
+        <button type="button" onClick={() => update({ quality: nextQuality(settings.quality) })}>
+          {`${t('pause.quality')}: ${t(`pause.quality.${settings.quality}`)}`}
+        </button>
       </div>
       {confirming ? (
         <div className="pause-confirm">
@@ -107,6 +110,14 @@ export function PauseMenu({ game, controller }: { readonly game: GameApp; readon
       )}
     </section>
   );
+}
+
+const QUALITY_ORDER: readonly Settings['quality'][] = ['auto', 'low', 'mobile', 'high'];
+
+/** The next quality choice in the cycle: auto, low, mobile, high, then back to auto. */
+function nextQuality(current: Settings['quality']): Settings['quality'] {
+  const index = QUALITY_ORDER.indexOf(current);
+  return QUALITY_ORDER[(index + 1) % QUALITY_ORDER.length] ?? 'auto';
 }
 
 /** The HUD's menu button. Touch and keyboard players use it too, so Escape is never the only way in. */

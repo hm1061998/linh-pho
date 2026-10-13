@@ -6,6 +6,8 @@ import { CurrencyBar, QuestTracker } from '../ui/hud/HudBars';
 import { InteractionHint } from '../ui/hud/InteractionHint';
 import { LanternHud } from '../ui/hud/LanternHud';
 import { MenuButton, PauseMenu } from '../ui/hud/PauseMenu';
+import { AssetInspector } from '../ui/dev/AssetInspector';
+import { StatsOverlay } from '../ui/dev/StatsOverlay';
 import { NoticeStack } from '../ui/hud/NoticeStack';
 import { OrientationGate } from '../ui/hud/OrientationGate';
 import { StartupErrorPanel, type StartupErrorReason } from '../ui/hud/StartupErrorPanel';
@@ -128,6 +130,8 @@ export function GameView() {
             <DialoguePanel game={state.game} />
             <TouchControls game={state.game} />
             <MenuButton />
+            <StatsOverlay game={state.game} />
+            <AssetInspector game={state.game} />
             <PauseMenu game={state.game} controller={state.controller} />
             {state.loadOutcome === 'recovered' && <RecoveryBanner />}
           </>

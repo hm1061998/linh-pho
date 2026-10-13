@@ -16,7 +16,8 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `47bde1a` | `feat(module-05)`: Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01 |
 | `6c5d40a` | `feat(module-06)`: minigame lắp khung và khắc, chất lượng Thường/Đẹp/Hoàn Mỹ |
 | `73ee660` | `feat(module-07)`: cửa hàng, ba ô trưng bày, đơn hàng, Q02, màn hình kết thúc |
-| (module-08) | `feat(module-08)`: lưu và tải, tự lưu, khôi phục, cài đặt, menu tạm dừng, âm thanh |
+| `b52fb0e` | `feat(module-08)`: lưu và tải, tự lưu, khôi phục, cài đặt, menu tạm dừng, âm thanh |
+| (module-09) | `feat(module-09)`: manifest tài sản, bộ nạp GLB có dự phòng, test GLB, preset chất lượng, F3/F4 |
 
 ## Đã hoàn thành
 
@@ -97,13 +98,24 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Âm thanh tổng hợp:** Tám hiệu ứng bằng Web Audio. Mở khoá sau cử chỉ người chơi. Tắt được trong menu (D-048).
 - **Màn kết thúc được nhớ:** Cờ `end_card_seen` (D-045).
 
+### Module 09 — Manifest tài sản, bộ nạp GLB, dev tools
+- **Manifest (`docs/ASSET_MANIFEST.md`):** Hợp đồng với Blender. Cho mọi model MVP: kích thước, ngân sách tam giác (đề xuất), pivot và hướng, tên node, animation bắt buộc và tùy chọn, collider, và bảng trạng thái. Repo không có model production nào, và tài liệu nói rõ điều đó.
+- **Bộ nạp (`engine/assets/AssetLoader.ts`):** Đọc `src/content/assets.json`. Mỗi asset có dự phòng hình khối. Tải lỗi, hết giờ, hoặc thiếu file đều giữ dự phòng, không dừng game (D-049).
+- **Animation thiếu:** Clip được yêu cầu, không thì `idle`, không thì đứng yên (`resolveAnimation`, test đầy đủ).
+- **Test GLB (`engine/assets/testGlb.ts`):** Khối glTF 2.0 nhị phân có clip `idle`, sinh bằng code. PlayCanvas nạp thành công trong Chrome (D-050).
+- **Thay một asset:** Đổi một dòng trong `assets.json`. Đã kiểm tra: `validateAssets` từ chối nguồn ngoài `/assets/` và bộ sinh lạ.
+- **Preset chất lượng:** Thấp, di động, cao, đổi mật độ điểm ảnh; mặc định tự động theo màn hình cảm ứng (D-051).
+- **Công cụ đo:** F3 hiện FPS, lệnh vẽ, và số model (mọi bản). F4 mở bảng asset (chỉ dev) để tải và đặt thử (D-052).
+- **Dev-only:** Asset `dev.*` không được tải trong bản phát hành.
+- **Chưa làm:** Phát animation trên NPC (NPC vẫn là placeholder). Lightmap và bake. Đo số tam giác thật. Color grading (không cần ở MVP). Cuối cùng là lưới Blender thật.
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 36 file, 301 test, tất cả đạt |
-| `npm run build` | Đạt. `index-*.js` 2,440.41 kB (gzip 643.83 kB). Hook dev không có trong bundle |
+| `npm test` | 38 file, 324 test, tất cả đạt |
+| `npm run build` | Đạt. `index-*.js` 2,449.03 kB (gzip 646.76 kB). Hook dev không có trong bundle |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -129,6 +141,9 @@ Test thuần (chạy trong Node), theo nhóm:
   - `shopContent`: nội dung thật không có lỗi. Giá 0, màu sai, hình lạ, đơn thiếu món, quầy thiếu, ô trùng đều bị loại có lý do.
   - `q02`: Q02 bắt đầu sau Q01, không nhận đơn trước khi nhiệm vụ hỏi, Kệ Đèn không bán trước Q01, mua và đặt đầy đủ đến khi xong, phần thưởng trả đúng một lần, từ chối cấp và ô đã có món.
   - `gameplayContent`: danh sách nhiệm vụ có Q02, và quầy cùng ô trưng bày không nằm trong vật cản.
+- **Module 09:**
+  - `assetFormats`: GLB của test có header, chunk, accessor, chỉ số, và clip đúng cấu trúc. Sinh cùng một kết quả mỗi lần. Clip thiếu rơi về `idle`, rồi về đứng yên.
+  - `assetManifest`: manifest thật không có lỗi. Nguồn ngoài `/assets/` bị từ chối. Bộ sinh lạ bị từ chối. Mục hỏng không kéo theo mục khác. Preset chọn đúng theo thiết bị.
 - **Module 08:**
   - `saveDocument`: bản lưu do game ghi đọc lại đúng. Không phải đối tượng, thiếu phiên bản, phiên bản tương lai, coins sai kiểu, chất lượng và trạng thái nhiệm vụ lạ đều bị từ chối. Trường lạ được bỏ qua. Cài đặt hỏng về mặc định, tiến trình giữ nguyên.
   - `saveRoundTrip`: tải lại giữ coins, cờ, nhiệm vụ đang chạy, kho, đèn, puzzle đã giải, số lần sai, đơn đã nhận, cờ kết thúc. Craft đang dở không được lưu, nhưng nguyên liệu thì còn. Tải hai lần không trả thưởng hai lần. Pickup đã xoá khỏi nội dung bị bỏ khi tải. Bắt đầu lại trả về trạng thái mở đầu và được lưu.
@@ -159,6 +174,21 @@ Test thuần (chạy trong Node), theo nhóm:
 | Console | Không có lỗi mới sau khi khởi động lại. Lỗi `LanternHud is not defined` còn trong buffer là của phiên HMR cũ |
 
 Lỗi thao tác khi kiểm tra Module 05 (không phải lỗi game): chọn bằng toạ độ thay vì ref đã bấm nhầm vùng trống. Sau đó dùng ref và kết quả đúng.
+
+### Kiểm tra trong trình duyệt (Module 09: bộ nạp GLB, F3, F4)
+
+| Bước | Kết quả |
+|---|---|
+| Tải trang | Bộ nạp đọc manifest. Năm nội thất ở trạng thái `none` (không có model), dùng dự phòng. `dev.test_crate` ở trạng thái `loaded` |
+| Clip của test crate | `idle`. Yêu cầu `wave` (không có) rơi về `idle`. Nội thất không có clip |
+| F4 (dev) | Bảng "Assets (dev)" hiện đúng trạng thái và clip |
+| Đặt test crate trước mặt người chơi | Khối glTF hiện trong cảnh, cạnh nhân vật, đúng màu và vị trí trên mặt đất. Số "Remove placed" tăng lên 1 |
+| F3 | Hiện "FPS 3, Draw calls 162, Models 1/6". FPS 3 là giới hạn pane (D-032), không phải đo thật |
+| Console | Không có lỗi trong bản hiện tại. Các lỗi `StatsOverlay is not defined` và `resolveQualityPreset is not defined` còn trong buffer là của phiên HMR cũ, trước khi khởi động lại |
+
+Lỗi tìm ra khi kiểm tra: tên clip sau khi nạp là `dev.test_crate/animation/0`, không phải `idle`. Nên `resolveAnimation` không khớp, và "thiếu animation thì về idle" sẽ không bao giờ chạy. Đã sửa: lấy tên từ `AnimTrack.name`. Sau sửa, clip là `idle`.
+
+Lỗi thứ hai: asset `dev.test_crate` được tải cả trong bản phát hành. Đã sửa: `preload(includeDev)` bỏ qua id `dev.` khi không ở chế độ dev.
 
 ### Kiểm tra trong trình duyệt (Module 08: lưu, khôi phục, tạm dừng, ngôn ngữ)
 
@@ -214,6 +244,7 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 ## Chưa kiểm chứng (phải nói rõ)
 - **FPS thực tế:** không đo được trong pane lúc này. Cần kiểm tra lại trên máy thật khi môi trường ổn định.
 - **Minigame chế tạo là placeholder HTML:** chưa có khung 3D, chưa xoay vật thể, chưa có tiếng «tách» (D-040). Kéo thả bằng cảm ứng thật chưa được thử trên thiết bị. Chỉ thử bằng chuột và click ref trong trình duyệt.
+- **Module 09 trong trình duyệt:** Chưa có model thật nên chưa đo được đường nhập Blender (hướng, pivot, vật liệu). Chưa thử nạp trên Android. Chưa phát animation trên NPC. Chưa đo số tam giác thật.
 - **Module 08 trong trình duyệt:** âm thanh chưa được nghe (trình duyệt tự động không phát được để kiểm). Chưa thử ở chế độ riêng tư, nơi IndexedDB có thể bị chặn. Chưa thử mở hai tab cùng lúc, nơi hai bản lưu có thể ghi đè nhau. Menu tạm dừng chưa thử trên màn hình điện thoại.
 - **Module 07 trong trình duyệt:** chưa đi bộ tới quầy (mở bằng `openPanel`). Sự khác biệt đầu và cuối tiệm là có thật nhưng nhẹ, cần xem lại với mô hình thật (Module 09). Màn kết thúc không được lưu, nên tải lại thì hiện lại. Panel cửa hàng chưa thử trên màn hình điện thoại.
 - **Module 05 trong trình duyệt:** chưa thấy bằng mắt ba ký hiệu 3D và bước chuyển sáng của chúng, chưa quét ký hiệu bằng tay, chưa đi hết Q01 trong trình duyệt (chỉ có test đơn vị với nội dung thật), chưa thấy cầu sáng và hạt, chưa thử nút Q trên cảm ứng.
@@ -230,10 +261,11 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 7. **Bundle 2.42 MB minify, 639 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
 8. **Copy hard-code đã chuyển sang locale** ở Module 08. Chỉ còn tên "Tiếng Việt" và "English" trong menu là viết cứng, vì đó là tên ngôn ngữ.
 9. **Hai tab cùng mở** có thể ghi đè bản lưu của nhau. Chưa khoá đa tab, sẽ xem lại ở Module 10 nếu cần.
+10. **Bộ sinh test GLB** nằm trong bundle phát hành (vài trăm byte mã), dù asset `dev.*` không được tải. Chấp nhận được ở MVP, nhưng Module 10 có thể tách ra nếu bundle cần gọn.
 
 ## Việc tiếp theo
-- **Module 09:** manifest tài sản và bộ nạp GLB có dự phòng hình khối, để bản chơi đầu tiên không cần Blender. Các hình khối hiện là placeholder viết trong code, nên Module 09 cần tách chúng thành tài sản có thể thay.
-- **Sau đó:** Module 10 (QA, kích thước bundle, hiệu năng), Module 11 (AnalyticsPort, PlatformPort, ghi chú riêng tư, checklist phát hành), Module 12 (thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`, gồm teaser chương 2).
+- **Module 10:** QA và kiểm thử end to end (Q00 → Q01 → Q02, và lưu tải lại ở giữa mỗi chặng), kích thước bundle và hiệu năng trên thiết bị thật, kiểm tra cảm ứng (joystick, minigame kéo thả, menu), đa tab, và ghi chú cho đo FPS thật.
+- **Sau đó:** Module 11 (AnalyticsPort không làm gì, PlatformPort, ghi chú riêng tư, checklist phát hành), Module 12 (thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`, gồm teaser chương 2). Lưới Blender thật làm song song theo `docs/ASSET_MANIFEST.md`.
 
 ## Checklist kiểm thử thủ công (Module 07, Q02)
 - [ ] Hoàn thành Q01. Quầy tiệm (gần cửa tiệm) hiện Q02 "Phiên Chợ Đầu Tiên" trong bảng nhiệm vụ.

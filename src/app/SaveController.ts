@@ -1,6 +1,7 @@
 import { setLanguage } from '../content';
 import { parseSaveDocument, serializeSaveDocument, DEFAULT_SETTINGS, type Settings } from '../domain/save/SaveDocument';
 import type { SavePort } from '../ports/SavePort';
+import { QUALITY_PROFILES, isCoarsePointer, resolveQualityPreset } from '../engine/quality/qualityPresets';
 import { setSfxEnabled } from '../shared/audio/sfx';
 import type { GameApp } from './GameApp';
 
@@ -147,6 +148,8 @@ export class SaveController {
     document.documentElement.lang = this.settings.language;
     this.game.setReducedVfx(this.settings.reducedEffects);
     setSfxEnabled(this.settings.soundOn);
+    const preset = resolveQualityPreset(this.settings.quality, isCoarsePointer());
+    this.game.setQuality(QUALITY_PROFILES[preset]);
   }
 
   /** A storage failure while reading counts as "nothing saved" and is reported, never thrown into the load. */
