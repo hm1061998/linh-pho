@@ -156,6 +156,10 @@
   "furniture.hanging_lamp.name": "Paper hanging lamp",
   "order.wood_lantern.name": "A customer needs a Wooden Lantern",
   "order.paper_rope.name": "A customer needs dó paper and hemp rope",
+  "order.ink_wood.name": "A customer needs ink and wood scrap",
+  "order.indigo_bamboo.name": "A customer needs indigo dye and two bamboo",
+  "order.rope_wood.name": "A customer needs two hemp ropes and wood scrap",
+  "order.spirit_lantern.name": "A customer needs a Spirit Pattern Lantern",
 
   "notice.bought": "Bought {item}",
   "notice.order_accepted": "Order accepted: {order}",

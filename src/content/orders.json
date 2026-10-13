@@ -15,6 +15,39 @@
         { "itemId": "rope", "count": 1 }
       ],
       "rewards": { "coins": 15, "reputation": 1 }
+    },
+    {
+      "id": "order_ink_wood",
+      "nameKey": "order.ink_wood.name",
+      "requires": [
+        { "itemId": "ink", "count": 1 },
+        { "itemId": "wood_scrap", "count": 1 }
+      ],
+      "rewards": { "coins": 20, "reputation": 2 }
+    },
+    {
+      "id": "order_indigo_bamboo",
+      "nameKey": "order.indigo_bamboo.name",
+      "requires": [
+        { "itemId": "indigo", "count": 1 },
+        { "itemId": "bamboo", "count": 2 }
+      ],
+      "rewards": { "coins": 25, "reputation": 2 }
+    },
+    {
+      "id": "order_rope_wood",
+      "nameKey": "order.rope_wood.name",
+      "requires": [
+        { "itemId": "rope", "count": 2 },
+        { "itemId": "wood_scrap", "count": 1 }
+      ],
+      "rewards": { "coins": 15, "reputation": 1 }
+    },
+    {
+      "id": "order_spirit_lantern",
+      "nameKey": "order.spirit_lantern.name",
+      "requires": [{ "itemId": "spirit_lantern", "count": 1 }],
+      "rewards": { "coins": 60, "reputation": 4 }
     }
   ]
 }

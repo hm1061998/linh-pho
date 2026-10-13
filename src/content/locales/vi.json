@@ -156,6 +156,10 @@
   "furniture.hanging_lamp.name": "Đèn treo giấy",
   "order.wood_lantern.name": "Khách cần một Đèn Mộc",
   "order.paper_rope.name": "Khách cần giấy dó và dây gai",
+  "order.ink_wood.name": "Khách cần mực và gỗ vụn",
+  "order.indigo_bamboo.name": "Khách cần màu lam và hai cây tre",
+  "order.rope_wood.name": "Khách cần hai cuộn dây gai và gỗ vụn",
+  "order.spirit_lantern.name": "Khách cần một Đèn Vân Linh",
 
   "notice.bought": "Đã mua {item}",
   "notice.order_accepted": "Đã nhận đơn: {order}",

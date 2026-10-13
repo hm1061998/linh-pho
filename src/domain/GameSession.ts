@@ -577,13 +577,29 @@ export class GameSession {
     return { ok: true };
   }
 
-  /** An order is requested while some active quest still has an unfinished accept objective for it. */
+  /**
+   * An order is requested while some active quest still has an unfinished accept objective for it, or when it is the
+   * next replay order after the first chapter.
+   */
   private orderIsRequested(orderId: string): boolean {
-    return this.content.quests.some(
+    const questAsks = this.content.quests.some(
       (quest) =>
         this.quests.statusOf(quest.id) === 'active' &&
         quest.objectives.some((objective) => objective.type === 'accept' && objective.targetId === orderId),
     );
+    return questAsks || this.isNextReplayOrder(orderId);
+  }
+
+  /**
+   * After the first chapter (`mvp_complete`), the board offers the authored orders one at a time, in the order they are
+   * written. The next order is the first one not yet delivered.
+   */
+  private isNextReplayOrder(orderId: string): boolean {
+    if (!this.flags.get('mvp_complete')) {
+      return false;
+    }
+    const next = this.orderBoard.views(this.inventory).find((order) => order.status !== 'delivered');
+    return next?.id === orderId;
   }
 
   // ---------- snapshots ----------

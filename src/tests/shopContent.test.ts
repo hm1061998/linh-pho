@@ -24,13 +24,21 @@ const GOOD_PIECE = {
 };
 
 describe('shipped shop content', () => {
-  it('loads with no issues: a counter, three sockets, five furniture pieces, and two orders', () => {
+  it('loads with no issues: a counter, three sockets, five furniture pieces, and the six authored orders', () => {
     const result = validateShop(rawShop(), { ...CTX, hasTextKey: (key) => key.length > 0 && key.includes('.') });
     expect(result.issues).toEqual([]);
     expect(result.content.counter).not.toBeNull();
     expect(result.content.slots).toHaveLength(3);
     expect(result.content.furniture).toHaveLength(5);
-    expect(result.content.orders.map((order) => order.id)).toEqual(['order_wood_lantern', 'order_paper_rope']);
+    // The first two are the chapter's orders, and the other four are the replay orders GDD C3 asks for.
+    expect(result.content.orders.map((order) => order.id)).toEqual([
+      'order_wood_lantern',
+      'order_paper_rope',
+      'order_ink_wood',
+      'order_indigo_bamboo',
+      'order_rope_wood',
+      'order_spirit_lantern',
+    ]);
   });
 
   it('gives the second socket and the hanging lamp a later shop level, so the shop visibly grows', () => {
