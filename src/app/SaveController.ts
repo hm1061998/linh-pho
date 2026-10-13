@@ -153,6 +153,7 @@ export class SaveController {
     document.documentElement.dataset.largeText = String(this.settings.largeText);
     this.game.setReducedVfx(this.settings.reducedEffects);
     setSfxEnabled(this.settings.soundOn);
+    this.game.input.bindings.set(this.settings.keys);
     const preset = resolveQualityPreset(this.settings.quality, this.platform.touchFirst);
     this.game.setQuality(QUALITY_PROFILES[preset]);
   }

@@ -14,6 +14,7 @@ import { StartupErrorPanel, type StartupErrorReason } from '../ui/hud/StartupErr
 import { TouchControls } from '../ui/hud/TouchControls';
 import { useLanguage } from '../ui/state/useLanguage';
 import { t } from '../content';
+import { acquireSaveLock, browserLocks } from '../adapters/SaveLock';
 import { LocalSaveAdapter } from '../adapters/LocalSaveAdapter';
 import { unlockAudio } from '../shared/audio/sfx';
 import { GameApp } from './GameApp';
@@ -22,6 +23,8 @@ import { SaveController, type LoadOutcome } from './SaveController';
 
 type ViewState =
   | { readonly status: 'loading' }
+  /** Another tab owns the save. This tab waits, and starts when that tab closes. */
+  | { readonly status: 'waiting_save' }
   | {
       readonly status: 'ready';
       readonly game: GameApp;
@@ -33,7 +36,8 @@ type ViewState =
 /**
  * Mounts the game canvas under a transparent HUD root. The canvas is created imperatively for each effect run, so
  * StrictMode and HMR never share an engine instance or a WebGL context. The save is loaded before the HUD appears, so
- * the player never sees a fresh world replace the saved one. The effect cleanup disposes everything it created.
+ * the player never sees a fresh world replace the saved one. Only one tab at a time owns the save, so two open tabs
+ * cannot overwrite each other. The effect cleanup disposes everything it created and gives the save lock back.
  */
 export function GameView() {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -60,32 +64,52 @@ export function GameView() {
     let game: GameApp | null = null;
     let controller: SaveController | null = null;
     let removeDevHandle: (() => void) | null = null;
+    let releaseSave: (() => void) | null = null;
+    const waitingForSave = new AbortController();
 
-    GameApp.create({ canvas, container })
-      .then(async (created) => {
-        // The effect was cleaned up while the device was still being created. Dispose and stop.
+    // Without the Web Locks API the lock is skipped, and the game starts as it did before.
+    const locks = browserLocks();
+    const ownership: Promise<(() => void) | null> = locks
+      ? acquireSaveLock(locks, waitingForSave.signal, () => {
+          if (!cancelled) {
+            setState({ status: 'waiting_save' });
+          }
+        })
+      : Promise.resolve(null);
+
+    ownership
+      .then((release) => {
         if (cancelled) {
-          created.dispose();
-          return;
+          release?.();
+          return undefined;
         }
-        game = created;
-        const loader = new SaveController(created, new LocalSaveAdapter());
-        const loadOutcome = await loader.load();
-        if (cancelled) {
-          loader.dispose();
-          created.dispose();
-          return;
-        }
-        controller = loader;
-        if (import.meta.env.DEV) {
-          // Dev-only handle for acceptance checks in the browser console. Stripped from production builds.
-          const scope = window as Window & { __linhPho?: { game: GameApp } };
-          scope.__linhPho = { game: created };
-          removeDevHandle = () => {
-            delete scope.__linhPho;
-          };
-        }
-        setState({ status: 'ready', game: created, controller: loader, loadOutcome });
+        releaseSave = release;
+        setState({ status: 'loading' });
+        return GameApp.create({ canvas, container }).then(async (created) => {
+          // The effect was cleaned up while the device was still being created. Dispose and stop.
+          if (cancelled) {
+            created.dispose();
+            return;
+          }
+          game = created;
+          const loader = new SaveController(created, new LocalSaveAdapter());
+          const loadOutcome = await loader.load();
+          if (cancelled) {
+            loader.dispose();
+            created.dispose();
+            return;
+          }
+          controller = loader;
+          if (import.meta.env.DEV) {
+            // Dev-only handle for acceptance checks in the browser console. Stripped from production builds.
+            const scope = window as Window & { __linhPho?: { game: GameApp } };
+            scope.__linhPho = { game: created };
+            removeDevHandle = () => {
+              delete scope.__linhPho;
+            };
+          }
+          setState({ status: 'ready', game: created, controller: loader, loadOutcome });
+        });
       })
       .catch((error: unknown) => {
         if (cancelled) {
@@ -98,12 +122,16 @@ export function GameView() {
 
     return () => {
       cancelled = true;
+      waitingForSave.abort();
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
       removeDevHandle?.();
       controller?.dispose();
       game?.dispose();
       game = null;
+      // Last, so nothing writes the save after another tab has been given the lock.
+      releaseSave?.();
+      releaseSave = null;
       canvas.remove();
     };
   }, []);
@@ -116,6 +144,11 @@ export function GameView() {
         {state.status === 'loading' && (
           <p className="status-card" role="status">
             {t('ui.loading')}
+          </p>
+        )}
+        {state.status === 'waiting_save' && (
+          <p className="status-card" role="status">
+            {t('ui.save.waiting')}
           </p>
         )}
         {state.status === 'ready' && (

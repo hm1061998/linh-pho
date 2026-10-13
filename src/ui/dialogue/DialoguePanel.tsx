@@ -41,14 +41,14 @@ export function DialoguePanel({ game }: { readonly game: GameApp }) {
       if (event.target instanceof HTMLButtonElement) {
         return;
       }
-      if (event.code === 'KeyE' || event.code === 'Enter' || event.code === 'Space') {
+      if (event.code === 'Enter' || event.code === 'Space' || game.input.bindings.actionFor(event.code) === 'interact') {
         event.preventDefault();
         dialogue.advance();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, dialogue]);
+  }, [isOpen, dialogue, game]);
 
   if (!view) {
     return null;

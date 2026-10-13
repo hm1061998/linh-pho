@@ -1,4 +1,5 @@
 import type { Quality } from '../content/gameplayTypes';
+import { cleanKeyMap, DEFAULT_KEY_MAP, type KeyMap } from '../input/keyMap';
 import { type SessionProgress } from './SessionProgress';
 
 /**
@@ -21,6 +22,8 @@ export interface Settings {
   readonly quality: QualityChoice;
   /** `large` scales the whole HUD up, for players who need bigger text and buttons. */
   readonly largeText: boolean;
+  /** The player's keys. A save from before this field existed loads with the defaults. */
+  readonly keys: KeyMap;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -29,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   soundOn: true,
   quality: 'auto',
   largeText: false,
+  keys: DEFAULT_KEY_MAP,
 };
 
 const QUALITY_CHOICES: readonly QualityChoice[] = ['auto', 'low', 'mobile', 'high'];
@@ -186,6 +190,7 @@ export function parseSettings(value: unknown): Settings {
     soundOn: isBoolean(value.soundOn) ? value.soundOn : DEFAULT_SETTINGS.soundOn,
     quality: QUALITY_CHOICES.includes(value.quality as QualityChoice) ? (value.quality as QualityChoice) : DEFAULT_SETTINGS.quality,
     largeText: isBoolean(value.largeText) ? value.largeText : DEFAULT_SETTINGS.largeText,
+    keys: cleanKeyMap(value.keys),
   };
 }
 

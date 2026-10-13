@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GameApp } from '../../app/GameApp';
 import { GAME_CONTENT, t } from '../../content';
 import type { SessionSnapshot } from '../../domain/GameSession';
@@ -24,7 +24,7 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
       }
       const panel = game.session.currentPanel;
       // Escape is the pause menu's key: it closes an open panel first, then opens the menu.
-      if (event.code === 'KeyI') {
+      if (game.input.bindings.actionFor(event.code) === 'inventory') {
         event.preventDefault();
         // The inventory would end a craft in progress. Keep the minigame open until the player finishes or cancels it.
         if (game.session.activeCraft) {
@@ -41,12 +41,29 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [game]);
 
+  // Opening a panel moves focus into it, so keyboard and screen-reader users land on it. Closing returns focus to where
+  // it was. Switching between panels keeps the same return point.
+  const open = snap.panel !== null && !dialogue;
+  const cardRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const returnTo = document.activeElement;
+    cardRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (returnTo instanceof HTMLElement) {
+        returnTo.focus({ preventScroll: true });
+      }
+    };
+  }, [open]);
+
   if (!snap.panel || dialogue) {
     return null;
   }
   const panel = snap.panel;
   return (
-    <section className="panel-card" role="dialog" aria-modal="true" aria-label={panelTitle(snap)}>
+    <section ref={cardRef} tabIndex={-1} className="panel-card" role="dialog" aria-modal="true" aria-label={panelTitle(snap)}>
       {panel.kind === 'craft' ? <CraftPanel game={game} stationId={panel.stationId} snap={snap} /> : null}
       {panel.kind === 'puzzle' ? <PuzzlePanel game={game} puzzleId={panel.puzzleId} snap={snap} /> : null}
       {panel.kind === 'shop' ? (

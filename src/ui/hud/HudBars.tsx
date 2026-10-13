@@ -34,6 +34,8 @@ export function QuestTracker({ game }: { readonly game: GameApp }) {
             <span>
               {t(objective.textKey)}
               {objective.count > 1 ? ` (${objective.progress}/${objective.count})` : ''}
+              {/* The check mark above is hidden from screen readers, so the state is spoken here instead. */}
+              <span className="sr-only">{` — ${t(objective.done ? 'ui.tracker.done' : 'ui.tracker.todo')}`}</span>
             </span>
           </li>
         ))}

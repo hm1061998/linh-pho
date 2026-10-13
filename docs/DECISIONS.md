@@ -427,3 +427,30 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Các khối này nằm trong mọi ảnh chụp và làm hub trông chưa xong. Cơ chế hiện có đã đủ, không cần đổi code gameplay.
 - **Đánh đổi:** 39 file mới, mỗi file chỉ một vật. Tổng số GLB lên 56. Cách gộp mỗi gian hàng vào một file sẽ cần đổi cơ chế nạp, nên chưa làm.
 - **Kiểm chứng:** Test đọc danh sách `hub.*` từ `assets.json`, nên mọi vật hub mới đều được kiểm tra kích thước và tâm. Trong game: 56 asset không dev đều `loaded`, và gian hàng, cổng, đèn góc được chụp ở 30 m.
+
+## D-065 — Tách chunk: engine, React và game ở ba file
+
+- **Chọn:** `vite.config.ts` gom `playcanvas` và `react`/`react-dom`/`scheduler` vào hai chunk riêng, phần còn lại là chunk game. Ngưỡng cảnh báo đặt 2200 kB để chặn đúng chunk engine.
+- **Lý do:** Khi chỉ sửa game, trình duyệt chỉ tải lại chunk game (khoảng 47 kB gzip) thay vì cả bundle (647 kB gzip). Engine và React ít thay đổi nên được cache.
+- **Đánh đổi:** Tổng gzip không giảm (647 kB). Engine vẫn một chunk 2.08 MB, vì game cần nó khi khởi động, nên không tải lười được.
+
+## D-066 — Khoá save bằng Web Locks: một tab giữ save
+
+- **Chọn:** `src/adapters/SaveLock.ts` xin khoá `linh-pho-save` trước khi tạo engine. Tab thứ hai hiện thông báo «Trò chơi đang mở ở một tab khác» và chờ. Khi tab đầu đóng, trình duyệt nhả khoá và tab thứ hai vào game.
+- **Lý do:** Hai tab cùng ghi sẽ đè tiến trình của nhau. Web Locks có khoá theo origin, và trình duyệt tự nhả khi tab đóng, nên không cần dọn khi tab bị treo.
+- **Đánh đổi:** Trình duyệt không có Web Locks thì không khoá, và game chạy như trước. Mở hai tab vẫn có thể ghi đè trên trình duyệt đó.
+- **Kiểm chứng:** `saveLock.test.ts` dùng bản giả lập với hàng đợi, `ifAvailable`, và huỷ. Trong trình duyệt: tab hai hiện thông báo, đóng tab một thì tab hai vào game, và khoá không bị kẹt khi chạy dev có StrictMode.
+
+## D-067 — Rà soát trình đọc màn hình: focus và nhãn, chưa thử với phần mềm thật
+
+- **Chọn:** Mở panel, menu tạm dừng hoặc màn kết thúc thì focus vào hộp thoại, đóng thì trả focus về chỗ cũ. Tiến độ nhiệm vụ có chữ «đã xong» hoặc «chưa xong» cho trình đọc (`sr-only`). Nút Menu có `aria-expanded`. Khung chế tạo có `role="group"`.
+- **Lý do:** Người dùng bàn phím và trình đọc màn hình không biết panel đã mở, và dấu ✓ bị ẩn khỏi trình đọc nên không ai biết nhiệm vụ đã xong.
+- **Đánh đổi:** Đây là rà soát bằng cây accessibility của trình duyệt, không phải thử với NVDA, VoiceOver hay TalkBack. Mục này vẫn để «chưa thử» trong báo cáo.
+- **Kiểm chứng:** Trong trình duyệt, cây accessibility có «— chưa xong» trên từng mục. Mở menu thì focus vào «Tiếp tục chơi», đóng thì về nút Menu. Mở kho đồ thì focus vào «Kho đồ», đóng thì về nút Menu.
+
+## D-068 — Đổi phím trong menu tạm dừng
+
+- **Chọn:** Mỗi hành động (tiến, lùi, trái, phải, tương tác, đổi đèn, kho đồ) có một phím chính, đổi được trong menu. Phím mũi tên luôn đi kèm bốn hướng và không đổi được. Gán một phím đã dùng thì hai hành động đổi chỗ, nên không bao giờ có hai hành động cùng phím. Phím dành riêng gồm Esc, Enter, Space, Tab, Backspace, các phím F và phím mũi tên. Bảng phím nằm trong `Settings.keys` và lưu cùng save. Save cũ không có trường này thì dùng phím mặc định, không đổi phiên bản save.
+- **Lý do:** Phím cố định là một trong các nợ đã biết, và cần cho người dùng bố cục bàn phím khác hoặc có khó khăn khi bấm.
+- **Đánh đổi:** Chỉ đổi phím chính. Mũi tên vẫn di chuyển được. Phím dành riêng không đổi được, và Esc vẫn là phím mở menu và huỷ chọn.
+- **Kiểm chứng:** `keyMap.test.ts` và `keyboardState.test.ts` (613 test cùng các test khác). Trong trình duyệt: đổi Tiến sang T và nhân vật đi bằng T, W không đi nữa. Đổi Kho đồ sang B. Enter bị từ chối với thông báo. Esc huỷ không đóng menu. Tải lại trang thì phím còn nguyên, và nút «Đặt lại» trả về mặc định.

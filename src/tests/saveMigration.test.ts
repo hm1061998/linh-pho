@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_KEY_MAP } from '../domain/input/keyMap';
 import { BLANK_PROGRESS } from '../domain/save/SessionProgress';
 import {
   DEFAULT_SETTINGS,
@@ -33,13 +34,14 @@ describe('save migrations', () => {
     if (result.ok) {
       expect(result.document.version).toBe(1);
       expect(result.document.progress.coins).toBe(7);
-      // Settings the old save did not have (largeText) take their defaults. The ones it had are kept.
+      // Settings the old save did not have (largeText, keys) take their defaults. The ones it had are kept.
       expect(result.document.settings).toEqual({
         language: 'en',
         reducedEffects: true,
         soundOn: false,
         quality: 'low',
         largeText: false,
+        keys: DEFAULT_KEY_MAP,
       });
     }
   });

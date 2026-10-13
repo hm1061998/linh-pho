@@ -1114,3 +1114,29 @@ textarea,
   font: inherit;
   cursor: pointer;
 }
+
+/* Text for screen readers only: visually hidden, still read out. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Controls in the pause menu: one row per action, the current key, and the change button. */
+.pause-key {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pause-key-notice {
+  min-height: 1.4em;
+  margin: 0.25rem 0 0;
+}

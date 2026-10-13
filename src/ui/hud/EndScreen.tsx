@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { GameApp } from '../../app/GameApp';
 import { END_SEEN_FLAG } from '../../domain/GameSession';
 import { t } from '../../content';
@@ -16,6 +16,8 @@ export function EndScreen({ game }: { readonly game: GameApp }) {
   const snap = useSessionSnapshot(game);
   const visible = snap.flags.mvp_complete === true && snap.flags[END_SEEN_FLAG] !== true;
 
+  const cardRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     if (!visible) {
       return;
@@ -26,6 +28,7 @@ export function EndScreen({ game }: { readonly game: GameApp }) {
     }
     game.analytics.track({ name: 'chapter.completed', chapter: 'first_chapter' });
     game.input.pushBlocker(ENDING_BLOCKER);
+    cardRef.current?.focus({ preventScroll: true });
     return () => game.input.popBlocker(ENDING_BLOCKER);
   }, [game, visible]);
 
@@ -33,7 +36,7 @@ export function EndScreen({ game }: { readonly game: GameApp }) {
     return null;
   }
   return (
-    <section className="end-card" role="dialog" aria-modal="true" aria-labelledby="end-title">
+    <section ref={cardRef} tabIndex={-1} className="end-card" role="dialog" aria-modal="true" aria-labelledby="end-title">
       <h2 id="end-title">{t('end.title')}</h2>
       <p>{t('end.body')}</p>
       <p className="end-stats">{t('end.stats', { coins: String(snap.coins), reputation: String(snap.reputation) })}</p>

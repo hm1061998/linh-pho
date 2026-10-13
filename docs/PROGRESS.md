@@ -284,7 +284,7 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 4. **Lồng đèn soi vết** trong GDD được ánh xạ thành Đèn Vân Linh (D-026).
 5. **`speed` là vận tốc dự định** (D-014). Không ảnh hưởng vị trí.
 6. **Mất WebGL context** (GPU reset): chưa xử lý, chỉ có log lỗi.
-7. **Bundle 2.45 MB minify, 647 kB gzip,** chủ yếu do PlayCanvas. Dưới mục tiêu 20 MB, nhưng chưa tách chunk hay tải lười. Xem `docs/QA_REPORT.md` mục 1.
+7. **Bundle đã tách thành ba chunk:** engine 2.08 MB (535 kB gzip), React 219 kB, game 159 kB. Vẫn chưa tải lười engine. Xem `docs/QA_REPORT.md` mục 1 và D-065.
 8. **Copy hard-code đã chuyển sang locale** ở Module 08. Chỉ còn tên "Tiếng Việt" và "English" trong menu là viết cứng, vì đó là tên ngôn ngữ.
 9. **Hai tab cùng mở** có thể ghi đè bản lưu của nhau. Chưa khoá đa tab, sẽ xem lại ở Module 10 nếu cần.
 10. **Bộ sinh test GLB** nằm trong bundle phát hành (vài trăm byte mã), dù asset `dev.*` không được tải. Chấp nhận được ở MVP, nhưng Module 10 có thể tách ra nếu bundle cần gọn.
@@ -293,7 +293,7 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 - **Đã xong các module 00–12 theo prompt kit.** Phần còn lại không thể làm trong môi trường này: thiết bị thật, FPS thật, lưới Blender thật, và chính sách riêng tư đã duyệt.
 - **Trước khi gọi là "chơi thử được":** Làm các việc trong mục 8 của `docs/QA_REPORT.md`. Đo FPS thật trên desktop và Android, thử cảm ứng và xoay ngang trên điện thoại, thử Firefox và Safari. Cần thiết bị thật, nên không làm được trong môi trường này.
 - **Song song:** lưới Blender thật theo `docs/ASSET_MANIFEST.md`, bắt đầu bằng khối kiểm tra pipeline.
-- **Nợ kỹ thuật đã biết:** đổi phím (chưa có giao diện), trình đọc màn hình, đa tab, tách chunk PlayCanvas.
+- **Nợ kỹ thuật đã biết:** trình đọc màn hình chưa thử với phần mềm thật. Đổi phím, khoá đa tab và tách chunk đã làm (D-065 đến D-068).
 
 ## Checklist kiểm thử thủ công (Module 07, Q02)
 - [ ] Hoàn thành Q01. Quầy tiệm (gần cửa tiệm) hiện Q02 "Phiên Chợ Đầu Tiên" trong bảng nhiệm vụ.

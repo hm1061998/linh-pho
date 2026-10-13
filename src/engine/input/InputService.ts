@@ -1,5 +1,5 @@
-import { shouldQueueInteract, shouldQueueLantern } from './interactPolicy';
-import { BOUND_KEY_CODES } from './keyBindings';
+import { shouldQueueAction } from './interactPolicy';
+import { KeyBindings } from './keyBindings';
 import { KeyboardState } from './KeyboardState';
 import { addMoveInputs, applyDeadzone, clampMagnitude, NO_MOVE, type MoveInput } from './moveInput';
 
@@ -42,7 +42,8 @@ interface ScreenPoint {
  * - Blockers: while any blocker is active (dialogue, crafting, pause), gameplay input reads as neutral.
  */
 export class InputService {
-  private readonly keys = new KeyboardState();
+  private readonly bindingsTable: KeyBindings;
+  private readonly keys: KeyboardState;
   private readonly blockers = new Set<string>();
   private readonly activePointers = new Map<number, ScreenPoint>();
   private readonly cleanups: Array<() => void> = [];
@@ -55,8 +56,10 @@ export class InputService {
   private interactQueued = false;
   private lanternQueued = false;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, bindings: KeyBindings = new KeyBindings()) {
     this.canvas = canvas;
+    this.bindingsTable = bindings;
+    this.keys = new KeyboardState(bindings);
     // Focusable, so the canvas can take keyboard focus after a click or tap.
     canvas.tabIndex = 0;
 
@@ -70,6 +73,11 @@ export class InputService {
     this.bind(canvas, 'pointerup', this.onPointerEnd);
     this.bind(canvas, 'pointercancel', this.onPointerEnd);
     this.bind(canvas, 'wheel', this.onWheel, { passive: false });
+  }
+
+  /** The live key map. The pause menu changes it, and the HUD shows its labels. */
+  get bindings(): KeyBindings {
+    return this.bindingsTable;
   }
 
   /** True while at least one blocker is active. */
@@ -157,7 +165,7 @@ export class InputService {
     if (event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
-    if (!BOUND_KEY_CODES.has(event.code)) {
+    if (!this.bindingsTable.boundCodes().has(event.code)) {
       return;
     }
     // Read before our own preventDefault below, so "already handled by UI" means handled by someone else.
@@ -165,20 +173,18 @@ export class InputService {
     // Stop arrow keys from scrolling the page.
     event.preventDefault();
     const press = { code: event.code, repeat: event.repeat, defaultPrevented: handledByUi };
-    if (shouldQueueInteract(press, this.isBlocked)) {
+    if (shouldQueueAction(this.bindingsTable.codesFor('interact'), press, this.isBlocked)) {
       this.interactQueued = true;
     }
-    if (shouldQueueLantern(press, this.isBlocked)) {
+    if (shouldQueueAction(this.bindingsTable.codesFor('lantern'), press, this.isBlocked)) {
       this.lanternQueued = true;
     }
     this.keys.press(event.code);
   };
 
   private readonly onKeyUp = (event: KeyboardEvent): void => {
-    // Always release, even inside a form field, so a key held across a focus change cannot stick.
-    if (BOUND_KEY_CODES.has(event.code)) {
-      this.keys.release(event.code);
-    }
+    // Always release, whatever the map says now. A key remapped while held must not stay pressed.
+    this.keys.release(event.code);
   };
 
   private readonly onVisibilityChange = (): void => {

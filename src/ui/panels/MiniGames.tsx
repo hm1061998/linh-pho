@@ -166,7 +166,7 @@ function AssemblyGame({ game, view }: { readonly game: GameApp; readonly view: A
   return (
     <div className="minigame assembly">
       <p>{t('ui.minigame.assembly.instruction')}</p>
-      <div className="frame" aria-label={t('ui.minigame.assembly.title')}>
+      <div className="frame" role="group" aria-label={t('ui.minigame.assembly.title')}>
         {view.sockets.map((socket, index) => (
           <button
             key={socket.id}

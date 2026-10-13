@@ -1,4 +1,8 @@
-import { INTERACT_KEYS, LANTERN_KEYS } from './keyBindings';
+import { codesFor, DEFAULT_KEY_MAP } from '../../domain/input/keyMap';
+
+/** The codes that interact and lantern use under the default map. The input service passes the live ones instead. */
+const DEFAULT_INTERACT_KEYS: readonly string[] = codesFor('interact', DEFAULT_KEY_MAP);
+const DEFAULT_LANTERN_KEYS: readonly string[] = codesFor('lantern', DEFAULT_KEY_MAP);
 
 /**
  * Whether a key press should queue one action (interact, or toggle the lantern).
@@ -19,10 +23,10 @@ export function shouldQueueAction(keys: readonly string[], press: KeyPress, bloc
   return keys.includes(press.code) && !press.repeat && !press.defaultPrevented && !blocked;
 }
 
-export function shouldQueueInteract(press: KeyPress, blocked: boolean): boolean {
-  return shouldQueueAction(INTERACT_KEYS, press, blocked);
+export function shouldQueueInteract(press: KeyPress, blocked: boolean, keys: readonly string[] = DEFAULT_INTERACT_KEYS): boolean {
+  return shouldQueueAction(keys, press, blocked);
 }
 
-export function shouldQueueLantern(press: KeyPress, blocked: boolean): boolean {
-  return shouldQueueAction(LANTERN_KEYS, press, blocked);
+export function shouldQueueLantern(press: KeyPress, blocked: boolean, keys: readonly string[] = DEFAULT_LANTERN_KEYS): boolean {
+  return shouldQueueAction(keys, press, blocked);
 }

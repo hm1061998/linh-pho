@@ -1,5 +1,7 @@
 import type { GameApp } from '../../app/GameApp';
 import { t } from '../../content';
+import { keyLabel } from '../../domain/input/keyMap';
+import { useKeyMap } from '../state/useKeyMap';
 import { useSessionSnapshot } from '../state/useSession';
 
 /**
@@ -8,13 +10,14 @@ import { useSessionSnapshot } from '../state/useSession';
  */
 export function LanternHud({ game }: { readonly game: GameApp }) {
   const snap = useSessionSnapshot(game);
+  const keys = useKeyMap(game);
   const spirit = snap.lantern.phase === 'spirit' || snap.lantern.phase === 'to_spirit';
   return (
     <>
       <div className="spirit-tint" style={{ opacity: snap.lantern.spiritAmount }} aria-hidden="true" />
       <div className="lantern-badge" role="status">
         <span>{t(spirit ? 'ui.lantern.spirit' : 'ui.lantern.real')}</span>
-        <kbd aria-hidden="true">{t('ui.lantern.key')}</kbd>
+        <kbd aria-hidden="true">{keyLabel(keys.lantern)}</kbd>
         <span className="lantern-hint">{t('ui.lantern.toggle')}</span>
       </div>
     </>

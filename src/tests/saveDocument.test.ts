@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_KEY_MAP } from '../domain/input/keyMap';
 import { BLANK_PROGRESS, type SessionProgress } from '../domain/save/SessionProgress';
 import {
   DEFAULT_SETTINGS,
@@ -84,6 +85,7 @@ describe('save document: settings fall back, progress does not', () => {
         soundOn: false,
         quality: 'auto',
         largeText: false,
+        keys: DEFAULT_KEY_MAP,
       });
     }
   });
@@ -92,8 +94,27 @@ describe('save document: settings fall back, progress does not', () => {
     expect(parseSettings(undefined)).toEqual(DEFAULT_SETTINGS);
   });
 
+  it('loads a save from before key settings existed, with the default keys', () => {
+    const settings = parseSettings({ language: 'en', reducedEffects: false, soundOn: true, quality: 'auto', largeText: false });
+    expect(settings.keys).toEqual(DEFAULT_KEY_MAP);
+    expect(settings.language).toBe('en');
+  });
+
+  it('replaces a broken key map with the default keys, and keeps the rest of the settings', () => {
+    const settings = parseSettings({ language: 'en', keys: { ...DEFAULT_KEY_MAP, forward: 'Escape' } });
+    expect(settings.keys).toEqual(DEFAULT_KEY_MAP);
+    expect(settings.language).toBe('en');
+  });
+
   it('round-trips a non-default setting', () => {
-    const settings = { language: 'en', reducedEffects: true, soundOn: false, quality: 'low', largeText: true } as const;
+    const settings = {
+      language: 'en',
+      reducedEffects: true,
+      soundOn: false,
+      quality: 'low',
+      largeText: true,
+      keys: { ...DEFAULT_KEY_MAP, forward: 'KeyT', inventory: 'KeyB' },
+    } as const;
     const text = serializeSaveDocument(BLANK_PROGRESS, settings, new Date(0));
     const result = parseSaveDocument(JSON.parse(text));
     expect(result.ok && result.document.settings).toEqual(settings);

@@ -1,26 +1,47 @@
+import { codesFor, DEFAULT_KEY_MAP, actionFor, REMAP_ACTIONS, type KeyMap, type RemapAction } from '../../domain/input/keyMap';
+
 /**
- * Keyboard bindings by `KeyboardEvent.code`, so layouts (AZERTY, Dvorak) map to the same physical keys.
- * Kept as data so a key-remap screen (Prompt 10) can replace it without touching the input logic.
+ * The live key map. `InputService` and the keyboard state read it on every event, and the pause menu replaces it when the
+ * player changes a key. The HUD listens, so the key labels it shows stay current.
  */
-export const MOVE_BINDINGS = {
-  forward: ['KeyW', 'ArrowUp'],
-  back: ['KeyS', 'ArrowDown'],
-  left: ['KeyA', 'ArrowLeft'],
-  right: ['KeyD', 'ArrowRight'],
-} as const satisfies Record<string, readonly string[]>;
+export class KeyBindings {
+  private map: KeyMap;
+  private readonly listeners = new Set<() => void>();
 
-export const INTERACT_KEYS: readonly string[] = ['KeyE'];
+  constructor(map: KeyMap = DEFAULT_KEY_MAP) {
+    this.map = map;
+  }
 
-/** Đèn Soi Linh toggle. Q is the key the GDD lists for changing the lantern mode. */
-export const LANTERN_KEYS: readonly string[] = ['KeyQ'];
+  get current(): KeyMap {
+    return this.map;
+  }
 
-const ALL_BOUND_CODES: readonly string[] = [
-  ...MOVE_BINDINGS.forward,
-  ...MOVE_BINDINGS.back,
-  ...MOVE_BINDINGS.left,
-  ...MOVE_BINDINGS.right,
-  ...INTERACT_KEYS,
-  ...LANTERN_KEYS,
-];
+  /** Replaces the whole map and tells every listener. */
+  set(map: KeyMap): void {
+    this.map = map;
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
 
-export const BOUND_KEY_CODES: ReadonlySet<string> = new Set(ALL_BOUND_CODES);
+  /** Called on every change. Returns the function that stops listening. */
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  codesFor(action: RemapAction): readonly string[] {
+    return codesFor(action, this.map);
+  }
+
+  actionFor(code: string): RemapAction | null {
+    return actionFor(code, this.map);
+  }
+
+  /** Every key code any action uses. The input service listens to these, and to nothing else. */
+  boundCodes(): ReadonlySet<string> {
+    return new Set(REMAP_ACTIONS.flatMap((action) => codesFor(action, this.map)));
+  }
+}

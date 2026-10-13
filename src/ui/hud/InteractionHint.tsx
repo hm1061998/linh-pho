@@ -1,7 +1,9 @@
 import type { GameApp } from '../../app/GameApp';
 import { t } from '../../content';
+import { keyLabel } from '../../domain/input/keyMap';
 import { useCoarsePointer } from '../state/useCoarsePointer';
 import { useDialogueView, useInteractionFocus } from '../state/useGameplayState';
+import { useKeyMap } from '../state/useKeyMap';
 
 /**
  * Small hint near the bottom of the screen: "E · Nói chuyện với Bà Nghiêm", "E · Nhặt Tre". It appears only when
@@ -11,13 +13,14 @@ export function InteractionHint({ game }: { readonly game: GameApp }) {
   const focus = useInteractionFocus(game);
   const dialogue = useDialogueView(game);
   const coarse = useCoarsePointer();
+  const keys = useKeyMap(game);
 
   if (!focus || dialogue || coarse) {
     return null;
   }
   return (
     <div className="interaction-hint" role="status">
-      <kbd aria-hidden="true">{t('ui.key.interact')}</kbd>
+      <kbd aria-hidden="true">{keyLabel(keys.interact)}</kbd>
       <span>{t(focus.actionKey, { name: t(focus.labelKey) })}</span>
     </div>
   );

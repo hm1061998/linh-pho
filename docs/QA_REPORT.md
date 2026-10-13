@@ -20,8 +20,8 @@ Tải về trong trình duyệt (đo bằng Resource Timing, bản preview cục
 
 - **Mục tiêu ≤ 20 MB ban đầu:** đạt (≈ 0.65 MB gzip cho toàn bộ JS và CSS).
 - **Thời điểm tải (bản preview, cục bộ):** DOMContentLoaded 263 ms, load 263 ms. Đây là máy cục bộ, không phản ánh mạng di động.
-- **Phần lớn kích thước là PlayCanvas.** Chưa tách chunk riêng, chưa tải lười các hệ thống chưa cần. Đây là việc để sau nếu bundle cần gọn hơn.
-- **Cảnh báo của Vite:** chunk JS lớn hơn 500 kB. Đã biết, không phải lỗi.
+- **Phần lớn kích thước là PlayCanvas.** Đã tách thành ba file: engine 2.08 MB (535 kB gzip), React 219 kB, và phần game 159 kB. Khi chỉ sửa game, trình duyệt tải lại khoảng 47 kB gzip thay vì 647 kB (D-065). Engine vẫn là một file vì cần khi khởi động, nên chưa tải lười.
+- **Cảnh báo của Vite:** ngưỡng đặt 2200 kB để chặn đúng chunk engine. Mọi chunk khác vượt 500 kB vẫn được báo.
 
 ## 2. Không có 404 và không có lỗi console (đo thật)
 
@@ -71,8 +71,8 @@ Lệnh: `npm test` (Vitest). Kết quả: 41 tệp, 340 test, tất cả đạt.
 | Không chỉ dựa vào màu | Có: ký hiệu có hình dạng và chữ (Vòng, Sóng, Lửa), dấu đã sáng có ✓, ô trưng bày có chữ "Trống" hoặc tên món. |
 | Giảm chuyển động | Có: `prefers-reduced-motion` tắt animation CSS, và cài đặt giảm hiệu ứng tắt hạt. |
 | Chữ lớn | Có: cài đặt "Chữ lớn" phóng HUD lên 125%, qua CSS `zoom`. Đã kiểm tra trên bản production. |
-| Đổi phím | **Chưa làm.** Phím nằm trong `src/engine/input/keyBindings.ts`. Giao diện đổi phím là việc để sau. |
-| Trình đọc màn hình | **Chưa kiểm tra.** Không có trình đọc màn hình trong môi trường. |
+| Đổi phím | **Đã làm (D-068).** Đổi trong menu tạm dừng. Đã kiểm tra trong trình duyệt: đổi phím, Esc huỷ, từ chối phím dành riêng, phím còn nguyên sau khi tải lại, đặt lại mặc định. Chưa thử với bàn phím có layout khác. |
+| Trình đọc màn hình | **Rà soát, chưa thử với phần mềm thật (D-067).** Đã sửa focus khi mở và đóng panel, menu, màn kết thúc. Tiến độ nhiệm vụ đọc được «đã xong» hoặc «chưa xong». Nút Menu báo trạng thái mở. Khung chế tạo có vai trò nhóm. Chưa chạy NVDA, VoiceOver hay TalkBack. |
 | Độ tương phản | **Chưa đo.** Màu chữ và nền chưa qua công cụ đo WCAG. |
 
 ## 6. Thiết bị và trình duyệt đã thử
@@ -91,8 +91,8 @@ Lệnh: `npm test` (Vitest). Kết quả: 41 tệp, 340 test, tất cả đạt.
 2. **Không có thiết bị di động.** Mọi thứ về cảm ứng mới được kiểm tra trên chuột, bằng click giả lập và kéo giả lập.
 3. **Âm thanh chưa được nghe.** Trình duyệt tự động không phát được âm để kiểm tra.
 4. **Chưa có model thật.** Hiệu năng và tải asset thật chưa đo được. Xem `docs/ASSET_MANIFEST.md`.
-5. **Lưu nhiều tab.** Hai tab cùng mở có thể ghi đè nhau. Chưa có khoá.
-6. **Đổi phím và trình đọc màn hình chưa làm.**
+5. **Lưu nhiều tab.** Đã có khoá bằng Web Locks (D-066). Tab thứ hai hiện thông báo và chờ, rồi vào khi tab đầu đóng. Trình duyệt không có Web Locks thì không khoá.
+6. **Trình đọc màn hình chưa thử với phần mềm thật.** Đổi phím đã làm (D-068).
 
 ## 8. Việc cần làm trước khi gọi là "có thể chơi thử"
 
