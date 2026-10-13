@@ -2,7 +2,7 @@
 
 Cập nhật: 2026-10-14. Tài liệu này là hợp đồng giữa code và Blender. Mọi model 3D phải khớp với dòng tương ứng ở đây trước khi nhập vào game.
 
-**Tình trạng hiện tại:** 17 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 8 vật trong hub (mục 3, có thêm mái xưởng), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật không nằm trong các mục trên (cửa, cổng, cột đèn, gian hàng, lan can cầu...) vẫn là khối placeholder từ `src/engine/scene/hubLayout.ts`. **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
+**Tình trạng hiện tại:** 56 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 47 vật trong hub (mục 3 và 3b), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật còn lại (mặt đất, sông, lan can cầu, cột bên lề) vẫn là khối placeholder từ `src/engine/scene/hubLayout.ts`. **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
 
 ---
 
@@ -57,6 +57,19 @@ Kích thước và vị trí đọc trực tiếp từ `src/engine/scene/hubLayo
 | `ENV_Bridge_Deck` | mặt cầu | Mặt cầu. Vật liệu riêng: game làm sáng theo cờ `bridge_glow`. | có GLB |
 
 Mục tiêu ngân sách tam giác cho hub: dưới 60 000 tam giác trên màn hình mặc định. Đây là mục tiêu chưa đo, sẽ kiểm tra bằng số liệu F3 khi có model thật.
+
+### 3b. Phần còn lại của hub
+
+Các vật sau không có trong bảng mục 3, nhưng đã được làm thành GLB để hub nhìn tốt hơn. Quy tắc giống mục 3: gốc ở tâm khối blockout, kích thước lấy từ `hubLayout.ts`, và `src/tests/furnitureModels.test.ts` kiểm tra từng file. Mặt đất, sông, lan can cầu và cột bên lề vẫn là blockout.
+
+| Nhóm | Vật (id trong `hubLayout.ts`) | Số lượng |
+|---|---|---|
+| Gian hàng | `PROP_Stall_<n>_Table`, `_Canopy` (mái sọc), `_PostWest`, `_PostEast`, `_Lantern` | 4 gian × 5 |
+| Đèn góc | `PROP_Lamp_Corner_<NE/NW/SE/SW>_Pole`, `_Head` | 4 × 2 |
+| Đèn quảng trường | `PROP_Lamp_Plaza_Base`, `_Pole`, `_Head` | 3 |
+| Cổng cũ | `ENV_Gate_Pillar_West`, `_East`, `ENV_Gate_Beam`, `PROP_Lantern_Gate` | 4 |
+| Cửa tiệm | `ENV_House_Shop_Door` | 1 |
+| Bụi cây | `ENV_Bush_East`, `_West`, `_North` | 3 |
 
 ---
 
@@ -124,7 +137,7 @@ Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thê
 
 | Asset | Có GLB | Đã kiểm tra trên desktop | Đã kiểm tra trên Android |
 |---|---|---|---|
-| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 17 file | chưa thử |
-| Tám vật trong hub (mục 3, gồm mái xưởng thêm vào) | có | nạp trong dev; production tải đủ 17 file; cầu và tiệm sáng đúng khi bật cờ | chưa thử |
-| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 17 file | chưa thử |
+| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 56 file | chưa thử |
+| 47 vật trong hub (mục 3 và 3b) | có | nạp trong dev; cầu và tiệm sáng đúng khi bật cờ; gian hàng, cổng và đèn góc đã kiểm tra ở 30 m | chưa thử |
+| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 56 file | chưa thử |
 | `dev.test_crate` (mục 7) | sinh bằng code | đã nạp trong Chrome (dev) | chưa thử |

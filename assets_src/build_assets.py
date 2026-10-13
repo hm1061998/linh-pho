@@ -16,6 +16,7 @@ Conventions (docs/ASSET_MANIFEST.md):
 
 import math
 import os
+from functools import partial
 
 import bmesh
 import bpy
@@ -46,6 +47,8 @@ PALETTE = {
     "MAT_Window_A": ("#1F2A44", 0.35, None, 0.0),
     "MAT_Lips_A": ("#8E4A4A", 0.6, None, 0.0),
     "MAT_Belt_A": ("#3A2A1E", 0.7, None, 0.0),
+    "MAT_StoneDark_A": ("#6B5C47", 0.9, None, 0.0),
+    "MAT_Foliage_A": ("#3E6B4F", 0.9, None, 0.0),
 }
 
 
@@ -445,6 +448,85 @@ ASSETS = {
     "npc.npc_ong_do": ("npc_ong_do", npc_ong_do),
     "npc.npc_bac": ("npc_bac", npc_bac),
 }
+
+
+# ---- Hub detail beyond manifest section 3 (docs/ASSET_MANIFEST.md section 3b) ------------------------------------
+# Same rules as section 3: each piece is one GLB built around its own centre, at the size in hubLayout.ts. The
+# helpers take game sizes (x, y up, z) and convert them, because Blender is Z-up. The tests check the sizes.
+
+
+def _game_box(name: str, mat: str, size):
+    shape = Shape([mat])
+    shape.box(mat, (0.0, 0.0, 0.0), (size[0], size[2], size[1]))
+    return [shape.finish(name)], []
+
+
+def _game_ellipsoid(name: str, mat: str, size):
+    """A sphere of the given size. A radius of 0.5 scaled by the size gives exactly that size."""
+    shape = Shape([mat])
+    shape.sphere(mat, (0.0, 0.0, 0.0), 0.5, scale=(size[0], size[2], size[1]), u=16, v=10)
+    return [shape.finish(name)], []
+
+
+def _game_pole(name: str, mat: str, diameter: float, height: float):
+    shape = Shape([mat])
+    shape.cylinder(mat, (0.0, 0.0, 0.0), diameter / 2, height, segments=16)
+    return [shape.finish(name)], []
+
+
+def _stall_table(name: str):
+    wood, cloth = "MAT_WoodWarm_A", "MAT_Terracotta_A"
+    shape = Shape([wood, cloth])
+    shape.box(wood, (0.0, 0.0, 0.41), (2.4, 1.2, 0.08))  # top, from z 0.37 to 0.45
+    for x in (-1.05, 1.05):
+        for y in (-0.52, 0.52):
+            shape.box(wood, (x, y, -0.04), (0.1, 0.1, 0.82))  # legs, from z -0.45 to 0.37
+    shape.box(cloth, (0.0, 0.58, 0.1), (2.2, 0.02, 0.55))  # cloth hanging on the front (+Y), inside the box
+    return [shape.finish(name)], []
+
+
+def _stall_canopy(name: str):
+    # A striped awning: 14 strips across 2.8 m, alternating terracotta and paper. The strips fill the box exactly.
+    cloth, paper = "MAT_Terracotta_A", "MAT_Paper_A"
+    shape = Shape([cloth, paper])
+    strips = 14
+    width = 2.8 / strips
+    for i in range(strips):
+        x = -1.4 + width / 2 + i * width
+        shape.box(cloth if i % 2 == 0 else paper, (x, 0.0, 0.0), (width, 1.8, 0.12))
+    return [shape.finish(name)], []
+
+
+def _hub_detail() -> dict:
+    """Builders for the hub pieces beyond section 3, keyed by blockout id."""
+    detail = {}
+    for i in range(1, 5):
+        stall = f"PROP_Stall_{i}"
+        detail[f"{stall}_Table"] = partial(_stall_table, f"{stall}_Table")
+        detail[f"{stall}_Canopy"] = partial(_stall_canopy, f"{stall}_Canopy")
+        for side in ("PostWest", "PostEast"):
+            detail[f"{stall}_{side}"] = partial(_game_box, f"{stall}_{side}", "MAT_WoodDark_A", (0.12, 2.5, 0.12))
+        detail[f"{stall}_Lantern"] = partial(_game_ellipsoid, f"{stall}_Lantern", "MAT_LanternGlow_A", (0.45, 0.45, 0.45))
+    for compass in ("NE", "NW", "SE", "SW"):
+        lamp = f"PROP_Lamp_Corner_{compass}"
+        detail[f"{lamp}_Pole"] = partial(_game_pole, f"{lamp}_Pole", "MAT_WoodDark_A", 0.18, 2.8)
+        detail[f"{lamp}_Head"] = partial(_game_ellipsoid, f"{lamp}_Head", "MAT_LanternGlow_A", (0.36, 0.36, 0.36))
+    detail["PROP_Lamp_Plaza_Base"] = partial(_game_box, "PROP_Lamp_Plaza_Base", "MAT_StoneDark_A", (1.6, 0.5, 1.6))
+    detail["PROP_Lamp_Plaza_Pole"] = partial(_game_pole, "PROP_Lamp_Plaza_Pole", "MAT_WoodDark_A", 0.35, 4.2)
+    detail["PROP_Lamp_Plaza_Head"] = partial(_game_ellipsoid, "PROP_Lamp_Plaza_Head", "MAT_LanternGlow_A", (1.6, 1.6, 1.6))
+    for side in ("West", "East"):
+        name = f"ENV_Gate_Pillar_{side}"
+        detail[name] = partial(_game_box, name, "MAT_WoodDark_A", (0.8, 4.5, 0.8))
+    detail["ENV_Gate_Beam"] = partial(_game_box, "ENV_Gate_Beam", "MAT_Terracotta_A", (6.6, 0.6, 1.0))
+    detail["PROP_Lantern_Gate"] = partial(_game_ellipsoid, "PROP_Lantern_Gate", "MAT_LanternGlow_A", (0.7, 0.7, 0.7))
+    detail["ENV_House_Shop_Door"] = partial(_game_box, "ENV_House_Shop_Door", "MAT_WoodDark_A", (1.4, 2.4, 0.12))
+    detail["ENV_Bush_East"] = partial(_game_ellipsoid, "ENV_Bush_East", "MAT_Foliage_A", (2.4, 1.6, 2.4))
+    detail["ENV_Bush_West"] = partial(_game_ellipsoid, "ENV_Bush_West", "MAT_Foliage_A", (2.0, 1.4, 2.0))
+    detail["ENV_Bush_North"] = partial(_game_ellipsoid, "ENV_Bush_North", "MAT_Foliage_A", (1.8, 1.2, 1.8))
+    return detail
+
+
+ASSETS.update({f"hub.{name}": (name.lower(), builder) for name, builder in _hub_detail().items()})
 
 
 def _gltf_extent(objects) -> str:

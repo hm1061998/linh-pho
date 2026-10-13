@@ -47,24 +47,20 @@ const FURNITURE: readonly ModelSpec[] = [
   { id: 'furniture.hanging_lamp', node: 'PROP_HangingLamp', size: [0.5, 0.545, 0.5], pivot: 'hang', triangleBudget: 1200 },
 ];
 
-/** Hub pieces from hubLayout.ts: the model must have the blockout's size and sit centred on the blockout's position. */
-const HUB_NODES = [
-  'ENV_House_Shop_Body',
-  'ENV_House_Shop_Roof',
-  'PROP_Signboard_Shop',
-  'ENV_House_Workshop_Body',
-  'ENV_House_Workshop_Roof',
-  'PROP_Workbench_Workshop',
-  'PROP_Lantern_Workshop',
-  'ENV_Bridge_Deck',
-];
-
-const HUB: readonly ModelSpec[] = HUB_NODES.map((node) => {
+/**
+ * Every `hub.<node>` entry in assets.json. Each must name a piece in hubLayout.ts, and its model must have that piece's
+ * size and sit centred on the piece's position. Reading the list from assets.json means a new hub model is checked too.
+ */
+const HUB: readonly ModelSpec[] = assetsJson.assets.flatMap((entry) => {
+  if (!entry.id.startsWith('hub.')) {
+    return [];
+  }
+  const node = entry.id.slice('hub.'.length);
   const prop = HUB_PROPS.find((candidate) => candidate.id === node);
   if (!prop) {
     throw new Error(`hubLayout.ts has no prop named ${node}`);
   }
-  return { id: `hub.${node}`, node, size: prop.size, pivot: 'centre' };
+  return [{ id: entry.id, node, size: prop.size, pivot: 'centre' }];
 });
 
 const NPCS: readonly ModelSpec[] = [

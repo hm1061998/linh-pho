@@ -414,3 +414,16 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Giữ nguyên toạ độ trong `hubLayout.ts` và vùng va chạm. Quy tắc pivot "giữa đáy" của manifest mục 1 áp dụng cho vật tĩnh đặt trong tiệm, không áp cho hub.
 - **Đánh đổi:** Hub lệch khỏi quy tắc chung của manifest mục 1. `docs/ASSET_MANIFEST.md` ghi ngoại lệ này. Đèn treo nội thất giữ pivot ở điểm treo như manifest quy định.
 - **Kiểm chứng:** `src/tests/furnitureModels.test.ts` đọc accessor của từng GLB và so với `HUB_PROPS`. Kích thước và tâm đều khớp.
+
+## D-063 — Đường dẫn asset theo manifest, không theo art bible
+
+- **Chọn:** Mọi model nằm trong `public/assets/` và được gọi là `/assets/<tên>.glb`, theo `docs/ASSET_MANIFEST.md`. Art bible BLENDER-P06 ghi `/public/assets/models/`, nhưng không dùng đường dẫn đó.
+- **Lý do:** Manifest là hợp đồng giữa code và Blender (đầu tài liệu). Code đọc `source.url` từ `assets.json`, nên một nguồn duy nhất đủ. Chọn quyết định của bạn ngày 14/10/2026.
+- **Đánh đổi:** Art bible giữ nguyên đường dẫn cũ. Ai đọc art bible cần biết điều này. Nếu sau này chuyển sang thư mục con, phải đổi `assets.json` và manifest cùng lúc.
+
+## D-064 — Phần còn lại của hub làm thành GLB, mỗi vật một file
+
+- **Chọn:** Gian hàng, đèn góc, đèn quảng trường, cổng, cửa tiệm và bụi cây có GLB riêng, theo cùng cơ chế `hub.<id>` của mục 3. Mỗi file ở đúng kích thước khối blockout. Mặt đất, sông, lan can cầu và cột bên lề giữ blockout.
+- **Lý do:** Các khối này nằm trong mọi ảnh chụp và làm hub trông chưa xong. Cơ chế hiện có đã đủ, không cần đổi code gameplay.
+- **Đánh đổi:** 39 file mới, mỗi file chỉ một vật. Tổng số GLB lên 56. Cách gộp mỗi gian hàng vào một file sẽ cần đổi cơ chế nạp, nên chưa làm.
+- **Kiểm chứng:** Test đọc danh sách `hub.*` từ `assets.json`, nên mọi vật hub mới đều được kiểm tra kích thước và tâm. Trong game: 56 asset không dev đều `loaded`, và gian hàng, cổng, đèn góc được chụp ở 30 m.
