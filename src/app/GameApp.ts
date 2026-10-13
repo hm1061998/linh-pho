@@ -42,7 +42,7 @@ export interface GameDebugSnapshot {
 const DIALOGUE_BLOCKER = 'dialogue';
 const PANEL_BLOCKER = 'panel';
 
-type TargetKind = 'npc' | 'pickup' | 'station' | 'placement' | 'glyph';
+type TargetKind = 'npc' | 'pickup' | 'station' | 'placement' | 'glyph' | 'counter';
 
 /**
  * Owns the PlayCanvas Application lifecycle (device, canvas sizing, visibility pause, teardown), the per-frame
@@ -279,6 +279,10 @@ export class GameApp {
       // Glyphs exist only in spirit phase, so they start hidden. syncWorld turns them on.
       this.interactionSystem.setEnabled(glyph.id, false);
     }
+    const counter = GAME_CONTENT.shop.counter;
+    if (counter) {
+      this.addTarget(counter.id, 'counter', counter.labelKey, counter.position, 'ui.action.shop');
+    }
   }
 
   private addTarget(
@@ -330,6 +334,9 @@ export class GameApp {
       }
       case 'glyph':
         this.sessionState.scanGlyph(targetId);
+        return;
+      case 'counter':
+        this.sessionState.openPanel({ kind: 'shop' });
         return;
       default:
         console.error(`[Interaction] Target "${targetId}" has no action; nothing happened (${t('error.generic')})`);

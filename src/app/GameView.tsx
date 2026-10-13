@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { DialoguePanel } from '../ui/dialogue/DialoguePanel';
+import { EndScreen } from '../ui/hud/EndScreen';
 import { PanelHost } from '../ui/panels/PanelHost';
 import { CurrencyBar, QuestTracker } from '../ui/hud/HudBars';
 import { InteractionHint } from '../ui/hud/InteractionHint';
@@ -93,6 +94,7 @@ export function GameView() {
             <NoticeStack game={state.game} />
             <InteractionHint game={state.game} />
             <PanelHost game={state.game} />
+            <EndScreen game={state.game} />
             <DialoguePanel game={state.game} />
             <TouchControls game={state.game} />
           </>

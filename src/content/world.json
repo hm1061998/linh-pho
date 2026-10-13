@@ -14,7 +14,11 @@
     { "id": "pk_ink_1", "itemId": "ink", "position": { "x": 2, "z": -26 } },
     { "id": "pk_indigo_1", "itemId": "indigo", "position": { "x": 6.5, "z": 28.5 } },
     { "id": "pk_wood_1", "itemId": "wood_scrap", "position": { "x": -21, "z": -26 } },
-    { "id": "pk_wood_2", "itemId": "wood_scrap", "position": { "x": -14, "z": -27 } }
+    { "id": "pk_wood_2", "itemId": "wood_scrap", "position": { "x": -14, "z": -27 } },
+    { "id": "pk_bamboo_5", "itemId": "bamboo", "position": { "x": 21.5, "z": -3 } },
+    { "id": "pk_bamboo_6", "itemId": "bamboo", "position": { "x": 23, "z": -6 } },
+    { "id": "pk_paper_4", "itemId": "paper", "position": { "x": -8.5, "z": -17 } },
+    { "id": "pk_rope_4", "itemId": "rope", "position": { "x": -24.5, "z": -2.5 } }
   ],
   "stations": [
     {

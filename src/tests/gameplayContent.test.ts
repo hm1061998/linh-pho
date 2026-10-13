@@ -61,16 +61,19 @@ describe('shipped gameplay content', () => {
   it('has the Module 04 pieces: items, recipes, Q00, and world interactables', () => {
     expect(GAME_CONTENT.items.map((item) => item.id)).toContain('wooden_lantern');
     expect(GAME_CONTENT.recipes.map((recipe) => recipe.id)).toContain('recipe_wooden_lantern');
-    expect(GAME_CONTENT.quests.map((quest) => quest.id)).toEqual(['q00_dem_mo_cho', 'q01_net_muc']);
+    expect(GAME_CONTENT.quests.map((quest) => quest.id)).toEqual(['q00_dem_mo_cho', 'q01_net_muc', 'q02_phien_cho_dau_tien']);
     expect(GAME_CONTENT.stations.length).toBeGreaterThan(0);
     expect(GAME_CONTENT.placements.length).toBeGreaterThan(0);
   });
 
-  it('keeps every pickup, station, and placement inside the hub and off solid obstacles', () => {
+  it('keeps every pickup, station, placement, and shop point inside the hub and off solid obstacles', () => {
+    const counter = GAME_CONTENT.shop.counter;
     const points = [
       ...GAME_CONTENT.pickups.map((entry) => ({ id: entry.id, position: entry.position })),
       ...GAME_CONTENT.stations.map((entry) => ({ id: entry.id, position: entry.position })),
       ...GAME_CONTENT.placements.map((entry) => ({ id: entry.id, position: entry.position })),
+      ...(counter ? [{ id: counter.id, position: counter.position }] : []),
+      ...GAME_CONTENT.shop.slots.map((entry) => ({ id: entry.id, position: entry.position })),
     ];
     for (const { id, position } of points) {
       expect(Math.abs(position.x), `${id} x`).toBeLessThan(HUB_HALF_SIZE_M - 0.5);

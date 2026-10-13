@@ -268,3 +268,32 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Cách chọn:** Chạm thanh tre rồi chạm ô; hoặc kéo thả vào ô gần nhất. Bàn phím dùng nút thường. Chạm hoặc kéo ra ngoài mọi ô tính là một lần trượt.
 - **Phản hồi:** Ô sáng lên bằng animation CSS 450 ms và rung ngắn (`navigator.vibrate`, nếu trình duyệt hỗ trợ). Chưa có tiếng «tách», để Module 08 làm cùng SFX tổng hợp.
 - **Giảm chuyển động:** `prefers-reduced-motion` tắt animation.
+
+## D-041 — Cửa hàng: tiền kiếm được, mua và đặt là một bước nguyên tử
+
+- **Tiền:** Chỉ có Xu Đèn kiếm được (phần thưởng nhiệm vụ, đơn hàng). Không có tiền thật, không tích hợp thanh toán (Prompt 07).
+- **Mua:** `GameSession.buyFurniture` kiểm tra đủ mọi điều kiện trước (cấp tiệm, cờ, số tiền), rồi mới trừ tiền và thêm tồn kho. Số dư không bao giờ âm. Test: `q02.test` (không đủ tiền thì từ chối, số dư giữ nguyên).
+- **Ô trưng bày:** Ba ô cố định (`shop.json`). Một ô chỉ giữ một món. Ô mở theo cấp tiệm (ô 3 ở cấp 2). Đặt món khỏi tồn kho vào ô là một bước: kiểm tra trước, rồi chuyển.
+- **Cấp tiệm:** Cấp 1 sau Q00, cấp 2 khi Q02 xong (khai báo trong `quests.json`, dùng lại cơ chế `unlocks.shopLevel` có sẵn).
+- **Dữ liệu:** Năm món nội thất và ba ô trong `shop.json`, hai đơn trong `orders.json`. Kiểm tra bằng `validateShop.ts`, món sai bị loại kèm lý do. Tên và thông báo là khoá locale.
+
+## D-042 — Đơn hàng: mở → nhận → giao, một lần, chỉ khi nhiệm vụ đang cần
+
+- **Trạng thái:** Mỗi đơn đi qua `open`, `accepted`, `delivered`, không đi ngược. `OrderBoard` giữ trạng thái đó.
+- **Chỉ nhận khi nhiệm vụ đang hỏi:** Một đơn chỉ nhận được khi có nhiệm vụ đang hoạt động có mục tiêu `accept` trỏ tới đơn đó. Ngoài Q02, quầy không nhận đơn. Đây là lý do `GameSession.orderIsRequested` đọc nội dung nhiệm vụ.
+- **Giao nguyên tử:** Giao dùng `Inventory.spend`, tiêu hết các món hoặc không món nào. Thiếu món thì đơn vẫn ở trạng thái đã nhận. Không giao được hai lần: đơn đã giao thì trả `already_delivered`, không cộng tiền thêm.
+- **Nguồn đếm:** Mỗi đơn là một nguồn duy nhất cho mục tiêu `accept` và `deliver`, nên lặp lại không đếm thêm.
+
+## D-043 — Q02 và nguồn nguyên liệu đủ để giao đơn
+
+- **Mục tiêu:** Nhận hai đơn, giao hai đơn, mua Kệ Đèn, đặt Kệ Đèn vào một ô. Mục tiêu `buy` và `place` trỏ tới mã món nội thất.
+- **Kệ Đèn cần cờ `q01_complete`:** Nếu không, người chơi có thể mua trước khi Q02 bắt đầu, và mục tiêu `buy` sẽ không bao giờ đếm. Cờ này buộc việc mua xảy ra sau khi Q02 đã bắt đầu.
+- **Thêm nguyên liệu vào thế giới:** Q00 và Q01 đã dùng hết 4 tre, 2 giấy dó, 2 dây gai trong thế giới, nên đơn Đèn Mộc không thể giao nếu không có thêm. Đã thêm 2 tre, 1 giấy dó, 1 dây gai (`world.json`). Thêm đúng số cần, không dư.
+- **Phần thưởng:** Q02 cộng 10 Uy Tín, cấp tiệm lên 2, đặt cờ `q02_complete` và `mvp_complete`.
+
+## D-044 — Hiển thị nâng cấp và màn hình kết thúc
+
+- **Hình học tạm (D-040):** Quầy, ô trưng bày và món nội thất là hình khối đơn giản lấy từ `visual` trong JSON. Chưa có mô hình thật (Module 09).
+- **Nâng cấp nhìn thấy được:** Thân tiệm và biển hiệu sáng dần theo cấp (`SHOP_GLOW_LEVEL_1` và `_2`). Ô trưng bày hiện theo cấp. Món đặt vào ô hiện trong cảnh. Mỗi nhân bản vật liệu được clone trước khi chỉnh sáng, để không làm sáng vật gỗ khác.
+- **Màn hình kết thúc:** Hiện một lần khi cờ `mvp_complete` bật. Nó đóng panel đang mở, khoá đầu vào gameplay trong lúc hiện, và "Đi dạo tiếp" trả lại thế giới mở. Lời teaser là bản nháp, cần kiểm tra ở Module 12.
+- **Chưa lưu:** Việc đã xem màn kết thúc chưa được lưu. Sau khi tải lại trang, màn hình sẽ hiện lại (Module 08 sẽ lưu cờ này).

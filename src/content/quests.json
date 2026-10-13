@@ -32,6 +32,22 @@
       ],
       "rewards": { "coins": 0, "reputation": 10 },
       "unlocks": { "flags": ["q01_complete", "bridge_glow"], "shopLevel": null }
+    },
+    {
+      "id": "q02_phien_cho_dau_tien",
+      "titleKey": "quest.q02.title",
+      "autoStart": true,
+      "prerequisites": ["q01_net_muc"],
+      "objectives": [
+        { "id": "accept_wood", "type": "accept", "targetId": "order_wood_lantern", "count": 1, "textKey": "quest.q02.obj.accept_wood" },
+        { "id": "accept_paper", "type": "accept", "targetId": "order_paper_rope", "count": 1, "textKey": "quest.q02.obj.accept_paper" },
+        { "id": "deliver_wood", "type": "deliver", "targetId": "order_wood_lantern", "count": 1, "textKey": "quest.q02.obj.deliver_wood" },
+        { "id": "deliver_paper", "type": "deliver", "targetId": "order_paper_rope", "count": 1, "textKey": "quest.q02.obj.deliver_paper" },
+        { "id": "buy_shelf", "type": "buy", "targetId": "lantern_shelf", "count": 1, "textKey": "quest.q02.obj.buy_shelf" },
+        { "id": "place_shelf", "type": "place", "targetId": "lantern_shelf", "count": 1, "textKey": "quest.q02.obj.place_shelf" }
+      ],
+      "rewards": { "coins": 0, "reputation": 10 },
+      "unlocks": { "flags": ["q02_complete", "mvp_complete"], "shopLevel": 2 }
     }
   ]
 }

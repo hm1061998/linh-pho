@@ -1,6 +1,7 @@
 import { validateContent } from '../domain/content/validate';
 import { validateGameplay } from '../domain/content/validateGameplay';
-import type { ObjectiveType } from '../domain/content/gameplayTypes';
+import { validateShop } from '../domain/content/validateShop';
+import type { ItemDef, ObjectiveType } from '../domain/content/gameplayTypes';
 import type { ContentIssue, NpcDefinition } from '../domain/content/types';
 import type { SessionContent } from '../domain/GameSession';
 import { createTranslator } from '../shared/i18n/translator';
@@ -9,9 +10,11 @@ import enLocale from './locales/en.json';
 import viLocale from './locales/vi.json';
 import itemsJson from './items.json';
 import npcsJson from './npcs.json';
+import ordersJson from './orders.json';
 import puzzlesJson from './puzzles.json';
 import questsJson from './quests.json';
 import recipesJson from './recipes.json';
+import shopJson from './shop.json';
 import worldJson from './world.json';
 
 const LOCALES = { vi: viLocale, en: enLocale };
@@ -30,6 +33,15 @@ const placementIds = new Set(worldJson.placements.map((placement) => placement.i
 const glyphIds = new Set(worldJson.glyphs.map((glyph) => glyph.id));
 const puzzleIds = new Set(puzzlesJson.puzzles.map((puzzle) => puzzle.id));
 
+// Items first: the shop's orders refer to them. The shop's furniture and orders are then known to the quests.
+const itemsById = new Map<string, ItemDef>();
+for (const item of itemsJson.items) {
+  itemsById.set(item.id, item as ItemDef);
+}
+const shopResult = validateShop({ shop: shopJson, orders: ordersJson }, { items: itemsById, hasTextKey });
+const orderIds = new Set(shopResult.content.orders.map((order) => order.id));
+const furnitureIds = new Set(shopResult.content.furniture.map((furniture) => furniture.id));
+
 const gameplayResult = validateGameplay(
   { items: itemsJson, recipes: recipesJson, quests: questsJson, world: worldJson, puzzles: puzzlesJson },
   {
@@ -40,13 +52,18 @@ const gameplayResult = validateGameplay(
         case 'talk':
           return npcIds.has(targetId);
         case 'place':
-          return placementIds.has(targetId);
+          // A placement takes an item, and a shop socket takes furniture. Both are valid targets for place.
+          return placementIds.has(targetId) || furnitureIds.has(targetId);
         case 'scan':
           return glyphIds.has(targetId);
         case 'puzzle':
           return puzzleIds.has(targetId);
+        case 'accept':
+        case 'deliver':
+          return orderIds.has(targetId);
+        case 'buy':
+          return furnitureIds.has(targetId);
         default:
-          // Accept/deliver/buy get targets in Module 07. Until then, quests that use them are reported.
           return false;
       }
     },
@@ -58,10 +75,15 @@ export const GAME_CONTENT: SessionContent = {
   npcs: npcResult.content.npcs,
   dialogues: npcResult.content.dialogues,
   ...gameplayResult.content,
+  shop: shopResult.content,
 };
 
 /** Problems found while loading content. The game still starts, so log them and fix the JSON. */
-export const CONTENT_ISSUES: readonly ContentIssue[] = [...npcResult.issues, ...gameplayResult.issues];
+export const CONTENT_ISSUES: readonly ContentIssue[] = [
+  ...npcResult.issues,
+  ...gameplayResult.issues,
+  ...shopResult.issues,
+];
 
 const translator = createTranslator(LOCALES, PRIMARY_LOCALE, FALLBACK_LOCALE);
 

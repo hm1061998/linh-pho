@@ -14,7 +14,8 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `033e3f0` | `feat(hud)`: chặn bôi đen và yêu cầu xoay ngang trên điện thoại |
 | `cb90832` | `feat(module-04)`: kho đồ, công thức, nhiệm vụ, Q00 đầy đủ |
 | `47bde1a` | `feat(module-05)`: Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01 |
-| (module-06) | `feat(module-06)`: minigame lắp khung và khắc, chất lượng Thường/Đẹp/Hoàn Mỹ |
+| `6c5d40a` | `feat(module-06)`: minigame lắp khung và khắc, chất lượng Thường/Đẹp/Hoàn Mỹ |
+| (module-07) | `feat(module-07)`: cửa hàng, ba ô trưng bày, đơn hàng, Q02, màn hình kết thúc |
 
 ## Đã hoàn thành
 
@@ -74,13 +75,23 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Thông báo:** "Đã làm xong Đèn Vân Linh (Đẹp)" nêu chất lượng; món không có chất lượng giữ thông báo cũ.
 - **Giao diện (placeholder HTML, D-040):** khung hai chiều và vòng khắc; chạm để chọn rồi chạm ô, kéo thả, và nút thường cho bàn phím. Không có 3D, không xoay, không tiếng.
 
+### Module 07 — Cửa hàng, đơn hàng, Q02, màn hình kết thúc
+- **Quầy tiệm (`shop.json`):** Một quầy mở bảng cửa hàng với ba phần: đơn hàng, nội thất, ô trưng bày. Ba ô cố định, mở theo cấp tiệm (ô 3 ở cấp 2). Năm món nội thất, mỗi món có giá, cấp yêu cầu, cờ yêu cầu và hình khối tạm (D-041).
+- **Mua và đặt:** Mua bằng Xu Đèn kiếm được. Kiểm tra đủ mọi điều kiện trước rồi mới trừ tiền, nên số dư không bao giờ âm. Mỗi ô giữ một món (D-041).
+- **Đơn hàng (`orders.json`, `OrderBoard`):** Hai đơn xác định: Đèn Mộc (25 Xu Đèn, 2 Uy Tín) và giấy dó với dây gai (15 Xu Đèn, 1 Uy Tín). Nhận đơn chỉ khi nhiệm vụ đang hỏi. Giao nguyên tử, một lần (D-042).
+- **Q02 "Phiên Chợ Đầu Tiên":** Nhận hai đơn, giao hai đơn, mua Kệ Đèn, đặt vào một ô. Hoàn thành: cấp tiệm 2, +10 Uy Tín, cờ `mvp_complete` (D-043).
+- **Nguồn nguyên liệu:** Thêm 2 tre, 1 giấy dó, 1 dây gai vào thế giới, vì Q00 và Q01 đã dùng hết nguyên liệu có sẵn. Thiếu chúng thì đơn Đèn Mộc không thể giao.
+- **Hiển thị nâng cấp:** Thân tiệm và biển hiệu sáng theo cấp. Ô và món nội thất hiện trong cảnh. Đây là hình khối tạm (D-044).
+- **Màn hình kết thúc:** Hiện một lần khi `mvp_complete` bật. Đóng panel đang mở, khoá gameplay trong lúc hiện, và có "Đi dạo tiếp". Lời teaser là bản nháp (D-044).
+- **Hai lỗi phát hiện khi kiểm tra và đã sửa:** (1) màn kết thúc hiện chồng lên panel đang mở, nên giờ tự đóng panel. (2) Ánh sáng tiệm quá nhạt để thấy khác biệt, nên tăng độ sáng cấp 1 lên 0.25 và cấp 2 lên 0.55, đồng thời chiếu sáng cả biển hiệu.
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 29 file, 220 test, tất cả đạt |
-| `npm run build` | Đạt. `index-*.js` 2,401.89 kB (gzip 633.87 kB). Hook dev không có trong bundle |
+| `npm test` | 32 file, 254 test, tất cả đạt |
+| `npm run build` | Đạt. `index-*.js` 2,424.45 kB (gzip 639.07 kB). Hook dev không có trong bundle |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -101,6 +112,11 @@ Test thuần (chạy trong Node), theo nhóm:
   - `engravingGame`: đúng thứ tự thì hoàn tất, sai không reset và tính một lần sai, chạm lại dấu đã sáng là sai, dấu lạ không tính sai, sau khi xong không nhận thêm.
   - `craftMinigame` (session): giữ chỗ khi bắt đầu, trả khi huỷ, tiêu một lần khi hoàn tất, chất lượng từ minigame, rời panel thì huỷ craft, khoá engraving tới khi giải puzzle, view không lộ thứ tự, confirm-only hoàn tất ngay.
   - `q01` và `gameSession` đổi sang chơi minigame thật qua `craftHelpers.ts`, không còn gọi trực tiếp.
+- **Module 07:**
+  - `shopDomain`: mua không đủ tiền thì từ chối và không đổi gì, cấp và cờ khoá đúng, ô một món, ô khoá theo cấp, giữ tồn kho khi đặt, đơn đi `open → accepted → delivered`, thiếu đồ thì không tiêu gì, giao một lần.
+  - `shopContent`: nội dung thật không có lỗi. Giá 0, màu sai, hình lạ, đơn thiếu món, quầy thiếu, ô trùng đều bị loại có lý do.
+  - `q02`: Q02 bắt đầu sau Q01, không nhận đơn trước khi nhiệm vụ hỏi, Kệ Đèn không bán trước Q01, mua và đặt đầy đủ đến khi xong, phần thưởng trả đúng một lần, từ chối cấp và ô đã có món.
+  - `gameplayContent`: danh sách nhiệm vụ có Q02, và quầy cùng ô trưng bày không nằm trong vật cản.
 
 ### Kiểm tra trong trình duyệt (Q00 đầy đủ, bằng phím và chuột thật khi có thể)
 
@@ -127,6 +143,23 @@ Test thuần (chạy trong Node), theo nhóm:
 
 Lỗi thao tác khi kiểm tra Module 05 (không phải lỗi game): chọn bằng toạ độ thay vì ref đã bấm nhầm vùng trống. Sau đó dùng ref và kết quả đúng.
 
+### Kiểm tra trong trình duyệt (Module 07: cửa hàng, đơn hàng, Q02, màn kết thúc)
+
+Quầy được mở bằng `openPanel({kind:'shop'})`, đúng với việc tương tác quầy. Chưa đi bộ tới quầy trong trình duyệt (pane chạy 3 khung hình/giây, xem D-032).
+
+| Bước | Kết quả |
+|---|---|
+| Mở quầy | Đơn "Khách cần một Đèn Mộc" và "Khách cần giấy dó và dây gai", mỗi đơn có nút Nhận đơn. Nội thất có giá và "Đã có 0" |
+| Nhận cả hai đơn (click) | Cả hai sang "Đang nhận". Hai mục tiêu accept được đánh dấu |
+| Chế Đèn Mộc thứ hai, giao đơn Đèn Mộc (click) | Xu Đèn 30 → 55, Uy Tín 10 → 12, Đèn Mộc bị tiêu |
+| Giao đơn giấy dó và dây gai (click) | Xu Đèn 55 → 70, Uy Tín 13 |
+| Mua Kệ Đèn (click) | 70 → 50 Xu Đèn. Kệ Đèn "Đã có 1" |
+| Chọn Kệ Đèn, chạm "Ô trưng bày 1" (click) | Ô 1 hiện "Kệ Đèn". Q02 hoàn thành. Cấp tiệm 2. Ô 3 mở |
+| Màn kết thúc | "Tiệm đã sáng", Xu Đèn 50, Uy Tín 23, teaser. Gameplay bị khoá. Panel đang mở tự đóng (`currentPanel` = null) |
+| Đi dạo tiếp | Màn đóng, gameplay mở lại |
+| So sánh đầu game (cấp 0) và cuối (cấp 2) | Đầu: tiệm tối, không có ô. Cuối: thân tiệm sáng hơn, ô và Kệ Đèn hiện. Khác biệt có thấy nhưng nhẹ (xem Chưa kiểm chứng) |
+| Console | Không có lỗi mới sau khi khởi động lại dev server. Lỗi `hasGlowMaterial is not defined` còn trong buffer là của bản HMR trung gian, trước khi sửa |
+
 ### Kiểm tra trong trình duyệt (Module 06: minigame chế tạo, bằng click thật)
 
 | Bước | Kết quả |
@@ -149,6 +182,7 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 ## Chưa kiểm chứng (phải nói rõ)
 - **FPS thực tế:** không đo được trong pane lúc này. Cần kiểm tra lại trên máy thật khi môi trường ổn định.
 - **Minigame chế tạo là placeholder HTML:** chưa có khung 3D, chưa xoay vật thể, chưa có tiếng «tách» (D-040). Kéo thả bằng cảm ứng thật chưa được thử trên thiết bị. Chỉ thử bằng chuột và click ref trong trình duyệt.
+- **Module 07 trong trình duyệt:** chưa đi bộ tới quầy (mở bằng `openPanel`). Sự khác biệt đầu và cuối tiệm là có thật nhưng nhẹ, cần xem lại với mô hình thật (Module 09). Màn kết thúc không được lưu, nên tải lại thì hiện lại. Panel cửa hàng chưa thử trên màn hình điện thoại.
 - **Module 05 trong trình duyệt:** chưa thấy bằng mắt ba ký hiệu 3D và bước chuyển sáng của chúng, chưa quét ký hiệu bằng tay, chưa đi hết Q01 trong trình duyệt (chỉ có test đơn vị với nội dung thật), chưa thấy cầu sáng và hạt, chưa thử nút Q trên cảm ứng.
 - **Lưu và tải tiến trình:** chưa có. Mất khi tải lại trang (Module 08).
 - **Đọc bằng trình đọc màn hình, giữ joystick lâu, pinch zoom, tạm dừng khi ẩn tab, thiết bị thật:** như các module trước.
@@ -160,12 +194,21 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 4. **Lồng đèn soi vết** trong GDD được ánh xạ thành Đèn Vân Linh (D-026).
 5. **`speed` là vận tốc dự định** (D-014). Không ảnh hưởng vị trí.
 6. **Mất WebGL context** (GPU reset): chưa xử lý, chỉ có log lỗi.
-7. **Bundle 2.40 MB minify, 634 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
+7. **Bundle 2.42 MB minify, 639 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
 8. **Copy tiếng Việt còn hard-code** trong `StartupErrorPanel.tsx` và `TouchControls.tsx`. Sẽ chuyển sang locale ở Module 08.
 
 ## Việc tiếp theo
-- **Module 07:** cửa hàng (ba ô trang trí, năm món nội thất trong JSON, mua bằng xu đã kiếm, cấp cửa hàng, nâng cấp hiện trên cảnh), hai đơn hàng xác định (có ít nhất một món đã biết), Q02 (nhận đơn, giao, mua Kệ Đèn, đặt vào ô), màn hình kết thúc và teaser chương 2.
-- Sau đó: Module 08 (lưu và tải, cài đặt, menu tạm dừng, SFX tổng hợp kèm tiếng «tách» của minigame), rồi Module 09 đến 12.
+- **Module 08:** `SavePort` và `LocalSaveAdapter` (IndexedDB chính, localStorage dự phòng), SaveV1 có phiên bản, kiểm tra và migration. Tự lưu sau mốc quan trọng, khôi phục khi tải lại. Lưu cả cờ màn kết thúc đã xem. Cài đặt ngôn ngữ, âm thanh và giảm hiệu ứng. SFX tổng hợp kèm tiếng «tách» của minigame. Menu tạm dừng (Esc). Chuyển các chuỗi còn hard-code sang locale.
+- Sau đó: Module 09 (manifest tài sản, bộ nạp GLB có dự phòng hình khối), Module 10 (QA, kích thước bundle, hiệu năng), Module 11 (AnalyticsPort, PlatformPort, ghi chú riêng tư, checklist phát hành), Module 12 (thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`, gồm teaser chương 2).
+
+## Checklist kiểm thử thủ công (Module 07, Q02)
+- [ ] Hoàn thành Q01. Quầy tiệm (gần cửa tiệm) hiện Q02 "Phiên Chợ Đầu Tiên" trong bảng nhiệm vụ.
+- [ ] Mở quầy, nhận cả hai đơn. Đơn chưa đủ đồ thì nút Giao đơn bị khoá.
+- [ ] Làm Đèn Mộc thứ hai ở bàn nghề, giao đơn Đèn Mộc. Xu Đèn và Uy Tín tăng đúng. Đèn Mộc bị tiêu.
+- [ ] Thu thập giấy dó và dây gai (đã có ở vị trí mới), giao đơn giấy dó và dây gai.
+- [ ] Mua Kệ Đèn (20 Xu Đèn). Chọn Kệ Đèn, chạm Ô trưng bày 1. Màn kết thúc hiện. Đóng panel tự động.
+- [ ] Trước khi hoàn thành Q01, Kệ Đèn không bán được (cần cờ `q01_complete`). Sau khi Q02 xong, tiệm lên cấp 2: Ô 3 mở và Đèn treo giấy bán được.
+- [ ] Tiệm sáng hơn sau khi lên cấp. Ô và món nội thất đứng đúng chỗ.
 
 ## Checklist kiểm thử thủ công (Module 05, Q01)
 - [ ] Sau khi xong Q00, nói chuyện với Cô Lam. Nhiệm vụ "Nét Mực Thất Lạc" bắt đầu.

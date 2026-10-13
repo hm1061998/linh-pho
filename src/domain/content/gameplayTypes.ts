@@ -122,3 +122,56 @@ export interface GameplayContent {
   readonly glyphs: readonly GlyphDef[];
   readonly puzzles: readonly PuzzleDef[];
 }
+
+// ---------- shop and orders (Module 07) ----------
+
+export type FurnitureShape = 'box' | 'cylinder' | 'sphere';
+
+/** Placeholder geometry until the real models arrive. `size` is width, height, depth in metres. */
+export interface FurnitureVisual {
+  readonly shape: FurnitureShape;
+  /** Hex colour, `#rrggbb`. */
+  readonly color: string;
+  readonly size: readonly [number, number, number];
+}
+
+export interface FurnitureDef {
+  readonly id: string;
+  readonly nameKey: string;
+  /** Lantern Coins. Paid from earned coins only. */
+  readonly price: number;
+  /** The shop level that must be reached before this can be bought. */
+  readonly minShopLevel: number;
+  /** A flag that must be set before this can be bought. `null` means no requirement. */
+  readonly requiresFlag: string | null;
+  readonly visual: FurnitureVisual;
+}
+
+/** A fixed decoration socket. One piece of furniture per socket. */
+export interface ShopSlotDef {
+  readonly id: string;
+  readonly labelKey: string;
+  readonly position: { readonly x: number; readonly z: number };
+  readonly minShopLevel: number;
+}
+
+export interface ShopCounterDef {
+  readonly id: string;
+  readonly labelKey: string;
+  readonly position: { readonly x: number; readonly z: number };
+}
+
+export interface OrderDef {
+  readonly id: string;
+  readonly nameKey: string;
+  readonly requires: readonly ItemAmount[];
+  readonly rewards: { readonly coins: number; readonly reputation: number };
+}
+
+export interface ShopContent {
+  /** Null when the counter entry is invalid. The shop then has no entrance, and the rest of the game still runs. */
+  readonly counter: ShopCounterDef | null;
+  readonly slots: readonly ShopSlotDef[];
+  readonly furniture: readonly FurnitureDef[];
+  readonly orders: readonly OrderDef[];
+}

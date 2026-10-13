@@ -60,31 +60,31 @@ const OBJECTIVE_TYPES: readonly ObjectiveType[] = [
 const MINI_GAMES: readonly MiniGameKind[] = ['confirm', 'assembly', 'engraving'];
 const QUALITIES: readonly Quality[] = ['normal', 'good', 'perfect'];
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isNonEmptyString(value: unknown): value is string {
+export function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
-function isFiniteNumber(value: unknown): value is number {
+export function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function isPositiveInteger(value: unknown): value is number {
+export function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 1;
 }
 
-function isNonNegativeInteger(value: unknown): value is number {
+export function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;
 }
 
-function error(source: string, message: string): ContentIssue {
+export function error(source: string, message: string): ContentIssue {
   return { level: 'error', source, message };
 }
 
-function readList(root: unknown, key: string, issues: ContentIssue[]): unknown[] {
+export function readList(root: unknown, key: string, issues: ContentIssue[]): unknown[] {
   if (!isRecord(root) || !Array.isArray(root[key])) {
     issues.push(error(key, `expected { "${key}": [ ... ] }`));
     return [];
@@ -93,7 +93,7 @@ function readList(root: unknown, key: string, issues: ContentIssue[]): unknown[]
 }
 
 /** Parses each entry, drops ones that fail, and drops later duplicates of an ID. */
-function parseAll<T extends { readonly id: string }>(
+export function parseAll<T extends { readonly id: string }>(
   list: readonly unknown[],
   label: string,
   parse: (raw: unknown, source: string, issues: ContentIssue[]) => T | null,
@@ -149,7 +149,7 @@ function parseItem(raw: unknown, source: string, issues: ContentIssue[], ctx: Ga
 
 // ---------- recipes ----------
 
-function parseAmount(
+export function parseAmount(
   raw: unknown,
   source: string,
   items: ReadonlyMap<string, ItemDef>,
@@ -349,7 +349,7 @@ function parseQuest(
 
 // ---------- world ----------
 
-function parsePosition(raw: unknown): { x: number; z: number } | null {
+export function parsePosition(raw: unknown): { x: number; z: number } | null {
   if (!isRecord(raw) || !isFiniteNumber(raw.x) || !isFiniteNumber(raw.z)) {
     return null;
   }

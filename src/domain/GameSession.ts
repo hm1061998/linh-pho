@@ -8,6 +8,7 @@ import type {
   PuzzleDef,
   QuestDef,
   RecipeDef,
+  ShopContent,
   StationDef,
 } from './content/gameplayTypes';
 import { CraftingSystem, type CraftSession } from './crafting/CraftingSystem';
@@ -19,8 +20,10 @@ import { AssemblyGame, ASSEMBLY_SOCKET_IDS } from './minigame/AssemblyGame';
 import { EngravingGame } from './minigame/EngravingGame';
 import { ConfirmGame, type MiniGame } from './minigame/MiniGame';
 import type { MiniGameStatus, MiniGameStep } from './minigame/types';
+import { OrderBoard, type OrderView } from './orders/OrderBoard';
 import { GlyphPuzzle, type PuzzleResult, type PuzzleView } from './puzzle/GlyphPuzzle';
 import { QuestSystem, type QuestSystemEvent, type QuestView } from './quests/QuestSystem';
+import { Shop, type FurnitureView, type ShopSlotView } from './shop/Shop';
 
 /**
  * The game state for one playthrough, with no engine code. It connects the domain systems and applies rewards
@@ -39,6 +42,7 @@ export interface SessionContent {
   readonly placements: readonly PlacementDef[];
   readonly glyphs: readonly GlyphDef[];
   readonly puzzles: readonly PuzzleDef[];
+  readonly shop: ShopContent;
 }
 
 const PLAYER_FACING_REFUSALS: ReadonlySet<string> = new Set([
@@ -48,11 +52,20 @@ const PLAYER_FACING_REFUSALS: ReadonlySet<string> = new Set([
   'locked',
   'wrong_station',
   'not_spirit',
+  'insufficient_coins',
+  'level_locked',
+  'flag_locked',
+  'slot_locked',
+  'slot_occupied',
+  'no_stock',
+  'missing_items',
+  'not_available',
 ]);
 
 export type PanelState =
   | { readonly kind: 'craft'; readonly stationId: string }
   | { readonly kind: 'puzzle'; readonly stationId: string; readonly puzzleId: string }
+  | { readonly kind: 'shop' }
   | { readonly kind: 'inventory' };
 
 export type SessionEvent =
@@ -95,6 +108,10 @@ export interface SessionSnapshot {
   readonly lantern: LanternSnapshot;
   readonly puzzles: readonly PuzzleView[];
   readonly miniGame: MiniGameView | null;
+  readonly shopSlots: readonly ShopSlotView[];
+  readonly furniture: readonly FurnitureView[];
+  /** Orders as the board shows them. `open` is true only when an active quest asks for the order to be accepted. */
+  readonly orders: readonly (OrderView & { readonly open: boolean })[];
 }
 
 export class GameSession {
@@ -120,6 +137,9 @@ export class GameSession {
   private panel: PanelState | null = null;
   private miniGame: MiniGame | null = null;
   private lastLanternPhase: string = 'real';
+  private readonly shopStock: Shop;
+  private readonly orderBoard: OrderBoard;
+  private readonly flagSet = (flag: string): boolean => this.flags.get(flag);
 
   constructor(content: SessionContent) {
     this.content = content;
@@ -134,6 +154,8 @@ export class GameSession {
     this.inventory = new Inventory(content.items);
     this.crafting = new CraftingSystem(content.recipes, this.inventory, this.flags);
     this.quests = new QuestSystem(content.quests);
+    this.shopStock = new Shop(content.shop.furniture, content.shop.slots);
+    this.orderBoard = new OrderBoard(content.shop.orders);
 
     this.quests.events.on('quest.completed', (event) => this.applyCompletion(event));
     this.quests.events.on('quest.started', (event) => this.notice('notice.quest_started', { questKey: this.questTitle(event.questId) }));
@@ -414,10 +436,84 @@ export class GameSession {
     return this.crafting.current;
   }
 
+  // ---------- shop and orders (Module 07) ----------
+
+  /**
+   * Buys one piece of furniture with earned coins. Every check runs before anything changes, then the coins go out
+   * and the stock goes up in the same step. The balance can never go negative.
+   */
+  buyFurniture(furnitureId: string): ActionResult {
+    const check = this.shopStock.checkPurchase(furnitureId, this.shopLevel, this.flagSet, this.coins);
+    if (!check.ok) {
+      return this.fail(check.reason);
+    }
+    this.coins -= check.def.price;
+    const purchaseId = this.shopStock.commitPurchase(furnitureId);
+    this.quests.handle({ type: 'buy', targetId: furnitureId, sourceId: purchaseId });
+    this.notice('notice.bought', { itemKey: check.def.nameKey });
+    this.emitChanged();
+    return { ok: true };
+  }
+
+  /** Puts one owned piece into a decoration socket. A socket holds one piece, and only unlocked sockets take one. */
+  placeFurniture(furnitureId: string, slotId: string): ActionResult {
+    const check = this.shopStock.checkPlacement(furnitureId, slotId, this.shopLevel);
+    if (!check.ok) {
+      return this.fail(check.reason);
+    }
+    this.shopStock.commitPlacement(furnitureId, slotId);
+    this.quests.handle({ type: 'place', targetId: furnitureId, sourceId: slotId });
+    this.notice('notice.placed', { itemKey: check.def.nameKey });
+    this.emitChanged();
+    return { ok: true };
+  }
+
+  /** Accepts an order. Only an order that an active quest asks for can be accepted, and only once. */
+  acceptOrder(orderId: string): ActionResult {
+    const def = this.orderBoard.def(orderId);
+    if (!def) {
+      return this.fail('unknown_order');
+    }
+    if (!this.orderIsRequested(orderId) || !this.orderBoard.accept(orderId)) {
+      return this.fail('not_available');
+    }
+    this.quests.handle({ type: 'accept', targetId: orderId, sourceId: orderId });
+    this.notice('notice.order_accepted', { orderKey: def.nameKey });
+    this.emitChanged();
+    return { ok: true };
+  }
+
+  /**
+   * Delivers an accepted order: spends the items, pays the coins and reputation, and counts toward the quest. The
+   * spend and the payment cannot be split, and an order delivered once cannot pay again.
+   */
+  deliverOrder(orderId: string): ActionResult {
+    const done = this.orderBoard.deliver(orderId, this.inventory);
+    if (!done.ok) {
+      return this.fail(done.reason);
+    }
+    this.coins += done.def.rewards.coins;
+    this.reputation += done.def.rewards.reputation;
+    this.quests.handle({ type: 'deliver', targetId: orderId, sourceId: orderId });
+    this.notice('notice.order_delivered', { orderKey: done.def.nameKey, amount: String(done.def.rewards.coins) });
+    this.emitChanged();
+    return { ok: true };
+  }
+
+  /** An order is requested while some active quest still has an unfinished accept objective for it. */
+  private orderIsRequested(orderId: string): boolean {
+    return this.content.quests.some(
+      (quest) =>
+        this.quests.statusOf(quest.id) === 'active' &&
+        quest.objectives.some((objective) => objective.type === 'accept' && objective.targetId === orderId),
+    );
+  }
+
   // ---------- snapshots ----------
 
   snapshot(): SessionSnapshot {
     const craft = this.crafting.current;
+    const shopView = this.shopStock.views(this.shopLevel, this.flagSet);
     return {
       coins: this.coins,
       reputation: this.reputation,
@@ -436,6 +532,12 @@ export class GameSession {
       lantern: this.lantern.snapshot,
       puzzles: [...this.puzzles.values()].map((puzzle) => puzzle.view()),
       miniGame: this.miniGameView(),
+      shopSlots: shopView.slots,
+      furniture: shopView.furniture,
+      orders: this.orderBoard.views(this.inventory).map((order) => ({
+        ...order,
+        open: order.status === 'open' && this.orderIsRequested(order.id),
+      })),
     };
   }
 

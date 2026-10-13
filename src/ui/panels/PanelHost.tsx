@@ -5,6 +5,7 @@ import type { SessionSnapshot } from '../../domain/GameSession';
 import { useDialogueView } from '../state/useGameplayState';
 import { qualityLabel, useSessionSnapshot } from '../state/useSession';
 import { MiniGame } from './MiniGames';
+import { ShopPanel } from './ShopPanel';
 
 /**
  * Hosts the one panel the session has open: the crafting table, the engraving puzzle, or the inventory. Panels
@@ -49,6 +50,15 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
     <section className="panel-card" role="dialog" aria-modal="true" aria-label={panelTitle(snap)}>
       {panel.kind === 'craft' ? <CraftPanel game={game} stationId={panel.stationId} snap={snap} /> : null}
       {panel.kind === 'puzzle' ? <PuzzlePanel game={game} puzzleId={panel.puzzleId} snap={snap} /> : null}
+      {panel.kind === 'shop' ? (
+        <>
+          <header className="panel-header">
+            <h2>{panelTitle(snap)}</h2>
+            <CloseButton game={game} />
+          </header>
+          <ShopPanel game={game} snap={snap} />
+        </>
+      ) : null}
       {panel.kind === 'inventory' ? <InventoryPanel game={game} snap={snap} /> : null}
     </section>
   );
@@ -59,6 +69,9 @@ function panelTitle(snap: SessionSnapshot): string {
   if (panel?.kind === 'craft' || panel?.kind === 'puzzle') {
     const station = GAME_CONTENT.stations.find((candidate) => candidate.id === panel.stationId);
     return t(station?.labelKey ?? 'ui.craft.title');
+  }
+  if (panel?.kind === 'shop') {
+    return t(GAME_CONTENT.shop.counter?.labelKey ?? 'ui.shop.title');
   }
   return t('ui.inventory.title');
 }

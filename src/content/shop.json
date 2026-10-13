@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "counter": {
+    "id": "shop_counter",
+    "labelKey": "shop.counter.name",
+    "position": { "x": -13.8, "z": 15.2 }
+  },
+  "slots": [
+    { "id": "shop_slot_1", "labelKey": "shop.slot.1", "position": { "x": -17.5, "z": 16.8 }, "minShopLevel": 1 },
+    { "id": "shop_slot_2", "labelKey": "shop.slot.2", "position": { "x": -15.0, "z": 16.8 }, "minShopLevel": 1 },
+    { "id": "shop_slot_3", "labelKey": "shop.slot.3", "position": { "x": -12.5, "z": 16.8 }, "minShopLevel": 2 }
+  ],
+  "furniture": [
+    {
+      "id": "lantern_shelf",
+      "nameKey": "furniture.lantern_shelf.name",
+      "price": 20,
+      "minShopLevel": 1,
+      "requiresFlag": "q01_complete",
+      "visual": { "shape": "box", "color": "#8a5a3b", "size": [1.6, 1.1, 0.5] }
+    },
+    {
+      "id": "bamboo_vase",
+      "nameKey": "furniture.bamboo_vase.name",
+      "price": 8,
+      "minShopLevel": 1,
+      "requiresFlag": null,
+      "visual": { "shape": "cylinder", "color": "#7fa35a", "size": [0.5, 0.9, 0.5] }
+    },
+    {
+      "id": "paper_painting",
+      "nameKey": "furniture.paper_painting.name",
+      "price": 12,
+      "minShopLevel": 1,
+      "requiresFlag": null,
+      "visual": { "shape": "box", "color": "#e7d4ad", "size": [1.0, 0.8, 0.08] }
+    },
+    {
+      "id": "stool",
+      "nameKey": "furniture.stool.name",
+      "price": 10,
+      "minShopLevel": 1,
+      "requiresFlag": null,
+      "visual": { "shape": "cylinder", "color": "#6b4a2f", "size": [0.6, 0.45, 0.6] }
+    },
+    {
+      "id": "hanging_lamp",
+      "nameKey": "furniture.hanging_lamp.name",
+      "price": 25,
+      "minShopLevel": 2,
+      "requiresFlag": null,
+      "visual": { "shape": "sphere", "color": "#f2b759", "size": [0.5, 0.5, 0.5] }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "orders": [
+    {
+      "id": "order_wood_lantern",
+      "nameKey": "order.wood_lantern.name",
+      "requires": [{ "itemId": "wooden_lantern", "count": 1 }],
+      "rewards": { "coins": 25, "reputation": 2 }
+    },
+    {
+      "id": "order_paper_rope",
+      "nameKey": "order.paper_rope.name",
+      "requires": [
+        { "itemId": "paper", "count": 1 },
+        { "itemId": "rope", "count": 1 }
+      ],
+      "rewards": { "coins": 15, "reputation": 1 }
+    }
+  ]
+}

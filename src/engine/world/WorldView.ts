@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import type { GlyphDef, PickupDef, PlacementDef, StationDef } from '../../domain/content/gameplayTypes';
+import type { FurnitureDef, FurnitureShape, GlyphDef, PickupDef, PlacementDef, ShopContent, StationDef } from '../../domain/content/gameplayTypes';
 import type { SessionSnapshot } from '../../domain/GameSession';
 import type { WalkableWorld } from '../player/collision';
 import { colorFromHex } from '../scene/colorFromHex';
@@ -29,12 +29,21 @@ const PEDESTAL_COLOR = '#6B5C47';
 const PICKUP_SIZE_M = 0.32;
 const BRIDGE_DECK_NAME = 'ENV_Bridge_Deck';
 const BRIDGE_GLOW_INTENSITY = 0.9;
+const SHOP_GLOW_NODES: readonly string[] = ['ENV_House_Shop_Body', 'PROP_Signboard_Shop'];
+/** The shop body warms as the shop levels up. Level 1 lights it, level 2 lights it fully. */
+const SHOP_GLOW_LEVEL_1 = 0.25;
+const SHOP_GLOW_LEVEL_2 = 0.55;
+const COUNTER_COLOR = '#6B4A2F';
+const COUNTER_SIZE_M: readonly [number, number, number] = [1.2, 0.9, 0.6];
+/** A hanging piece (a sphere) sits this high. Anything else stands on the floor. */
+const HANGING_HEIGHT_M = 1.3;
 
 export interface WorldContent {
   readonly pickups: readonly PickupDef[];
   readonly stations: readonly StationDef[];
   readonly placements: readonly PlacementDef[];
   readonly glyphs: readonly GlyphDef[];
+  readonly shop: ShopContent;
 }
 
 interface PlacementView {
@@ -47,12 +56,43 @@ interface GlyphView {
   readonly material: pc.StandardMaterial;
 }
 
+interface SlotView {
+  readonly root: pc.Entity;
+  readonly base: pc.Entity;
+  furnitureId: string | null;
+  piece: pc.Entity | null;
+}
+
+/** True when a named blockout node is a render entity with a standard material that a glow can be cloned from. */
+function hasGlowMaterial(node: pc.GraphNode | null): boolean {
+  return node instanceof pc.Entity && node.render !== undefined && node.render.material instanceof pc.StandardMaterial;
+}
+
+/** Clones a node's material so the glow only lights this node, then points the node at the clone. */
+function cloneGlowMaterial(node: pc.GraphNode | null): pc.StandardMaterial | null {
+  if (!(node instanceof pc.Entity) || !node.render) {
+    return null;
+  }
+  const shared = node.render.material;
+  if (!(shared instanceof pc.StandardMaterial)) {
+    return null;
+  }
+  const own = shared.clone();
+  own.emissive = colorFromHex(LAMP_GOLD);
+  own.update();
+  node.render.material = own;
+  return own;
+}
+
 export class WorldView {
   private readonly pickupViews = new Map<string, pc.Entity>();
   private readonly placementViews = new Map<string, PlacementView>();
   private readonly glyphViews = new Map<string, GlyphView>();
+  private readonly slotViews = new Map<string, SlotView>();
+  private readonly furnitureById = new Map<string, FurnitureDef>();
   private readonly parent: pc.Entity;
   private bridgeMaterial: pc.StandardMaterial | null = null;
+  private shopGlow: pc.StandardMaterial[] = [];
 
   constructor(parent: pc.Entity, content: WorldContent, world: WalkableWorld) {
     this.parent = parent;
@@ -123,6 +163,7 @@ export class WorldView {
       this.glyphViews.set(glyph.id, { root, material });
     }
 
+    this.buildShop(content.shop, world);
   }
 
   /** Brings every world object in line with the session. Safe to call often. */
@@ -153,6 +194,8 @@ export class WorldView {
       bridge.emissiveIntensity = snapshot.flags.bridge_glow ? BRIDGE_GLOW_INTENSITY : 0;
       bridge.update();
     }
+
+    this.syncShop(snapshot);
   }
 
   dispose(): void {
@@ -160,6 +203,101 @@ export class WorldView {
     this.pickupViews.clear();
     this.placementViews.clear();
     this.glyphViews.clear();
+    this.slotViews.clear();
+  }
+
+  /** The counter and the three display sockets. Sockets stay hidden until the shop level reaches them. */
+  private buildShop(shop: ShopContent, world: WalkableWorld): void {
+    for (const piece of shop.furniture) {
+      this.furnitureById.set(piece.id, piece);
+    }
+    if (shop.counter) {
+      const counter = this.box(`SHOP_${shop.counter.id}`, colorFromHex(COUNTER_COLOR));
+      const [width, height, depth] = COUNTER_SIZE_M;
+      counter.setLocalScale(width, height, depth);
+      const surface = world.surfaceHeightAt(shop.counter.position);
+      counter.setLocalPosition(shop.counter.position.x, surface + height / 2, shop.counter.position.z);
+      this.parent.addChild(counter);
+    }
+    for (const slot of shop.slots) {
+      const root = new pc.Entity(`SHOP_SLOT_${slot.id}`);
+      root.setLocalPosition(slot.position.x, world.surfaceHeightAt(slot.position), slot.position.z);
+      const base = this.primitive('SlotBase', 'cylinder', colorFromHex(PEDESTAL_COLOR));
+      base.setLocalScale(1.1, 0.05, 1.1);
+      base.setLocalPosition(0, 0.025, 0);
+      root.addChild(base);
+      root.enabled = false;
+      this.parent.addChild(root);
+      this.slotViews.set(slot.id, { root, base, furnitureId: null, piece: null });
+    }
+  }
+
+  /** Builds one placed piece from its visual definition. Placeholder geometry until real models arrive. */
+  private buildPiece(furnitureId: string): pc.Entity | null {
+    const piece = this.furnitureById.get(furnitureId);
+    if (!piece) {
+      return null;
+    }
+    const [width, height, depth] = piece.visual.size;
+    const entity = this.primitive(`FURNITURE_${piece.id}`, piece.visual.shape, colorFromHex(piece.visual.color), piece.visual.shape === 'sphere');
+    entity.setLocalScale(width, height, depth);
+    entity.setLocalPosition(0, piece.visual.shape === 'sphere' ? HANGING_HEIGHT_M : height / 2 + 0.05, 0);
+    return entity;
+  }
+
+  /** Shows the sockets the shop level allows, and swaps a socket's piece when the session says it changed. */
+  private syncShop(snapshot: SessionSnapshot): void {
+    for (const slot of snapshot.shopSlots) {
+      const view = this.slotViews.get(slot.id);
+      if (!view) {
+        continue;
+      }
+      view.root.enabled = slot.unlocked;
+      view.base.enabled = slot.furnitureId === null;
+      if (view.furnitureId !== slot.furnitureId) {
+        view.piece?.destroy();
+        view.piece = slot.furnitureId ? this.buildPiece(slot.furnitureId) : null;
+        if (view.piece) {
+          view.root.addChild(view.piece);
+        }
+        view.furnitureId = slot.furnitureId;
+      }
+    }
+    this.syncShopBody(snapshot.shopLevel);
+  }
+
+  /**
+   * The shop body and its sign warm with the shop level. Each gets its own material clone, so the glow cannot light
+   * the wood or the other buildings that share a material in the blockout. Resolved lazily, once every target
+   * exists, so a half-built blockout never leaves one of the pair cloned and the other not.
+   */
+  private syncShopBody(level: number): void {
+    if (this.shopGlow.length === 0) {
+      if (!SHOP_GLOW_NODES.every((name) => hasGlowMaterial(this.parent.findByName(name)))) {
+        return;
+      }
+      this.shopGlow = SHOP_GLOW_NODES.map((name) => cloneGlowMaterial(this.parent.findByName(name))).filter(
+        (material): material is pc.StandardMaterial => material !== null,
+      );
+    }
+    const intensity = level >= 2 ? SHOP_GLOW_LEVEL_2 : level >= 1 ? SHOP_GLOW_LEVEL_1 : 0;
+    for (const material of this.shopGlow) {
+      material.emissiveIntensity = intensity;
+      material.update();
+    }
+  }
+
+  private primitive(name: string, type: FurnitureShape, color: pc.Color, emissive = false): pc.Entity {
+    const material = new pc.StandardMaterial();
+    material.diffuse = color;
+    if (emissive) {
+      material.emissive = color;
+      material.emissiveIntensity = 0.8;
+    }
+    material.update();
+    const entity = new pc.Entity(name);
+    entity.addComponent('render', { type, material });
+    return entity;
   }
 
   /**

@@ -813,3 +813,105 @@ textarea,
     animation: none;
   }
 }
+
+/* Shop counter: orders, furniture for sale, and display sockets. */
+.shop-section {
+  margin-top: 12px;
+}
+
+.shop-section h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: var(--lantern-gold);
+}
+
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shop-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.shop-list li strong,
+.shop-list li p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.shop-list button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
+
+.shop-list button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.shop-list.slots button {
+  flex-basis: 100%;
+  text-align: left;
+}
+
+/* The end of the first chapter. Centred over the scene, and it pauses gameplay while open. */
+.end-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 460px);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 22px;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  color: var(--text-main);
+  pointer-events: auto;
+}
+
+.end-card h2 {
+  margin: 0 0 8px;
+  color: var(--lantern-gold);
+}
+
+.end-card h3 {
+  margin: 14px 0 4px;
+  font-size: 15px;
+}
+
+.end-stats {
+  color: var(--lantern-gold);
+  font-size: 14px;
+}
+
+.end-teaser {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.end-card button {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--parchment);
+  border-radius: 10px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
