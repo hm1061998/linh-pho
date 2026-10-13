@@ -37,6 +37,12 @@ PALETTE = {
     "MAT_Bamboo_A": ("#A89A5C", 0.6, None, 0.0),
     "MAT_Ink_A": ("#2E2620", 0.9, None, 0.0),
     "MAT_LanternGlow_A": ("#F2B759", 0.4, "#F2B759", 1.0),
+    "MAT_Skin_A": ("#E0B48F", 0.6, None, 0.0),
+    "MAT_Hair_A": ("#2B2118", 0.5, None, 0.0),
+    "MAT_Trousers_A": ("#3A3328", 0.8, None, 0.0),
+    "MAT_Shoe_A": ("#2E2620", 0.6, None, 0.0),
+    "MAT_Hat_A": ("#D9C08A", 0.8, None, 0.0),
+    "MAT_Jade_A": ("#65D4BD", 0.3, "#65D4BD", 0.5),
 }
 
 
@@ -260,6 +266,130 @@ def hub_env_bridge_deck():
     return [shape.finish("ENV_Bridge_Deck")], []
 
 
+# ---- NPCs (docs/ASSET_MANIFEST.md section 4) --------------------------------------------------------------------
+# Humans are rigged with a few bones. Each body part is one mesh with a single vertex group, so it moves rigidly
+# with its bone. That is enough for the idle breathing and head nod. The spirit has no rig: its idle is on the object.
+
+# (bone, head, tail, parent). Shared by all humans. The feet are at y = 0 (z in Blender) and the model faces +Y.
+HUMAN_BONES = [
+    ("Root", (0.0, 0.0, 0.0), (0.0, 0.0, 0.12), None),
+    ("Spine", (0.0, 0.0, 0.85), (0.0, 0.0, 1.45), "Root"),
+    ("Head", (0.0, 0.0, 1.45), (0.0, 0.0, 1.75), "Spine"),
+    ("UpperArm.L", (0.27, 0.0, 1.42), (0.27, 0.0, 0.92), "Spine"),
+    ("UpperArm.R", (-0.27, 0.0, 1.42), (-0.27, 0.0, 0.92), "Spine"),
+    ("UpperLeg.L", (0.1, 0.0, 0.85), (0.1, 0.0, 0.08), "Root"),
+    ("UpperLeg.R", (-0.1, 0.0, 0.85), (-0.1, 0.0, 0.08), "Root"),
+]
+
+
+def _make_rig(node: str) -> bpy.types.Object:
+    data = bpy.data.armatures.new(node + "_Rig")
+    arm = bpy.data.objects.new(node, data)
+    bpy.context.scene.collection.objects.link(arm)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.select_all(action="DESELECT")
+    arm.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    for name, head, tail, parent in HUMAN_BONES:
+        bone = data.edit_bones.new(name)
+        bone.head = head
+        bone.tail = tail
+        if parent is not None:
+            bone.parent = data.edit_bones[parent]
+    bpy.ops.object.mode_set(mode="OBJECT")
+    return arm
+
+
+def _idle_human(arm: bpy.types.Object) -> bpy.types.Action:
+    """A two-second loop (48 frames at 24 fps): the chest rises, the head nods, and the arms sway slightly."""
+    arm.animation_data_create()
+    action = bpy.data.actions.new("idle")
+    arm.animation_data.action = action
+    for frame, phase in ((1, 0.0), (25, 1.0), (48, 0.0)):
+        for bone, degrees in (("Spine", 1.5), ("Head", -2.5), ("UpperArm.L", -2.0), ("UpperArm.R", 2.0)):
+            pose = arm.pose.bones[bone]
+            pose.rotation_mode = "XYZ"
+            pose.rotation_euler = (math.radians(degrees * phase), 0.0, 0.0)
+            pose.keyframe_insert(data_path="rotation_euler", frame=frame)
+    return action
+
+
+def _human(node: str, tunic_hex: str, *, long_tunic: bool, hair: str, hat: bool = False, head_z: float = 1.605):
+    """A stylised person, 1.70 m to the top of the head (1.70 m with the hat), feet on y = 0."""
+    tunic = "MAT_Tunic_" + node
+    PALETTE[tunic] = (tunic_hex, 0.8, None, 0.0)
+    arm = _make_rig(node)
+    parts = []
+
+    def add(label: str, bone: str, materials: list[str], build) -> None:
+        shape = Shape(materials)
+        build(shape)
+        obj = shape.finish(f"{node}_{label}")
+        group = obj.vertex_groups.new(name=bone)
+        group.add(list(range(len(obj.data.vertices))), 1.0, "REPLACE")
+        modifier = obj.modifiers.new("Armature", "ARMATURE")
+        modifier.object = arm
+        obj.parent = arm
+        parts.append(obj)
+
+    hem = 0.42 if long_tunic else 0.85
+    add("Tunic", "Spine", [tunic], lambda s: s.cylinder(tunic, (0.0, 0.0, (hem + 1.48) / 2), 0.2 + (0.04 if long_tunic else 0.0), 1.48 - hem, segments=16, radius2=0.18))
+    add("Neck", "Head", ["MAT_Skin_A"], lambda s: s.cylinder("MAT_Skin_A", (0.0, 0.0, 1.5), 0.045, 0.1, segments=10))
+    add("Head", "Head", ["MAT_Skin_A"], lambda s: s.sphere("MAT_Skin_A", (0.0, 0.0, head_z), 0.095, scale=(1.0, 1.0, 1.0), u=16, v=10))
+    if hair == "bun":
+        add("Hair", "Head", ["MAT_Hair_A"], lambda s: (s.sphere("MAT_Hair_A", (0.0, 0.0, head_z), 0.096, scale=(1.0, 1.0, 0.7), u=16, v=10), s.sphere("MAT_Hair_A", (0.0, -0.085, head_z + 0.03), 0.05, u=12, v=8)))
+    elif hair == "long":
+        add("Hair", "Head", ["MAT_Hair_A"], lambda s: (s.sphere("MAT_Hair_A", (0.0, 0.0, head_z), 0.096, scale=(1.0, 1.0, 0.75), u=16, v=10), s.cylinder("MAT_Hair_A", (0.0, -0.05, head_z - 0.12), 0.09, 0.26, segments=12)))
+    else:
+        add("Hair", "Head", ["MAT_Hair_A"], lambda s: s.sphere("MAT_Hair_A", (0.0, 0.0, head_z), 0.096, scale=(1.0, 1.0, 0.75), u=16, v=10))
+    if hat:
+        add("Hat", "Head", ["MAT_Hat_A"], lambda s: s.cylinder("MAT_Hat_A", (0.0, 0.0, head_z + 0.135), 0.34, 0.12, segments=20, radius2=0.06))
+    for side in (1, -1):
+        x = 0.27 * side
+        add("Sleeve", "UpperArm.L" if side > 0 else "UpperArm.R", [tunic], lambda s, x=x: s.cylinder(tunic, (x, 0.0, 1.25), 0.055, 0.34, segments=10))
+        add("Forearm", "UpperArm.L" if side > 0 else "UpperArm.R", ["MAT_Skin_A"], lambda s, x=x: s.cylinder("MAT_Skin_A", (x, 0.0, 1.0), 0.045, 0.16, segments=10))
+        add("Hand", "UpperArm.L" if side > 0 else "UpperArm.R", ["MAT_Skin_A"], lambda s, x=x: s.sphere("MAT_Skin_A", (x, 0.0, 0.9), 0.05, u=10, v=6))
+        leg = 0.1 * side
+        add("Leg", "UpperLeg.L" if side > 0 else "UpperLeg.R", ["MAT_Trousers_A"], lambda s, x=leg: s.cylinder("MAT_Trousers_A", (x, 0.0, 0.475), 0.07, 0.75, segments=12))
+        add("Shoe", "UpperLeg.L" if side > 0 else "UpperLeg.R", ["MAT_Shoe_A"], lambda s, x=leg: s.box("MAT_Shoe_A", (x, 0.03, 0.03), (0.1, 0.2, 0.06)))
+    return [arm, *parts], [_idle_human(arm)]
+
+
+def npc_ba_nghiem():
+    return _human("NPC_BaNghiem", "#7A4E3A", long_tunic=True, hair="bun")
+
+
+def npc_co_lam():
+    return _human("NPC_CoLam", "#4F7C6E", long_tunic=False, hair="long")
+
+
+def npc_ong_do():
+    # The hat sits on the head, so the head is lower to keep the whole figure at 1.70 m.
+    return _human("NPC_OngDo", "#5A6B8C", long_tunic=False, hair="short", hat=True, head_z=1.505)
+
+
+def npc_bac():
+    """Bấc: a paper-like wisp with a glowing body, dark eyes and a short wick. Centred on its pivot, 0.36 m across."""
+    shape = Shape(["MAT_PaperGlow_A", "MAT_Ink_A", "MAT_WoodDark_A", "MAT_Jade_A"])
+    shape.sphere("MAT_PaperGlow_A", (0.0, 0.0, 0.0), 0.18, u=24, v=16)  # body
+    for x in (-0.06, 0.06):
+        shape.sphere("MAT_Ink_A", (x, 0.15, 0.03), 0.028, u=8, v=6)  # eyes, sunk slightly so they keep the 0.18 m depth symmetric
+    shape.cylinder("MAT_WoodDark_A", (0.0, 0.0, 0.165), 0.03, 0.03, segments=8, radius2=0.005)  # wick
+    shape.sphere("MAT_Jade_A", (-0.1, 0.12, 0.09), 0.02, u=8, v=6)  # teal highlight
+    obj = shape.finish("NPC_Bac")
+    obj.animation_data_create()
+    action = bpy.data.actions.new("idle")
+    obj.animation_data.action = action
+    for frame, width, height, lift in ((1, 1.0, 1.0, 0.0), (24, 1.04, 0.93, 0.012), (48, 1.0, 1.0, 0.0)):
+        obj.location = (0.0, 0.0, lift)
+        obj.scale = (width, width, height)
+        obj.keyframe_insert(data_path="location", frame=frame)
+        obj.keyframe_insert(data_path="scale", frame=frame)
+    obj.location = (0.0, 0.0, 0.0)
+    obj.scale = (1.0, 1.0, 1.0)
+    return [obj], [action]
+
+
 # ---- Registry ---------------------------------------------------------------------------------------------------
 
 ASSETS = {
@@ -275,6 +405,10 @@ ASSETS = {
     "hub.PROP_Workbench_Workshop": ("prop_workbench_workshop", hub_prop_workbench_workshop),
     "hub.PROP_Lantern_Workshop": ("prop_lantern_workshop", hub_prop_lantern_workshop),
     "hub.ENV_Bridge_Deck": ("env_bridge_deck", hub_env_bridge_deck),
+    "npc.npc_ba_nghiem": ("npc_ba_nghiem", npc_ba_nghiem),
+    "npc.npc_co_lam": ("npc_co_lam", npc_co_lam),
+    "npc.npc_ong_do": ("npc_ong_do", npc_ong_do),
+    "npc.npc_bac": ("npc_bac", npc_bac),
 }
 
 
@@ -325,11 +459,15 @@ def _export(stem: str, objects, actions) -> None:
 
 
 def _cleanup(objects, actions) -> None:
-    meshes = {obj.data for obj in objects if obj.type == "MESH"}
+    data = [obj.data for obj in objects if obj.type in ("MESH", "ARMATURE")]
     for obj in objects:
         bpy.data.objects.remove(obj, do_unlink=True)
-    for mesh in meshes:
-        bpy.data.meshes.remove(mesh)
+    for block in data:
+        if block.users == 0:
+            if isinstance(block, bpy.types.Mesh):
+                bpy.data.meshes.remove(block)
+            else:
+                bpy.data.armatures.remove(block)
     for action in actions:
         bpy.data.actions.remove(action)
 

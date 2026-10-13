@@ -152,6 +152,9 @@ export class GameApp {
       });
     }
 
+    // Models load before the scene is built, so every object is drawn once with its final model. Never rejects.
+    await game.assets.loadAll(import.meta.env.DEV);
+
     try {
       game.start();
     } catch (error) {
@@ -259,12 +262,12 @@ export class GameApp {
     this.app.setCanvasFillMode(pc.FILLMODE_NONE);
     this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
     this.resize();
-    buildHubBlockout(this.app);
+    buildHubBlockout(this.app, this.assetLoader);
+    this.npcs.attachModels(this.assetLoader);
     this.attachLifecycle();
     this.app.on('update', this.tick);
     this.cleanups.push(() => this.app.off('update', this.tick));
     this.sessionState.start();
-    this.assetLoader.preload(import.meta.env.DEV);
     this.syncWorld();
     this.app.start();
   }

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import assetsJson from '../content/assets.json';
 import { validateAssets } from '../domain/content/validateAssets';
+import { HUB_PROPS } from '../engine/scene/hubLayout';
 
 // Checks the shipped .glb files against docs/ASSET_MANIFEST.md. Reads each file's own JSON chunk, so it needs no Blender.
 const PUBLIC_DIR = fileURLToPath(new URL('../../public', import.meta.url));
@@ -16,6 +17,7 @@ interface GltfAccessor {
 
 interface GltfJson {
   nodes?: { name?: string }[];
+  animations?: { name?: string }[];
   meshes: { primitives: { attributes: { POSITION: number }; indices?: number; material?: number }[] }[];
   accessors: GltfAccessor[];
   materials?: { name?: string }[];
@@ -27,11 +29,14 @@ interface ModelSpec {
   readonly id: string;
   /** The node name the file must use, from the naming rules in the art bible. */
   readonly node: string;
-  /** Size in metres along glTF X, Y and Z. */
-  readonly size: readonly [number, number, number];
+  /** Size in metres along glTF X, Y and Z. Null leaves that axis unchecked, where the manifest gives no size. */
+  readonly size: readonly [number | null, number | null, number | null];
+  /** Clips the file must contain, by name. */
+  readonly animations?: readonly string[];
   /** Floor: feet on y = 0, centred on x and z. Centre: centred on all three axes. Hang: top of the cord at y = 0. */
   readonly pivot: Pivot;
-  readonly triangleBudget: number;
+  /** Per-model triangle budget. Hub pieces have none: the manifest sets one for the whole hub (60 000). */
+  readonly triangleBudget?: number;
 }
 
 const FURNITURE: readonly ModelSpec[] = [
@@ -42,7 +47,34 @@ const FURNITURE: readonly ModelSpec[] = [
   { id: 'furniture.hanging_lamp', node: 'PROP_HangingLamp', size: [0.5, 0.545, 0.5], pivot: 'hang', triangleBudget: 1200 },
 ];
 
-const MODELS: readonly ModelSpec[] = [...FURNITURE];
+/** Hub pieces from hubLayout.ts: the model must have the blockout's size and sit centred on the blockout's position. */
+const HUB_NODES = [
+  'ENV_House_Shop_Body',
+  'ENV_House_Shop_Roof',
+  'PROP_Signboard_Shop',
+  'ENV_House_Workshop_Body',
+  'PROP_Workbench_Workshop',
+  'PROP_Lantern_Workshop',
+  'ENV_Bridge_Deck',
+];
+
+const HUB: readonly ModelSpec[] = HUB_NODES.map((node) => {
+  const prop = HUB_PROPS.find((candidate) => candidate.id === node);
+  if (!prop) {
+    throw new Error(`hubLayout.ts has no prop named ${node}`);
+  }
+  return { id: `hub.${node}`, node, size: prop.size, pivot: 'centre' };
+});
+
+const NPCS: readonly ModelSpec[] = [
+  // Humans are 1.70 m tall, feet on the floor. Their width is not in the manifest, so it is not checked.
+  { id: 'npc.npc_ba_nghiem', node: 'NPC_BaNghiem', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 6000, animations: ['idle'] },
+  { id: 'npc.npc_co_lam', node: 'NPC_CoLam', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 6000, animations: ['idle'] },
+  { id: 'npc.npc_ong_do', node: 'NPC_OngDo', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 6000, animations: ['idle'] },
+  { id: 'npc.npc_bac', node: 'NPC_Bac', size: [0.36, 0.36, 0.36], pivot: 'centre', triangleBudget: 1200, animations: ['idle'] },
+];
+
+const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS];
 
 function readGlbJson(path: string): GltfJson {
   const bytes = readFileSync(path);
@@ -101,9 +133,21 @@ describe.each(MODELS)('model $id (manifest)', (spec) => {
   it('has the size the manifest gives, in the glTF Y-up frame', () => {
     const { min, max } = boundsOf(load());
     spec.size.forEach((metres, i) => {
-      expect((max[i] ?? NaN) - (min[i] ?? NaN)).toBeCloseTo(metres, 2);
+      if (metres !== null) {
+        expect((max[i] ?? NaN) - (min[i] ?? NaN)).toBeCloseTo(metres, 2);
+      }
     });
   });
+
+  if (spec.animations !== undefined) {
+    const clips = spec.animations;
+    it('contains the clips it must play', () => {
+      const names = (load().animations ?? []).map((animation) => animation.name);
+      for (const clip of clips) {
+        expect(names).toContain(clip);
+      }
+    });
+  }
 
   it('has its pivot where the manifest puts it', () => {
     const { min, max } = boundsOf(load());
@@ -124,11 +168,14 @@ describe.each(MODELS)('model $id (manifest)', (spec) => {
     }
   });
 
-  it('stays within its triangle budget', () => {
-    const triangles = trianglesOf(load());
-    expect(triangles).toBeGreaterThan(0);
-    expect(triangles).toBeLessThanOrEqual(spec.triangleBudget);
-  });
+  if (spec.triangleBudget !== undefined) {
+    const budget = spec.triangleBudget;
+    it('stays within its triangle budget', () => {
+      const triangles = trianglesOf(load());
+      expect(triangles).toBeGreaterThan(0);
+      expect(triangles).toBeLessThanOrEqual(budget);
+    });
+  }
 
   it('uses the node name and MAT_* material names from the art bible', () => {
     const json = load();

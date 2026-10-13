@@ -36,6 +36,8 @@ export interface AssetSummary {
 interface LoadedModel {
   readonly asset: pc.Asset;
   readonly animations: readonly string[];
+  /** The playable track for each clip name. */
+  readonly tracks: ReadonlyMap<string, pc.AnimTrack>;
 }
 
 interface Slot {
@@ -93,16 +95,19 @@ export class AssetLoader {
   }
 
   /**
-   * Starts every model that has a source. Failures keep their fallback, so this never rejects. Development-only
-   * entries (ids starting `dev.`) load only when `includeDev` is set, so release builds never fetch them.
+   * Loads every model that has a source, and resolves once each one has loaded or failed. Failures keep their fallback,
+   * so this never rejects. Development-only entries (ids starting `dev.`) load only when `includeDev` is set, so release
+   * builds never fetch them. The scene is built after this resolves, so each object is drawn once, with its final model.
    */
-  preload(includeDev: boolean): void {
+  async loadAll(includeDev: boolean): Promise<void> {
+    const pending: Promise<AssetStatus>[] = [];
     for (const slot of this.slots.values()) {
       const isDev = slot.entry.id.startsWith('dev.');
       if (slot.entry.source && (includeDev || !isDev)) {
-        void this.load(slot.entry.id);
+        pending.push(this.load(slot.entry.id));
       }
     }
+    await Promise.all(pending);
   }
 
   /** Loads one model, once. Resolves with the final status. Concurrent callers share the same load. */
@@ -140,6 +145,26 @@ export class AssetLoader {
       return container.instantiateRenderEntity();
     }
     return createFallbackEntity(`FALLBACK_${id}`, fallback);
+  }
+
+  /** A new entity with the loaded model in it, or null when the model is not loaded, so the caller draws its own fallback. */
+  instantiateLoaded(id: string): pc.Entity | null {
+    const slot = this.slots.get(id);
+    if (slot?.status === 'loaded' && slot.model) {
+      return (slot.model.asset.resource as pc.ContainerResource).instantiateRenderEntity();
+    }
+    return null;
+  }
+
+  /** The track to play for a requested clip: the clip itself, else the idle loop, else null (the model stays still). */
+  trackFor(id: string, requested: string | null): pc.AnimTrack | null {
+    const slot = this.slots.get(id);
+    const model = slot?.model;
+    if (!slot || !model) {
+      return null;
+    }
+    const name = resolveAnimation(requested, model.animations, slot.entry.idleAnimation);
+    return name === null ? null : (model.tracks.get(name) ?? null);
   }
 
   /** The clip to play for a requested animation. Falls back to idle, then to nothing. */
@@ -182,7 +207,14 @@ export class AssetLoader {
           finish(null);
           return;
         }
-        finish({ asset, animations: container.animations.map(clipNameOf) });
+        const tracks = new Map<string, pc.AnimTrack>();
+        for (const clip of container.animations) {
+          const track = clip.resource as pc.AnimTrack | null | undefined;
+          if (track) {
+            tracks.set(clipNameOf(clip), track);
+          }
+        }
+        finish({ asset, animations: [...tracks.keys()], tracks });
       });
       this.app.assets.add(asset);
       this.app.assets.load(asset);

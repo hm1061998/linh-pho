@@ -6,6 +6,17 @@
     { "id": "furniture.paper_painting", "source": { "kind": "url", "url": "/assets/furniture_paper_painting.glb" }, "idleAnimation": null },
     { "id": "furniture.stool", "source": { "kind": "url", "url": "/assets/furniture_stool.glb" }, "idleAnimation": null },
     { "id": "furniture.hanging_lamp", "source": { "kind": "url", "url": "/assets/furniture_hanging_lamp.glb" }, "idleAnimation": null },
+    { "id": "hub.ENV_House_Shop_Body", "source": { "kind": "url", "url": "/assets/env_house_shop_body.glb" }, "idleAnimation": null },
+    { "id": "hub.ENV_House_Shop_Roof", "source": { "kind": "url", "url": "/assets/env_house_shop_roof.glb" }, "idleAnimation": null },
+    { "id": "hub.PROP_Signboard_Shop", "source": { "kind": "url", "url": "/assets/prop_signboard_shop.glb" }, "idleAnimation": null },
+    { "id": "hub.ENV_House_Workshop_Body", "source": { "kind": "url", "url": "/assets/env_house_workshop_body.glb" }, "idleAnimation": null },
+    { "id": "hub.PROP_Workbench_Workshop", "source": { "kind": "url", "url": "/assets/prop_workbench_workshop.glb" }, "idleAnimation": null },
+    { "id": "hub.PROP_Lantern_Workshop", "source": { "kind": "url", "url": "/assets/prop_lantern_workshop.glb" }, "idleAnimation": null },
+    { "id": "hub.ENV_Bridge_Deck", "source": { "kind": "url", "url": "/assets/env_bridge_deck.glb" }, "idleAnimation": null },
+    { "id": "npc.npc_ba_nghiem", "source": { "kind": "url", "url": "/assets/npc_ba_nghiem.glb" }, "idleAnimation": "idle" },
+    { "id": "npc.npc_co_lam", "source": { "kind": "url", "url": "/assets/npc_co_lam.glb" }, "idleAnimation": "idle" },
+    { "id": "npc.npc_ong_do", "source": { "kind": "url", "url": "/assets/npc_ong_do.glb" }, "idleAnimation": "idle" },
+    { "id": "npc.npc_bac", "source": { "kind": "url", "url": "/assets/npc_bac.glb" }, "idleAnimation": "idle" },
     { "id": "dev.test_crate", "source": { "kind": "generated", "generator": "crate" }, "idleAnimation": "idle" }
   ]
 }

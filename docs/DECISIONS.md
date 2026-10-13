@@ -400,3 +400,17 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 
 - Chưa có manifest. Hướng ngang trên điện thoại được giữ bằng `OrientationGate` trong ứng dụng, không cần manifest.
 - `docs/PWA.md` ghi các mục cần có nếu thêm sau. Không thêm manifest bây giờ, vì nó cần icon PNG thật và phải thử cài đặt trên Android.
+
+## D-061 — Model được tải xong trước khi dựng cảnh, không thay sau
+
+- **Chọn:** `GameApp.create()` chờ `AssetLoader.loadAll()` (mỗi model có timeout 8 s và không bao giờ reject) rồi mới `start()`. Hub và NPC được dựng một lần với model cuối cùng, hoặc với placeholder nếu model lỗi.
+- **Lý do:** Lớp glow của tiệm và bến cầu clone material của node lúc đang dựng. Nếu model đến sau rồi thay node, glow đã cache sẽ trỏ vào vật đã bị hủy. Chờ trước thì không có trạng thái nửa vời.
+- **Đánh đổi:** Lần khởi động chậm bằng thời gian tải model lâu nhất, tối đa 8 s khi mạng xấu. Model lỗi không làm treo game vì có timeout và placeholder.
+- **Glow:** `WorldView` clone mọi material chuẩn dưới node, không chỉ material của chính node. Nhờ vậy một model nhiều mesh vẫn sáng đúng.
+
+## D-062 — Pivot của hub là tâm khối blockout; NPC tự căn chân
+
+- **Chọn:** Mỗi GLB hub có gốc ở tâm khối blockout trong `hubLayout.ts`, với kích thước đúng bằng khối đó. Code đặt model tại `position`, không scale. NPC người có gốc ở chân (y = 0), Bấc có gốc ở tâm.
+- **Lý do:** Giữ nguyên toạ độ trong `hubLayout.ts` và vùng va chạm. Quy tắc pivot "giữa đáy" của manifest mục 1 áp dụng cho vật tĩnh đặt trong tiệm, không áp cho hub.
+- **Đánh đổi:** Hub lệch khỏi quy tắc chung của manifest mục 1. `docs/ASSET_MANIFEST.md` ghi ngoại lệ này. Đèn treo nội thất giữ pivot ở điểm treo như manifest quy định.
+- **Kiểm chứng:** `src/tests/furnitureModels.test.ts` đọc accessor của từng GLB và so với `HUB_PROPS`. Kích thước và tâm đều khớp.

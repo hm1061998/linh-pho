@@ -1,6 +1,8 @@
 import * as pc from 'playcanvas';
 import type { NpcDefinition } from '../../domain/content/types';
 import { radToDeg } from '../../shared/utils/math';
+import type { AssetLoader } from '../assets/AssetLoader';
+import { playLoop } from '../assets/playLoop';
 import type { GroundPoint, WalkableWorld } from '../player/collision';
 import { colorFromHex } from '../scene/colorFromHex';
 
@@ -14,15 +16,17 @@ const SPIRIT_DIAMETER_M = 0.36;
 
 interface NpcView {
   readonly root: pc.Entity;
+  /** The placeholder shape, until the NPC's model replaces it. */
+  readonly body: pc.Entity;
   readonly isSpirit: boolean;
   readonly baseY: number;
   readonly phase: number;
 }
 
 /**
- * Renders NPCs as placeholder primitives: a capsule for humans and a glowing sphere for spirits.
- * Spirits bob in place (Art Bible §5), so no skeleton is needed. Facing follows the player during
- * dialogue. Real models replace these in Module 09.
+ * Renders each NPC as a placeholder primitive (a capsule for humans, a glowing sphere for spirits) until `attachModels`
+ * swaps in its model, which is in assets.json as `npc.<npc id>`. Spirits bob in place (Art Bible §5). Facing follows
+ * the player during dialogue.
  */
 export class NpcRenderer {
   private readonly views = new Map<string, NpcView>();
@@ -60,12 +64,37 @@ export class NpcRenderer {
       parent.addChild(root);
       this.views.set(npc.id, {
         root,
+        body,
         isSpirit,
         baseY,
         // Spread the spirits' bob phases so several spirits do not move in unison.
         phase: index * 1.7,
       });
     });
+  }
+
+  /**
+   * Replaces each placeholder whose model has loaded, and starts the model's idle loop. Call once, after the models have
+   * loaded. An NPC without a loaded model keeps its placeholder. A model faces -Z (docs/ASSET_MANIFEST.md section 1), so
+   * a human turns half a turn to face +Z, which is the direction `faceToward` aims the root.
+   */
+  attachModels(assets: AssetLoader): void {
+    for (const [id, view] of this.views) {
+      const modelId = `npc.${id}`;
+      const model = assets.instantiateLoaded(modelId);
+      if (!model) {
+        continue;
+      }
+      view.body.destroy();
+      if (!view.isSpirit) {
+        model.setLocalEulerAngles(0, 180, 0);
+      }
+      view.root.addChild(model);
+      const track = assets.trackFor(modelId, 'idle');
+      if (track) {
+        playLoop(model, 'idle', track);
+      }
+    }
   }
 
   /** Advances the spirit bob. `dt` is already clamped and is zero while paused. */

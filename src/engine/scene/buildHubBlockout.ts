@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import type { AssetLoader } from '../assets/AssetLoader';
 import { colorFromHex } from './colorFromHex';
 import { HUB_PROPS, type BlockoutProp } from './hubLayout';
 
@@ -7,10 +8,11 @@ const AMBIENT_HEX = '#4A5685';
 const KEY_LIGHT_HEX = '#FFD9A8';
 
 /**
- * Adds the placeholder hub and its lights to `app.root`. The camera and player are separate controllers.
- * Props share materials by color/emissive key, which keeps material count low for batching later.
+ * Adds the hub and its lights to `app.root`. Each prop is a blockout box, unless its model (`hub.<prop id>` in
+ * assets.json) has loaded: then the model replaces the box, at the same position. The camera and player are separate
+ * controllers. Props share materials by color/emissive key, which keeps material count low for batching later.
  */
-export function buildHubBlockout(app: pc.Application): void {
+export function buildHubBlockout(app: pc.Application, assets: AssetLoader): void {
   app.scene.ambientLight = colorFromHex(AMBIENT_HEX);
 
   const keyLight = new pc.Entity('LIGHT_Key');
@@ -47,15 +49,21 @@ export function buildHubBlockout(app: pc.Application): void {
   };
 
   for (const prop of HUB_PROPS) {
-    const entity = new pc.Entity(prop.id);
-    entity.addComponent('render', {
-      type: prop.shape,
-      material: materialFor(prop),
-    });
+    const root = new pc.Entity(prop.id);
     const [px, py, pz] = prop.position;
-    const [sx, sy, sz] = prop.size;
-    entity.setLocalPosition(px, py, pz);
-    entity.setLocalScale(sx, sy, sz);
-    app.root.addChild(entity);
+    root.setLocalPosition(px, py, pz);
+    const model = assets.instantiateLoaded(`hub.${prop.id}`);
+    if (model) {
+      // A model is built around the blockout's centre and has the blockout's size, so it needs no scale.
+      root.addChild(model);
+    } else {
+      root.addComponent('render', {
+        type: prop.shape,
+        material: materialFor(prop),
+      });
+      const [sx, sy, sz] = prop.size;
+      root.setLocalScale(sx, sy, sz);
+    }
+    app.root.addChild(root);
   }
 }

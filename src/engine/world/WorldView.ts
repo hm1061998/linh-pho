@@ -64,25 +64,37 @@ interface SlotView {
   piece: pc.Entity | null;
 }
 
-/** True when a named blockout node is a render entity with a standard material that a glow can be cloned from. */
-function hasGlowMaterial(node: pc.GraphNode | null): boolean {
-  return node instanceof pc.Entity && node.render !== undefined && node.render.material instanceof pc.StandardMaterial;
+/**
+ * The render components with a standard material at or under a node. That is the blockout box itself, or the meshes of
+ * a model placed under the node.
+ */
+function standardRenders(node: pc.GraphNode | null): pc.RenderComponent[] {
+  if (!(node instanceof pc.Entity)) {
+    return [];
+  }
+  return (node.findComponents('render') as pc.RenderComponent[]).filter(
+    (render) => render.material instanceof pc.StandardMaterial,
+  );
 }
 
-/** Clones a node's material so the glow only lights this node, then points the node at the clone. */
-function cloneGlowMaterial(node: pc.GraphNode | null): pc.StandardMaterial | null {
-  if (!(node instanceof pc.Entity) || !node.render) {
-    return null;
+/**
+ * Gives every standard material under a node its own clone, so the glow lights only this node and not the other objects
+ * that shared the blockout material. Returns the clones, which the caller then drives.
+ */
+function cloneGlowMaterials(node: pc.GraphNode | null, emissiveHex: string): pc.StandardMaterial[] {
+  const clones = new Map<pc.StandardMaterial, pc.StandardMaterial>();
+  for (const render of standardRenders(node)) {
+    const shared = render.material as pc.StandardMaterial;
+    let own = clones.get(shared);
+    if (!own) {
+      own = shared.clone();
+      own.emissive = colorFromHex(emissiveHex);
+      own.update();
+      clones.set(shared, own);
+    }
+    render.material = own;
   }
-  const shared = node.render.material;
-  if (!(shared instanceof pc.StandardMaterial)) {
-    return null;
-  }
-  const own = shared.clone();
-  own.emissive = colorFromHex(LAMP_GOLD);
-  own.update();
-  node.render.material = own;
-  return own;
+  return [...clones.values()];
 }
 
 export class WorldView {
@@ -93,7 +105,7 @@ export class WorldView {
   private readonly furnitureById = new Map<string, FurnitureDef>();
   private readonly parent: pc.Entity;
   private readonly assets: AssetLoader;
-  private bridgeMaterial: pc.StandardMaterial | null = null;
+  private bridgeMaterials: pc.StandardMaterial[] = [];
   private shopGlow: pc.StandardMaterial[] = [];
 
   constructor(parent: pc.Entity, content: WorldContent, world: WalkableWorld, assets: AssetLoader) {
@@ -192,10 +204,9 @@ export class WorldView {
       view.material.update();
     }
 
-    const bridge = this.resolveBridgeMaterial();
-    if (bridge) {
-      bridge.emissiveIntensity = snapshot.flags.bridge_glow ? BRIDGE_GLOW_INTENSITY : 0;
-      bridge.update();
+    for (const material of this.resolveBridgeMaterials()) {
+      material.emissiveIntensity = snapshot.flags.bridge_glow ? BRIDGE_GLOW_INTENSITY : 0;
+      material.update();
     }
 
     this.syncShop(snapshot);
@@ -277,12 +288,10 @@ export class WorldView {
    */
   private syncShopBody(level: number): void {
     if (this.shopGlow.length === 0) {
-      if (!SHOP_GLOW_NODES.every((name) => hasGlowMaterial(this.parent.findByName(name)))) {
+      if (!SHOP_GLOW_NODES.every((name) => standardRenders(this.parent.findByName(name)).length > 0)) {
         return;
       }
-      this.shopGlow = SHOP_GLOW_NODES.map((name) => cloneGlowMaterial(this.parent.findByName(name))).filter(
-        (material): material is pc.StandardMaterial => material !== null,
-      );
+      this.shopGlow = SHOP_GLOW_NODES.flatMap((name) => cloneGlowMaterials(this.parent.findByName(name), LAMP_GOLD));
     }
     const intensity = level >= 2 ? SHOP_GLOW_LEVEL_2 : level >= 1 ? SHOP_GLOW_LEVEL_1 : 0;
     for (const material of this.shopGlow) {
@@ -305,28 +314,14 @@ export class WorldView {
   }
 
   /**
-   * The deck's material is shared with other wood objects in the blockout, so the glow needs a material of its own.
-   * It is cloned once, on first use, after the blockout has been built.
+   * The deck's material may be shared with other wood objects, so the glow needs a material of its own. The clones are
+   * made once, on first use, after the hub has been built.
    */
-  private resolveBridgeMaterial(): pc.StandardMaterial | null {
-    if (this.bridgeMaterial) {
-      return this.bridgeMaterial;
+  private resolveBridgeMaterials(): pc.StandardMaterial[] {
+    if (this.bridgeMaterials.length === 0) {
+      this.bridgeMaterials = cloneGlowMaterials(this.parent.findByName(BRIDGE_DECK_NAME), SPIRIT_JADE);
     }
-    const deck = this.parent.findByName(BRIDGE_DECK_NAME);
-    if (!(deck instanceof pc.Entity) || !deck.render) {
-      return null;
-    }
-    const shared = deck.render.material;
-    if (!(shared instanceof pc.StandardMaterial)) {
-      return null;
-    }
-    const own = shared.clone();
-    own.emissive = colorFromHex(SPIRIT_JADE);
-    own.emissiveIntensity = 0;
-    own.update();
-    deck.render.material = own;
-    this.bridgeMaterial = own;
-    return own;
+    return this.bridgeMaterials;
   }
 
   private box(name: string, color: pc.Color, emissive = false): pc.Entity {

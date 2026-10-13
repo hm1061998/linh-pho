@@ -2,7 +2,7 @@
 
 Cập nhật: 2026-10-14. Tài liệu này là hợp đồng giữa code và Blender. Mọi model 3D phải khớp với dòng tương ứng ở đây trước khi nhập vào game.
 
-**Tình trạng hiện tại:** có một model production: `furniture.stool` (`public/assets/furniture_stool.glb`, làm trong Blender, nguồn ở `assets_src/furniture_stool.blend`). Kiểm tra kích thước, pivot, ngân sách tam giác và material bằng `src/tests/furnitureModels.test.ts`. Các vật còn lại vẫn là hình khối placeholder, vẽ từ dữ liệu (`src/content/shop.json`, `src/engine/scene/hubLayout.ts`). **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
+**Tình trạng hiện tại:** 16 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 7 vật trong hub (mục 3), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật không nằm trong các mục trên (cửa, cổng, cột đèn, gian hàng, lan can cầu...) vẫn là khối placeholder từ `src/engine/scene/hubLayout.ts`. **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
 
 ---
 
@@ -32,11 +32,11 @@ Các vật này có hình khối placeholder ngay trong JSON. Khi có model, th�
 
 | Id manifest | Loại | Kích thước (m) | Tam giác tối đa | Pivot | Animation | Collider | Trạng thái |
 |---|---|---|---|---|---|---|---|
-| `furniture.lantern_shelf` | Kệ Đèn | 1.6 × 1.1 × 0.5 | 1500 | đáy giữa | không | không | placeholder |
-| `furniture.bamboo_vase` | Bình tre | 0.5 × 0.9 × 0.5 | 800 | đáy giữa | không | không | placeholder |
-| `furniture.paper_painting` | Tranh giấy dó | 1.0 × 0.8 × 0.08 | 600 | đáy giữa | không | không | placeholder |
+| `furniture.lantern_shelf` | Kệ Đèn | 1.6 × 1.1 × 0.5 | 1500 | đáy giữa | không | không | có GLB |
+| `furniture.bamboo_vase` | Bình tre | 0.5 × 0.9 × 0.5 | 800 | đáy giữa | không | không | có GLB |
+| `furniture.paper_painting` | Tranh giấy dó | 1.0 × 0.8 × 0.08 | 600 | đáy giữa | không | không | có GLB |
 | `furniture.stool` | Ghế đẩu | 0.6 × 0.45 × 0.6 | 800 | đáy giữa | không | không | có GLB (108 tam giác) |
-| `furniture.hanging_lamp` | Đèn treo giấy | đường kính 0.5 | 1200 | điểm treo, cách sàn 1.3 m | không | không | placeholder, cần emissive |
+| `furniture.hanging_lamp` | Đèn treo giấy | đường kính 0.5 | 1200 | điểm treo, cách sàn 1.3 m | không | không | có GLB (emissive) |
 
 Ô trưng bày (`shop_slot_1..3`) không cần model: là mặt đế tròn do code vẽ.
 
@@ -44,17 +44,17 @@ Các vật này có hình khối placeholder ngay trong JSON. Khi có model, th�
 
 ## 3. Vật thể trong hub (hiện là blockout trong code)
 
-Kích thước và vị trí đọc trực tiếp từ `src/engine/scene/hubLayout.ts`. Khi thay bằng GLB, giữ đúng vị trí và kích thước đó. Không đổi bố cục để vừa model.
+Kích thước và vị trí đọc trực tiếp từ `src/engine/scene/hubLayout.ts`. Khi thay bằng GLB, giữ đúng vị trí và kích thước đó. Không đổi bố cục để vừa model. Pivot của model hub là tâm khối blockout, không phải giữa đáy: đây là ngoại lệ có chủ đích (xem D-062 trong `docs/DECISIONS.md`).
 
 | Node (tên đề xuất) | Hiện tại (code) | Ghi chú cho Blender | Trạng thái |
 |---|---|---|---|
-| `ENV_House_Shop_Body` | khối 8 × 4 × 6, tâm (−17, 2, 10) | Thân tiệm. Vật liệu riêng: game làm sáng vật liệu này theo cấp tiệm. | blockout |
-| `ENV_House_Shop_Roof` | khối 9.2 × 0.8 × 7.2 | Mái ngói đất nung. | blockout |
-| `PROP_Signboard_Shop` | khối 4 × 0.9 × 0.15 | Biển hiệu. Game làm sáng biển này theo cấp tiệm. | blockout |
-| `ENV_House_Workshop_Body` | khối 7 × 3.5 × 6 | Xưởng Cô Lam. | blockout |
-| `PROP_Workbench_Workshop` | khối 1.6 × 1 × 1 | Bàn nghề. Va chạm. | blockout |
-| `PROP_Lantern_Workshop` | cầu 0.5 | Đèn treo, phát sáng. | blockout |
-| `ENV_Bridge_Deck` | mặt cầu | Mặt cầu. Vật liệu riêng: game làm sáng theo cờ `bridge_glow`. | blockout |
+| `ENV_House_Shop_Body` | khối 8 × 4 × 6, tâm (−17, 2, 10) | Thân tiệm. Vật liệu riêng: game làm sáng vật liệu này theo cấp tiệm. | có GLB |
+| `ENV_House_Shop_Roof` | khối 9.2 × 0.8 × 7.2 | Mái ngói đất nung. | có GLB |
+| `PROP_Signboard_Shop` | khối 4 × 0.9 × 0.15 | Biển hiệu. Game làm sáng biển này theo cấp tiệm. | có GLB |
+| `ENV_House_Workshop_Body` | khối 7 × 3.5 × 6 | Xưởng Cô Lam. | có GLB |
+| `PROP_Workbench_Workshop` | khối 1.6 × 1 × 1 | Bàn nghề. Va chạm. | có GLB |
+| `PROP_Lantern_Workshop` | cầu 0.5 | Đèn treo, phát sáng. | có GLB |
+| `ENV_Bridge_Deck` | mặt cầu | Mặt cầu. Vật liệu riêng: game làm sáng theo cờ `bridge_glow`. | có GLB |
 
 Mục tiêu ngân sách tam giác cho hub: dưới 60 000 tam giác trên màn hình mặc định. Đây là mục tiêu chưa đo, sẽ kiểm tra bằng số liệu F3 khi có model thật.
 
@@ -69,7 +69,7 @@ Mục tiêu ngân sách tam giác cho hub: dưới 60 000 tam giác trên màn h
 | `NPC_OngDo` (Ông Độ) | 1.7 | 6000 | `idle` | — | Có va chạm (bán kính 0.35 m). |
 | `NPC_Bac` (Bấc, đèn sprite) | 0.36 đường kính | 1200 | `idle` | — | Không chặn đường. Phát sáng. Blockout: quả cầu 0.36 m. |
 
-**Quy tắc animation:** một clip có tên chính xác như bảng. Thiếu clip được yêu cầu thì game chạy `idle`. Thiếu cả `idle` thì mô hình đứng yên, không lỗi. Hiện game chưa phát animation (NPC là placeholder); phần này chờ có model thật.
+**Quy tắc animation:** một clip có tên chính xác như bảng. Thiếu clip được yêu cầu thì game chạy `idle`. Thiếu cả `idle` thì mô hình đứng yên, không lỗi. **Trạng thái:** bốn NPC đã có model và clip `idle` (`public/assets/npc_*.glb`). Game phát `idle` qua `src/engine/assets/playLoop.ts`. Người có 7 xương, mỗi phần cơ thể gắn cứng vào một xương, nên chỉ có chuyển động thở và gật đầu. Bấc không có xương, `idle` là keyframe trên chính object. Chưa có texture, khuôn mặt và trang phục chi tiết.
 
 ---
 
@@ -116,7 +116,7 @@ Dùng lại các prompt trong `LINH_PHO_BLENDER_ART_BIBLE.md` (BLENDER-P01 đế
 3. **Hub (mục 3)**, giữ bố cục, không đổi vị trí.
 4. **Nhân vật (mục 4)** cuối cùng, vì cần rig và clip.
 
-Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thêm `source: { "kind": "url", "url": "/assets/<tên>.glb" }` vào `src/content/assets.json`, chạy lại trò chơi. Không cần sửa code gameplay.
+Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thêm `source: { "kind": "url", "url": "/assets/<tên>.glb" }` vào `src/content/assets.json`, chạy lại trò chơi. Không cần sửa code gameplay. Nguồn của mọi model là `assets_src/build_assets.py`: sửa builder ở đó rồi chạy lại trong Blender, không sửa `.glb` bằng tay.
 
 ---
 
@@ -124,8 +124,7 @@ Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thê
 
 | Asset | Có GLB | Đã kiểm tra trên desktop | Đã kiểm tra trên Android |
 |---|---|---|---|
-| Ghế đẩu `furniture.stool` (mục 2) | có | đã nạp trong trình duyệt desktop (dev và production) | chưa thử |
-| Bốn nội thất còn lại (mục 2) | không | — | — |
-| Hub (mục 3) | không | — | — |
-| NPC và animation (mục 4) | không | — | — |
+| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 16 file | chưa thử |
+| Bảy vật trong hub (mục 3) | có | nạp trong dev; production tải đủ 16 file | chưa thử |
+| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 16 file | chưa thử |
 | `dev.test_crate` (mục 7) | sinh bằng code | đã nạp trong Chrome (dev) | chưa thử |
