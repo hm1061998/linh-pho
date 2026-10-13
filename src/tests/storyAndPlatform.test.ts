@@ -21,10 +21,22 @@ describe('story cards', () => {
     expect(teaser?.usedIn).toContain('end.teaser');
   });
 
-  it('marks no cultural fact as verified, since the sources were read only as summaries', () => {
+  it('marks a cultural fact as verified only with a source, and every verified fact keeps its source', () => {
     const facts = validateStoryCards(storyJson, hasKey).cards.filter((card) => card.kind === 'fact');
     expect(facts.length).toBeGreaterThan(0);
-    expect(facts.every((card) => card.status === 'needs_review')).toBe(true);
+    for (const card of facts) {
+      if (card.status === 'verified') {
+        expect(card.sources.length, card.id).toBeGreaterThan(0);
+        expect(card.note, card.id).toMatch(/đã đọc/i);
+      } else {
+        expect(card.status, card.id).toBe('needs_review');
+      }
+    }
+  });
+
+  it('keeps the harvest-season claim unverified, because no source read so far gives the months', () => {
+    const card = validateStoryCards(storyJson, hasKey).cards.find((candidate) => candidate.id === 'card_harvest_season');
+    expect(card?.status).toBe('needs_review');
   });
 
   it('refuses a fact marked verified without any source, and says why', () => {

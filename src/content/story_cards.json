@@ -4,8 +4,8 @@
     {
       "id": "card_giay_do_material",
       "kind": "fact",
-      "claim": "Giấy dó là giấy thủ công làm từ xơ vỏ cây dó.",
-      "status": "needs_review",
+      "claim": "Giấy dó là giấy thủ công làm từ vỏ cây dó.",
+      "status": "verified",
       "usedIn": ["item.paper.name"],
       "sources": [
         {
@@ -17,7 +17,7 @@
           "url": "https://tapchicongthuong.vn/giay-do--giay-sac-phong-trong-lich-su-van-hoa-dan-toc-van-de-khoi-phuc-vung-nguyen-lieu-va-lang-nghe-756.htm"
         }
       ],
-      "note": "Hai nguồn tóm tắt đồng ý. Chưa đọc toàn văn. Các nguồn không thống nhất về tên loài cây (dó và dướng), nên game không ghi tên khoa học."
+      "note": "Đã đọc bài Tạp chí Công Thương (Giấy dó, giấy sắc phong...) qua WebFetch ngày 14/10/2026: nguyên văn 'Giấy dó làm từ vỏ cây dó'. Bài không nêu tên khoa học, nên game không ghi tên loài. File VNPT (.doc) không đọc được vì lỗi mã hoá, chưa có bản đọc được."
     },
     {
       "id": "card_harvest_season",
@@ -31,13 +31,13 @@
           "url": "https://tapchicongthuong.vn/magazine/giu-nghe-giay-do-xu-muong-112541.htm"
         }
       ],
-      "note": "Chưa dùng trong game. Đọc toàn văn trước khi đưa vào."
+      "note": "Đã đọc bài 'Giữ nghề giấy dó xứ Mường' qua WebFetch ngày 14/10/2026: bài không nêu tháng thu hoạch. Bài nói về cây dướng (người Mường gọi là cây ráng), chọn cây trung niên 3–4 năm tuổi và lột lớp vỏ cứng sau khi phơi. Tháng 8–10 âm lịch chưa được nguồn nào đã đọc xác nhận. Chưa dùng trong game."
     },
     {
       "id": "card_buoi_history",
       "kind": "fact",
-      "claim": "Làng Bưởi ở Hà Nội từng làm giấy dó để viết và in tranh dân gian.",
-      "status": "needs_review",
+      "claim": "Làng Bưởi ở Hà Nội làm giấy dó từ đầu thế kỷ XV.",
+      "status": "verified",
       "usedIn": [],
       "sources": [
         {
@@ -45,7 +45,7 @@
           "url": "https://vietcetera.com/vn/zo-project-luu-giu-net-dep-giay-do-viet"
         }
       ],
-      "note": "Các nguồn ghi mốc thời gian khác nhau (đầu thế kỷ XV, thời Lý). Game không ghi mốc nào. Chưa dùng."
+      "note": "Đã đọc bài Vietcetera qua WebFetch ngày 14/10/2026: nguyên văn 'Làng Bưởi bắt đầu làm giấy từ đầu thế kỷ XV'. Cùng bài nói giấy dó đạt đến thịnh vượng thời Lý, và nói giấy dó dùng để viết và in tranh, nhưng các câu đó nói về giấy dó nói chung, không nói riêng làng Bưởi, nên thẻ không đưa vào. Bài Tạp chí Công Thương (2004) cũng ghi làng nghề quanh Thăng Long–Hà Nội có từ đầu thế kỷ XV. Chưa dùng trong game."
     },
     {
       "id": "card_fiction_market",

@@ -134,6 +134,7 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Quy tắc:** sự kiện có thật chỉ `verified` khi có nguồn https. Validator từ chối thẻ vi phạm. Thẻ trỏ tới khoá locale không có cũng bị loại (D-058).
 - **Trạng thái thật:** mọi sự kiện có thật là `needs_review`. Các nguồn tìm được chỉ là tóm tắt, và không đồng ý về loài cây, thời vụ, mốc lịch sử. Không có gì được ghi là đã kiểm chứng.
 - **Hướng dẫn:** `docs/STORY_CARDS.md` có bảng trạng thái, danh sách nguồn chưa đọc toàn văn, và cách chuyển sang `verified`.
+- **Cập nhật 14/10/2026 (D-069):** đã đọc ba nguồn qua WebFetch. Hai thẻ giấy dó và làng Bưởi chuyển sang `verified`. Thẻ thu hoạch vẫn `needs_review`. File VNPT không đọc được.
 
 ## Bằng chứng kiểm thử (đã chạy thật)
 

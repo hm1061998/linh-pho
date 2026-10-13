@@ -10,23 +10,23 @@ Mỗi câu có thật hoặc hư cấu xuất hiện trong game có một thẻ 
 
 | Thẻ | Loại | Trạng thái | Dùng ở đâu | Việc còn lại |
 |---|---|---|---|---|
-| Giấy dó là giấy thủ công làm từ xơ vỏ cây dó | sự kiện có thật | needs_review | `item.paper.name` | Đọc toàn văn hai nguồn. Tên loài cây không thống nhất (dó và dướng), nên không ghi tên khoa học. |
-| Thu hoạch vỏ dó khoảng tháng 8–10 âm lịch | sự kiện có thật | needs_review | chưa dùng | Đọc toàn văn nguồn. |
-| Làng Bưởi làm giấy dó | sự kiện có thật | needs_review | chưa dùng | Các nguồn ghi mốc thời gian khác nhau. Chọn một nguồn gốc và ghi rõ. |
+| Giấy dó là giấy thủ công làm từ vỏ cây dó | sự kiện có thật | verified | `item.paper.name` | Không. Đã đọc bài Tạp chí Công Thương, ngày 14/10/2026. Bài không nêu tên khoa học, nên game không ghi tên loài. |
+| Thu hoạch vỏ dó khoảng tháng 8–10 âm lịch | sự kiện có thật | needs_review | chưa dùng | Chưa có nguồn đã đọc nêu tháng. Bài Công Thương về xứ Mường nói cây dướng, không nói tháng. File VNPT (.doc) hỏng, không đọc được. Cần nguồn khác, hoặc bản VNPT đọc được. |
+| Làng Bưởi làm giấy dó từ đầu thế kỷ XV | sự kiện có thật | verified | chưa dùng | Không. Đã đọc bài Vietcetera, ngày 14/10/2026. Mục đích viết và in tranh bị bỏ, vì bài nói về giấy dó nói chung. |
 | Chợ đêm là nơi hư cấu | hư cấu | verified | `dlg.ba_nghiem.market` | Không cần nguồn ngoài. Căn cứ: GDD v1, mục C1. |
 | Đèn Soi Linh và Bấc là hư cấu | hư cấu | verified | `item.spirit_lantern.name`, `dlg.bac.greet` | Không cần nguồn ngoài. Căn cứ: GDD v1. |
 | Chương 2 mở ngõ Giấy | hư cấu | needs_review | `end.teaser` | Biên tập, và viết nội dung chương 2 thật. |
 
 ## Ghi chú về nguồn
 
-Các nguồn dưới đây được tìm bằng tìm kiếm web, và chỉ đọc được phần tóm tắt, chưa đọc toàn văn:
+Các nguồn được đọc qua công cụ tải trang (WebFetch) ngày 14/10/2026. Công cụ trả về phần trích xuất của trang, không phải bản sao từng ký tự. Các câu được dẫn trong ghi chú của thẻ là trích xuất đó. **Người phụ trách nên mở lại từng nguồn và kiểm tra câu được dẫn trước khi phát hành.**
 
-- VNPT, "141. Giấy dó" (tài liệu tóm tắt).
-- Tạp chí Công Thương, "Giấy dó, giấy sắc phong trong lịch sử văn hóa dân tộc".
-- Tạp chí Công Thương, "Giữ nghề giấy dó xứ Mường".
-- Vietcetera, "Zó Project: Lưu giữ nét đẹp giấy dó Việt".
+- VNPT, "141. Giấy dó" (file .doc): **không đọc được.** Nội dung bị lỗi mã hoá. Công cụ chỉ lấy được vài đoạn rời, có tên hai loài khác nhau. Không dùng để xác nhận gì.
+- Tạp chí Công Thương, "Giấy dó, giấy sắc phong trong lịch sử văn hóa dân tộc": **đã đọc.** Xác nhận giấy dó làm từ vỏ cây dó. Không nêu thời vụ.
+- Tạp chí Công Thương, "Giữ nghề giấy dó xứ Mường": **đã đọc.** Nói về cây dướng và cách làm. Không nêu tháng thu hoạch.
+- Vietcetera, "Zó Project: Lưu giữ nét đẹp giấy dó Việt": **đã đọc.** Nói làng Bưởi làm giấy từ đầu thế kỷ XV.
 
-Tóm tắt của các nguồn đồng ý ở điểm cốt lõi (giấy dó từ vỏ cây dó), nhưng không đồng ý về chi tiết (loài, thời vụ, thời gian ngâm vôi, mốc lịch sử). Vì vậy mọi sự kiện có thật vẫn là `needs_review` cho đến khi có người đọc toàn văn.
+Các nguồn không thống nhất về loài cây (dó và dướng), thời vụ và mốc lịch sử. Thẻ nào chưa có nguồn đã đọc xác nhận vẫn là `needs_review`.
 
 ## Cách chuyển `needs_review` thành `verified`
 

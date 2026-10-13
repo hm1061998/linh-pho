@@ -454,3 +454,10 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Phím cố định là một trong các nợ đã biết, và cần cho người dùng bố cục bàn phím khác hoặc có khó khăn khi bấm.
 - **Đánh đổi:** Chỉ đổi phím chính. Mũi tên vẫn di chuyển được. Phím dành riêng không đổi được, và Esc vẫn là phím mở menu và huỷ chọn.
 - **Kiểm chứng:** `keyMap.test.ts` và `keyboardState.test.ts` (613 test cùng các test khác). Trong trình duyệt: đổi Tiến sang T và nhân vật đi bằng T, W không đi nữa. Đổi Kho đồ sang B. Enter bị từ chối với thông báo. Esc huỷ không đóng menu. Tải lại trang thì phím còn nguyên, và nút «Đặt lại» trả về mặc định.
+
+## D-069 — Thẻ câu chuyện: đọc nguồn qua WebFetch, chuyển hai thẻ sang verified
+
+- **Chọn:** Đọc các nguồn trong `story_cards.json` qua công cụ tải trang. Hai thẻ có câu được nguồn xác nhận chuyển sang `verified`: giấy dó làm từ vỏ cây dó (Tạp chí Công Thương), và làng Bưởi làm giấy từ đầu thế kỷ XV (Vietcetera). Thẻ thu hoạch tháng 8–10 vẫn `needs_review`, vì không có nguồn đã đọc nêu tháng. Câu về làng Bưởi được rút gọn, bỏ mục đích viết và in tranh vì nguồn nói về giấy dó nói chung.
+- **Lý do:** Quy tắc trong `STORY_CARDS.md` cho phép `verified` khi có nguồn đã đọc toàn văn và câu khớp nguồn. Hai câu đó khớp nguồn.
+- **Đánh đổi:** Công cụ trả về phần trích xuất của trang, không phải bản sao từng ký tự. File VNPT (.doc) bị lỗi mã hoá, không đọc được. Các câu được dẫn cần người phụ trách mở lại nguồn kiểm tra trước khi phát hành.
+- **Kiểm chứng:** `storyAndPlatform.test.ts` kiểm tra mọi thẻ `verified` có nguồn và ghi chú «đã đọc», và thẻ thu hoạch vẫn là `needs_review`. Typecheck sạch, 614 test pass.
