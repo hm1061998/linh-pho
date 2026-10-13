@@ -23,6 +23,12 @@ export interface OrderView {
   readonly ready: boolean;
 }
 
+/** The board's saved state: which orders were accepted and which were delivered. */
+export interface OrderState {
+  readonly accepted: readonly string[];
+  readonly delivered: readonly string[];
+}
+
 export class OrderBoard {
   private readonly orders: ReadonlyMap<string, OrderDef>;
   private readonly acceptedIds = new Set<string>();
@@ -30,6 +36,27 @@ export class OrderBoard {
 
   constructor(orders: readonly OrderDef[]) {
     this.orders = new Map(orders.map((order) => [order.id, order]));
+  }
+
+  snapshot(): OrderState {
+    return { accepted: [...this.acceptedIds], delivered: [...this.deliveredIds] };
+  }
+
+  /** Replaces the board with a saved state. Unknown order IDs are dropped. A delivered order counts as accepted. */
+  restore(state: OrderState): void {
+    this.acceptedIds.clear();
+    this.deliveredIds.clear();
+    for (const orderId of state.accepted) {
+      if (this.orders.has(orderId)) {
+        this.acceptedIds.add(orderId);
+      }
+    }
+    for (const orderId of state.delivered) {
+      if (this.orders.has(orderId)) {
+        this.deliveredIds.add(orderId);
+        this.acceptedIds.add(orderId);
+      }
+    }
   }
 
   def(orderId: string): OrderDef | undefined {

@@ -4,6 +4,7 @@ import { validateShop } from '../domain/content/validateShop';
 import type { ItemDef, ObjectiveType } from '../domain/content/gameplayTypes';
 import type { ContentIssue, NpcDefinition } from '../domain/content/types';
 import type { SessionContent } from '../domain/GameSession';
+import type { Language } from '../domain/save/SaveDocument';
 import { createTranslator } from '../shared/i18n/translator';
 import dialoguesJson from './dialogues.json';
 import enLocale from './locales/en.json';
@@ -85,11 +86,40 @@ export const CONTENT_ISSUES: readonly ContentIssue[] = [
   ...shopResult.issues,
 ];
 
-const translator = createTranslator(LOCALES, PRIMARY_LOCALE, FALLBACK_LOCALE);
+let activeLanguage: Language = PRIMARY_LOCALE;
+let translator = createTranslator(LOCALES, activeLanguage, FALLBACK_LOCALE);
+const languageListeners = new Set<() => void>();
 
 /** Translates a locale key for display. Only the UI layer should call this. */
 export function t(key: string, params?: Readonly<Record<string, string>>): string {
   return translator.t(key, params);
+}
+
+export function getLanguage(): Language {
+  return activeLanguage;
+}
+
+/**
+ * Switches the language. The other language stays as the fallback, so a key missing from one locale still shows.
+ * Listeners run after the switch, so the HUD can re-render in the new language.
+ */
+export function setLanguage(language: Language): void {
+  if (language === activeLanguage) {
+    return;
+  }
+  activeLanguage = language;
+  translator = createTranslator(LOCALES, language, language === 'vi' ? FALLBACK_LOCALE : PRIMARY_LOCALE);
+  for (const listener of languageListeners) {
+    listener();
+  }
+}
+
+/** Subscribes to language changes. Returns the unsubscribe function. */
+export function subscribeLanguage(listener: () => void): () => void {
+  languageListeners.add(listener);
+  return () => {
+    languageListeners.delete(listener);
+  };
 }
 
 export function findNpc(npcId: string): NpcDefinition | undefined {

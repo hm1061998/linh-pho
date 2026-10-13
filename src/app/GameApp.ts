@@ -11,6 +11,7 @@ import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
 import { HUB_WORLD } from '../engine/scene/hubCollision';
 import { WorldView } from '../engine/world/WorldView';
+import { playSfx } from '../shared/audio/sfx';
 import { clampPixelRatio } from '../shared/utils/display';
 import { radToDeg } from '../shared/utils/math';
 import { GameStartupError, toGraphicsStartupError } from './startupErrors';
@@ -232,9 +233,13 @@ export class GameApp {
   /** One gameplay frame. `dt` is already clamped by the engine to 0.1 s, so a tab switch cannot teleport the player. */
   private readonly tick = (dt: number): void => {
     const frame = this.inputService.frame();
-    if (frame.lanternPressed && this.sessionState.toggleLantern().ok) {
-      const { x, z } = this.player.groundPosition;
-      this.fx.trigger(x, 0, z, this.reducedVfx);
+    if (frame.lanternPressed) {
+      const turningOn = !this.sessionState.lantern.isSpirit;
+      if (this.sessionState.toggleLantern().ok) {
+        playSfx(turningOn ? 'lantern_on' : 'lantern_off');
+        const { x, z } = this.player.groundPosition;
+        this.fx.trigger(x, 0, z, this.reducedVfx);
+      }
     }
     this.sessionState.updateLantern(dt);
     this.fx.update(dt);
@@ -318,6 +323,7 @@ export class GameApp {
       case 'pickup': {
         const result = this.sessionState.collectPickup(targetId);
         if (result.ok) {
+          playSfx('pickup');
           this.interactionSystem.unregister(targetId);
         }
         return;
@@ -328,6 +334,7 @@ export class GameApp {
       case 'placement': {
         const result = this.sessionState.placeItem(targetId);
         if (result.ok) {
+          playSfx('snap');
           this.interactionSystem.unregister(targetId);
         }
         return;

@@ -4,13 +4,14 @@ import { GAME_CONTENT, t } from '../../content';
 import type { SessionSnapshot } from '../../domain/GameSession';
 import { useDialogueView } from '../state/useGameplayState';
 import { qualityLabel, useSessionSnapshot } from '../state/useSession';
+import { playSfx } from '../../shared/audio/sfx';
 import { MiniGame } from './MiniGames';
 import { ShopPanel } from './ShopPanel';
 
 /**
- * Hosts the one panel the session has open: the crafting table, the engraving puzzle, or the inventory. Panels
- * never run game logic. They read snapshots and send actions to the session. Keys: I toggles the inventory, Escape
- * closes the panel. Neither key works while a dialogue is open, because the dialogue owns them then.
+ * Hosts the one panel the session has open: the crafting table, the engraving puzzle, the shop, or the inventory.
+ * Panels never run game logic. They read snapshots and send actions to the session. The key I toggles the inventory.
+ * It does not work while a dialogue is open, because the dialogue owns keys then.
  */
 export function PanelHost({ game }: { readonly game: GameApp }) {
   const snap = useSessionSnapshot(game);
@@ -22,10 +23,8 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
         return;
       }
       const panel = game.session.currentPanel;
-      if (event.code === 'Escape' && panel) {
-        event.preventDefault();
-        game.session.closePanel();
-      } else if (event.code === 'KeyI') {
+      // Escape is the pause menu's key: it closes an open panel first, then opens the menu.
+      if (event.code === 'KeyI') {
         event.preventDefault();
         // The inventory would end a craft in progress. Keep the minigame open until the player finishes or cancels it.
         if (game.session.activeCraft) {
@@ -182,8 +181,10 @@ function PuzzlePanel({
     const result = game.session.submitPuzzle(puzzleId);
     if (result.ok) {
       setFeedback('ui.puzzle.solved');
+      playSfx('chime');
     } else if (result.reason === 'wrong_order') {
       setFeedback('ui.puzzle.wrong');
+      playSfx('wrong');
     } else if (result.reason === 'incomplete') {
       setFeedback('ui.puzzle.incomplete');
     } else {

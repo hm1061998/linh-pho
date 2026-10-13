@@ -295,5 +295,34 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 
 - **Hình học tạm (D-040):** Quầy, ô trưng bày và món nội thất là hình khối đơn giản lấy từ `visual` trong JSON. Chưa có mô hình thật (Module 09).
 - **Nâng cấp nhìn thấy được:** Thân tiệm và biển hiệu sáng dần theo cấp (`SHOP_GLOW_LEVEL_1` và `_2`). Ô trưng bày hiện theo cấp. Món đặt vào ô hiện trong cảnh. Mỗi nhân bản vật liệu được clone trước khi chỉnh sáng, để không làm sáng vật gỗ khác.
-- **Màn hình kết thúc:** Hiện một lần khi cờ `mvp_complete` bật. Nó đóng panel đang mở, khoá đầu vào gameplay trong lúc hiện, và "Đi dạo tiếp" trả lại thế giới mở. Lời teaser là bản nháp, cần kiểm tra ở Module 12.
-- **Chưa lưu:** Việc đã xem màn kết thúc chưa được lưu. Sau khi tải lại trang, màn hình sẽ hiện lại (Module 08 sẽ lưu cờ này).
+- **Màn hình kết thúc:** Hiện khi cờ `mvp_complete` bật và `end_card_seen` chưa bật. Nó đóng panel đang mở, khoá đầu vào gameplay trong lúc hiện, và "Đi dạo tiếp" đặt `end_card_seen`. Lời teaser là bản nháp, cần kiểm tra ở Module 12.
+- **Đã xem lưu:** Việc đã đóng màn kết thúc là cờ `end_card_seen` trong tiến trình, nên không hiện lại sau khi tải lại trang (D-045).
+
+## D-045 — Lưu: tài liệu có phiên bản, kiểm tra từng trường, sao lưu khi lỗi
+
+- **Cổng và adapter:** `ports/SavePort.ts` chỉ chuyển văn bản (đọc, ghi, ghi bản sao). `adapters/LocalSaveAdapter.ts` ghi vào IndexedDB, và dùng localStorage khi IndexedDB không mở được. Mọi truy cập đều được bọc, lỗi trả về `false` hoặc `null`, không ném ra vòng lặp game.
+- **Tài liệu:** `domain/save/SaveDocument.ts` có `version`, `savedAt`, `progress` và `settings`. Mọi trường được kiểm tra kiểu. Trường lạ được bỏ qua, nên bản lưu mới vẫn đọc được phần đã biết.
+- **Tiến trình tách khỏi UI:** `domain/save/SessionProgress.ts` mô tả một ván chơi. Panel, hội thoại, và minigame đang dở không được lưu. Craft đang dở lưu thành nguyên liệu (vẫn nằm trong kho), nên tải lại không mất nguyên liệu.
+- **Lỗi đọc:** Tiến trình không qua kiểm tra, hoặc khôi phục ném lỗi, thì văn bản cũ được giữ ở khoá bản sao, trò chơi bắt đầu lại, và một banner báo cho người chơi. Không mất gì âm thầm.
+- **Cài đặt hỏng:** Chỉ thay trường hỏng bằng giá trị mặc định. Tiến trình vẫn giữ.
+- **Migration:** Bảng `MIGRATIONS` theo từng phiên bản cũ, hiện rỗng vì phiên bản 1 là đầu tiên. Khi đổi định dạng, thêm bước mới, không sửa bước cũ.
+- **Khôi phục không trả thưởng lần hai:** `restoreProgress` đặt lại mọi hệ thống, áp dữ liệu đã lưu, rồi gọi `start()` (idempotent). Phần thưởng đã nhận không được cộng lại.
+
+## D-046 — Tự lưu, khôi phục, đặt lại có xác nhận
+
+- **Tự lưu:** `app/SaveController.ts` lưu sau 800 ms kể từ thay đổi cuối. Khi trang bị ẩn hoặc đóng (`visibilitychange`, `pagehide`), lưu ngay. Ghi lỗi được báo một lần, không lặp lại.
+- **Thứ tự:** Màn hình chỉ hiện sau khi tải xong, nên người chơi không thấy thế giới mới thay thế tiến trình đã lưu. Tự lưu bắt đầu sau khi tải, nên không ghi đè bản lưu bằng trạng thái trống.
+- **Đặt lại:** "Bắt đầu lại" cần xác nhận, vì xoá ván đang chơi. Đặt lại được lưu ngay, để tải lại không khôi phục ván cũ.
+
+## D-047 — Cài đặt, menu tạm dừng, đổi ngôn ngữ
+
+- **Escape:** Một phím, hai việc theo thứ tự: đóng panel nếu đang mở, không thì mở menu tạm dừng. Hội thoại giữ phím riêng, nên Escape không làm gì khi đang nói chuyện. Nút Menu trên HUD dành cho cảm ứng và bàn phím.
+- **Tạm dừng:** Khoá đầu vào gameplay bằng blocker `pause`. Trạng thái menu là UI, không lưu, không đổi phiên.
+- **Ngôn ngữ:** `content/index.ts` đổi bộ dịch khi người chơi chọn, ngôn ngữ kia làm dự phòng. HUD được đặt `key` theo ngôn ngữ, nên mọi chuỗi render lại cùng lúc. Cách này đơn giản hơn truyền ngôn ngữ vào từng component.
+- **Cài đặt:** Ngôn ngữ, giảm hiệu ứng, và âm thanh được lưu cùng tiến trình, áp dụng ngay khi đổi, và giữ qua lần tải lại.
+
+## D-048 — Âm thanh tổng hợp, mở khoá sau cử chỉ người chơi
+
+- **Không có file âm thanh:** `shared/audio/sfx.ts` tổng hợp âm bằng Web Audio API (sóng sin, tam giác, vuông). Tám âm: đèn bật, đèn tắt, nhặt, tách (gắn ô), trượt, sai, chuông, xu. Âm tiếng «tách» là thứ GDD yêu cầu cho lắp khung.
+- **Mở khoá:** `AudioContext` chỉ được tạo sau cử chỉ đầu tiên (pointerdown hoặc keydown), vì trình duyệt chặn âm thanh trước đó. Mọi lệnh phát đều là no-op khi tắt âm, khi chưa có context, hoặc khi trình duyệt chưa chạy context.
+- **Chưa kiểm chứng bằng tai:** Trình duyệt tự động không nghe được. Phần này cần kiểm tra trên máy thật.

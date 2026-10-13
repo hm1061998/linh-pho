@@ -21,6 +21,7 @@ import { EngravingGame } from './minigame/EngravingGame';
 import { ConfirmGame, type MiniGame } from './minigame/MiniGame';
 import type { MiniGameStatus, MiniGameStep } from './minigame/types';
 import { OrderBoard, type OrderView } from './orders/OrderBoard';
+import { BLANK_PROGRESS, type SessionProgress } from './save/SessionProgress';
 import { GlyphPuzzle, type PuzzleResult, type PuzzleView } from './puzzle/GlyphPuzzle';
 import { QuestSystem, type QuestSystemEvent, type QuestView } from './quests/QuestSystem';
 import { Shop, type FurnitureView, type ShopSlotView } from './shop/Shop';
@@ -44,6 +45,9 @@ export interface SessionContent {
   readonly puzzles: readonly PuzzleDef[];
   readonly shop: ShopContent;
 }
+
+/** Set once the chapter-end card has been closed. Saved with the flags, so the card stays closed after a reload. */
+export const END_SEEN_FLAG = 'end_card_seen';
 
 const PLAYER_FACING_REFUSALS: ReadonlySet<string> = new Set([
   'pickup_taken',
@@ -169,10 +173,83 @@ export class GameSession {
     this.dialogue.events.on('dialogue.closed', () => this.emitChanged());
   }
 
-  /** Starts a new game: activates the first quests. */
+  /** Starts a new game: activates the first quests. Safe to call again: quests only activate once. */
   start(): void {
     this.quests.start();
     this.emitChanged();
+  }
+
+  // ---------- save and load ----------
+
+  /** The saveable state of this playthrough. See `SessionProgress` for what is left out and why. */
+  saveProgress(): SessionProgress {
+    return {
+      coins: this.coins,
+      reputation: this.reputation,
+      shopLevel: this.shopLevel,
+      flags: this.flags.snapshot(),
+      inventory: this.inventory.stackViews().map((stack) => ({ itemId: stack.itemId, quality: stack.quality, count: stack.count })),
+      collectedPickups: [...this.collected],
+      placed: [...this.placed],
+      quests: this.quests.snapshot(),
+      lanternSpirit: this.lantern.isSpirit,
+      puzzles: Object.fromEntries([...this.puzzles].map(([id, puzzle]) => [id, { solved: puzzle.isSolved, attempts: puzzle.view().attempts }])),
+      shop: this.shopStock.snapshot(),
+      orders: this.orderBoard.snapshot(),
+    };
+  }
+
+  /**
+   * Replaces the whole playthrough with a saved one, then activates the quests that are ready. Nothing is paid again:
+   * rewards were paid when they were first earned, and restoring does not pay them a second time.
+   */
+  restoreProgress(saved: SessionProgress): void {
+    this.crafting.cancel();
+    this.miniGame = null;
+    this.panel = null;
+    this.coins = saved.coins;
+    this.reputation = saved.reputation;
+    this.shopLevel = saved.shopLevel;
+    this.flags.restore(saved.flags);
+    this.inventory.restore(saved.inventory);
+    this.collected.clear();
+    for (const pickupId of saved.collectedPickups) {
+      if (this.pickupById.has(pickupId)) {
+        this.collected.add(pickupId);
+      }
+    }
+    this.placed.clear();
+    for (const placementId of saved.placed) {
+      if (this.placementById.has(placementId)) {
+        this.placed.add(placementId);
+      }
+    }
+    this.quests.restore(saved.quests);
+    this.lantern.restore(saved.lanternSpirit);
+    for (const [puzzleId, puzzle] of this.puzzles) {
+      puzzle.restore(saved.puzzles[puzzleId] ?? { solved: false, attempts: 0 });
+    }
+    this.shopStock.restore(saved.shop);
+    this.orderBoard.restore(saved.orders);
+    this.lastLanternPhase = this.lantern.snapshot.phase;
+    this.quests.start();
+    this.emitChanged();
+  }
+
+  /** Starts a new playthrough: every system goes back to its first state, and the first quests start. */
+  resetProgress(): void {
+    this.restoreProgress(BLANK_PROGRESS);
+  }
+
+  /** Records that the chapter-end card was closed, so it does not come back on the next visit. */
+  markEndSeen(): void {
+    this.flags.set(END_SEEN_FLAG, true);
+    this.emitChanged();
+  }
+
+  /** Tells the player that the save could not be read or written. The game keeps running either way. */
+  reportSaveProblem(kind: 'write_failed' | 'unreadable'): void {
+    this.notice(kind === 'write_failed' ? 'notice.save_failed' : 'notice.save_unreadable', {});
   }
 
   // ---------- interactions from the world ----------

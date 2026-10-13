@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { GameApp } from '../../app/GameApp';
 import { GAME_CONTENT, t } from '../../content';
 import type { SessionSnapshot } from '../../domain/GameSession';
+import { playSfx } from '../../shared/audio/sfx';
 
 /**
  * The shop counter. Three things live here: customer orders (accept, then deliver), furniture for sale (paid from
@@ -49,7 +50,15 @@ export function ShopPanel({ game, snap }: { readonly game: GameApp; readonly sna
                   </button>
                 ) : null}
                 {order.status === 'accepted' ? (
-                  <button type="button" disabled={!order.ready} onClick={() => game.session.deliverOrder(order.id)}>
+                  <button
+                    type="button"
+                    disabled={!order.ready}
+                    onClick={() => {
+                      if (game.session.deliverOrder(order.id).ok) {
+                        playSfx('coin');
+                      }
+                    }}
+                  >
                     {t('ui.shop.deliver')}
                   </button>
                 ) : null}
@@ -72,7 +81,15 @@ export function ShopPanel({ game, snap }: { readonly game: GameApp; readonly sna
                 {piece.lockedBy === 'level' ? ` · ${t('ui.shop.locked_level', { level: String(requiredLevel(piece.id)) })}` : ''}
                 {piece.lockedBy === 'flag' ? ` · ${t('ui.shop.locked_flag')}` : ''}
               </p>
-              <button type="button" disabled={piece.lockedBy !== null || snap.coins < piece.price} onClick={() => game.session.buyFurniture(piece.id)}>
+              <button
+                type="button"
+                disabled={piece.lockedBy !== null || snap.coins < piece.price}
+                onClick={() => {
+                  if (game.session.buyFurniture(piece.id).ok) {
+                    playSfx('coin');
+                  }
+                }}
+              >
                 {t('ui.shop.buy')}
               </button>
               {piece.owned > 0 ? (
@@ -104,6 +121,7 @@ export function ShopPanel({ game, snap }: { readonly game: GameApp; readonly sna
                   onClick={() => {
                     if (selected && game.session.placeFurniture(selected, slot.id).ok) {
                       setSelected(null);
+                      playSfx('snap');
                     }
                   }}
                 >

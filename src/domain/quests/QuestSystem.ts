@@ -157,10 +157,15 @@ export class QuestSystem {
   }
 
   /**
-   * Replaces progress with a saved snapshot. Unknown quest IDs and objective IDs are ignored, so an old
-   * save still loads after content changes. Quest state is not reward-checked here.
+   * Replaces progress with a saved snapshot. Every quest first goes back to locked, so a quest missing from the save
+   * does not keep progress from before. Unknown quest IDs and objective IDs are ignored, so an old save still loads
+   * after content changes. Quest state is not reward-checked here. Call `start()` afterwards to activate ready quests.
    */
   restore(saved: Readonly<Record<string, QuestState>>): void {
+    for (const state of this.states.values()) {
+      state.status = 'locked';
+      state.progress = new Map();
+    }
     for (const [questId, saveState] of Object.entries(saved)) {
       const state = this.states.get(questId);
       const def = this.defs.get(questId);

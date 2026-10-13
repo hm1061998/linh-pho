@@ -904,6 +904,139 @@ textarea,
   opacity: 0.9;
 }
 
+/* Pause menu, its menu button, and the banner for a save that could not be read. */
+.menu-button {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 96px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  color: var(--text-main);
+  font: inherit;
+  pointer-events: auto;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.pause-menu {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(92vw, 420px);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  color: var(--text-main);
+  pointer-events: auto;
+}
+
+.pause-menu h2 {
+  margin: 0;
+  color: var(--lantern-gold);
+}
+
+.pause-menu fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pause-menu legend {
+  width: 100%;
+  margin-bottom: 4px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.pause-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pause-menu button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pause-menu button[aria-pressed='true'] {
+  border-color: var(--focus-ring);
+  background: rgba(101, 212, 189, 0.22);
+}
+
+.pause-menu .pause-primary {
+  background: var(--lantern-gold);
+  border-color: var(--lantern-gold);
+  color: var(--night-navy);
+  font-weight: 700;
+}
+
+.pause-menu .pause-restart {
+  background: transparent;
+}
+
+.pause-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pause-confirm p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.save-banner {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(92vw, 520px);
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--panel-bg);
+  color: var(--text-main);
+  font-size: 14px;
+  pointer-events: auto;
+}
+
+.save-banner p {
+  margin: 0;
+  flex: 1;
+}
+
+.save-banner button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--parchment);
+  border-radius: 10px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
+
 .end-card button {
   margin-top: 12px;
   min-height: 44px;

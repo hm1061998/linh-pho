@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type P
 import type { GameApp } from '../../app/GameApp';
 import { t } from '../../content';
 import type { MiniGameView } from '../../domain/GameSession';
+import { playSfx } from '../../shared/audio/sfx';
 
 /**
  * The two crafting minigames, drawn as HTML placeholders for now. They send each action to the session and draw
@@ -97,8 +98,10 @@ function AssemblyGame({ game, view }: { readonly game: GameApp; readonly view: A
       setSnappedId(socketId);
       setSelected(false);
       buzz();
+      playSfx(step.status === 'complete' ? 'chime' : 'snap');
     } else if (step.reason === 'miss') {
       setMiss(true);
+      playSfx('miss');
     }
     // A socket that is already filled, or a finished frame, shows its state already. Nothing more to draw.
   };
@@ -263,8 +266,10 @@ function EngravingGame({ game, view }: { readonly game: GameApp; readonly view: 
     const step = game.session.engravingTap(markId);
     if (step.ok) {
       buzz();
+      playSfx(step.status === 'complete' ? 'chime' : 'snap');
     } else if (step.reason === 'wrong_mark') {
       setWrongId(markId);
+      playSfx('wrong');
     }
   };
 

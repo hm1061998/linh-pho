@@ -178,6 +178,17 @@ export class Inventory {
   }
 
   /** Every stack, sorted by item then quality, so the view and the save are stable. */
+  /**
+   * Replaces the whole inventory with saved stacks. Each stack goes through the normal `add` rules, so a stack that
+   * no longer fits the item (wrong quality for the item, unknown item) is dropped rather than trusted.
+   */
+  restore(stacks: readonly { readonly itemId: string; readonly quality: Quality | null; readonly count: number }[]): void {
+    this.stacks.clear();
+    for (const stack of stacks) {
+      this.add(stack.itemId, stack.count, stack.quality);
+    }
+  }
+
   stackViews(): StackView[] {
     return [...this.stacks.values()]
       .filter((stack) => stack.count > 0)

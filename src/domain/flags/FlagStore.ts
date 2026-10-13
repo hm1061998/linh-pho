@@ -25,4 +25,12 @@ export class FlagStore {
   snapshot(): Record<string, boolean> {
     return Object.fromEntries(this.values);
   }
+
+  /** Replaces every flag with a saved set. Used when a save is loaded or the progress is reset. */
+  restore(values: Readonly<Record<string, boolean>>): void {
+    this.values.clear();
+    for (const [flag, value] of Object.entries(values)) {
+      this.values.set(flag, value);
+    }
+  }
 }

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import type { GameApp } from '../../app/GameApp';
+import { END_SEEN_FLAG } from '../../domain/GameSession';
 import { t } from '../../content';
 import { useSessionSnapshot } from '../state/useSession';
 
@@ -7,14 +8,13 @@ import { useSessionSnapshot } from '../state/useSession';
 const ENDING_BLOCKER = 'ending';
 
 /**
- * The end of the first playable chapter. It shows once the MVP flag is set, with a short summary and a teaser for
- * the next chapter. Closing it returns the player to the open shop. The teaser is draft copy: the story cards
- * track whether each line has been checked.
+ * The end of the first playable chapter. It shows once the MVP flag is set, until the player closes it. Closing it
+ * is saved as a flag, so the card does not come back after a reload. The teaser is draft copy: the story cards track
+ * whether each line has been checked.
  */
 export function EndScreen({ game }: { readonly game: GameApp }) {
   const snap = useSessionSnapshot(game);
-  const [dismissed, setDismissed] = useState(false);
-  const visible = snap.flags.mvp_complete === true && !dismissed;
+  const visible = snap.flags.mvp_complete === true && snap.flags[END_SEEN_FLAG] !== true;
 
   useEffect(() => {
     if (!visible) {
@@ -38,7 +38,7 @@ export function EndScreen({ game }: { readonly game: GameApp }) {
       <p className="end-stats">{t('end.stats', { coins: String(snap.coins), reputation: String(snap.reputation) })}</p>
       <h3>{t('end.teaser_title')}</h3>
       <p className="end-teaser">{t('end.teaser')}</p>
-      <button type="button" onClick={() => setDismissed(true)}>
+      <button type="button" onClick={() => game.session.markEndSeen()}>
         {t('end.continue')}
       </button>
     </section>

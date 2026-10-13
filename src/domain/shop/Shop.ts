@@ -36,6 +36,13 @@ export interface FurnitureView {
 
 export type FlagCheck = (flag: string) => boolean;
 
+/** The shop's own state, as saved. Stock counts pieces not yet placed. Sockets map each slot to its piece or null. */
+export interface ShopState {
+  readonly stock: Readonly<Record<string, number>>;
+  readonly sockets: Readonly<Record<string, string | null>>;
+  readonly purchases: number;
+}
+
 export class Shop {
   private readonly furniture: ReadonlyMap<string, FurnitureDef>;
   private readonly slots: readonly ShopSlotDef[];
@@ -129,6 +136,32 @@ export class Shop {
 
   owned(furnitureId: string): number {
     return this.stock.get(furnitureId) ?? 0;
+  }
+
+  snapshot(): ShopState {
+    return {
+      stock: Object.fromEntries(this.stock),
+      sockets: Object.fromEntries(this.sockets),
+      purchases: this.purchases,
+    };
+  }
+
+  /**
+   * Replaces stock and sockets with a saved state. Unknown furniture and unknown sockets are dropped, and a socket the
+   * save does not name is left empty. So an old save still loads after the content changes.
+   */
+  restore(state: ShopState): void {
+    this.stock.clear();
+    for (const [furnitureId, count] of Object.entries(state.stock)) {
+      if (this.furniture.has(furnitureId) && Number.isInteger(count) && count > 0) {
+        this.stock.set(furnitureId, count);
+      }
+    }
+    for (const slot of this.slots) {
+      const furnitureId = state.sockets[slot.id] ?? null;
+      this.sockets.set(slot.id, furnitureId !== null && this.furniture.has(furnitureId) ? furnitureId : null);
+    }
+    this.purchases = Number.isInteger(state.purchases) && state.purchases > 0 ? state.purchases : 0;
   }
 
   views(level: number, flagSet: FlagCheck): { readonly slots: readonly ShopSlotView[]; readonly furniture: readonly FurnitureView[] } {

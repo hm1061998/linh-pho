@@ -202,6 +202,31 @@
   "error.missing_items": "Chưa đủ đồ để giao đơn.",
   "error.not_available": "Đơn này chưa cần nhận lúc này.",
 
+  "ui.canvas.label": "Cảnh chơi Linh Phố",
+  "ui.loading": "Đang thắp đèn chợ…",
+  "ui.menu.open": "Menu",
+
+  "pause.title": "Tạm dừng",
+  "pause.resume": "Tiếp tục chơi",
+  "pause.language": "Ngôn ngữ",
+  "pause.reduced_effects": "Giảm hiệu ứng",
+  "pause.sound": "Âm thanh",
+  "pause.on": "Bật",
+  "pause.off": "Tắt",
+  "pause.restart": "Bắt đầu lại",
+  "pause.restart_confirm": "Bắt đầu lại sẽ xoá tiến trình hiện tại. Chắc chắn không?",
+  "pause.restart_yes": "Có, bắt đầu lại",
+  "pause.restart_no": "Huỷ",
+
+  "notice.save_failed": "Chưa lưu được tiến trình. Tiến trình sẽ mất khi tải lại trang.",
+  "notice.save_unreadable": "Không đọc được tiến trình cũ. Bản sao đã được giữ lại, và trò chơi bắt đầu lại.",
+
+  "startup.title": "Không thể mở Linh Phố",
+  "startup.reload": "Tải lại trang",
+  "startup.webgl2": "Trình duyệt hoặc thiết bị này chưa bật WebGL2, nên chưa thể vẽ cảnh 3D. Hãy thử bản Chrome, Edge hoặc Firefox mới nhất và bật tăng tốc phần cứng.",
+  "startup.engine": "Không khởi động được engine đồ họa. Tải lại trang để thử lại.",
+  "startup.unknown": "Đã có lỗi không xác định khi khởi động game. Tải lại trang để thử lại.",
+
   "error.generic": "Chưa thực hiện được việc này.",
   "error.pickup_taken": "Vật này đã được nhặt rồi.",
   "error.missing_inputs": "Chưa đủ nguyên liệu.",

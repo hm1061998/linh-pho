@@ -15,7 +15,8 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `cb90832` | `feat(module-04)`: kho đồ, công thức, nhiệm vụ, Q00 đầy đủ |
 | `47bde1a` | `feat(module-05)`: Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01 |
 | `6c5d40a` | `feat(module-06)`: minigame lắp khung và khắc, chất lượng Thường/Đẹp/Hoàn Mỹ |
-| (module-07) | `feat(module-07)`: cửa hàng, ba ô trưng bày, đơn hàng, Q02, màn hình kết thúc |
+| `73ee660` | `feat(module-07)`: cửa hàng, ba ô trưng bày, đơn hàng, Q02, màn hình kết thúc |
+| (module-08) | `feat(module-08)`: lưu và tải, tự lưu, khôi phục, cài đặt, menu tạm dừng, âm thanh |
 
 ## Đã hoàn thành
 
@@ -85,13 +86,24 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Màn hình kết thúc:** Hiện một lần khi `mvp_complete` bật. Đóng panel đang mở, khoá gameplay trong lúc hiện, và có "Đi dạo tiếp". Lời teaser là bản nháp (D-044).
 - **Hai lỗi phát hiện khi kiểm tra và đã sửa:** (1) màn kết thúc hiện chồng lên panel đang mở, nên giờ tự đóng panel. (2) Ánh sáng tiệm quá nhạt để thấy khác biệt, nên tăng độ sáng cấp 1 lên 0.25 và cấp 2 lên 0.55, đồng thời chiếu sáng cả biển hiệu.
 
+### Module 08 — Lưu, khôi phục, cài đặt, tạm dừng, âm thanh
+- **Lưu (`SavePort`, `LocalSaveAdapter`):** IndexedDB là kho chính, localStorage là dự phòng. Tài liệu có phiên bản, kiểm tra từng trường, và bảng migration (D-045).
+- **Tự lưu và tải:** Lưu 800 ms sau thay đổi cuối, và ngay khi trang ẩn hoặc đóng. Tải xong mới hiện HUD (D-046).
+- **Khôi phục an toàn:** Lưu hỏng thì giữ bản sao, bắt đầu lại, và báo người chơi bằng banner. Lưu không đọc được bằng việc khôi phục nửa vời thì cũng coi là hỏng (D-045).
+- **Bắt đầu lại:** Có xác nhận. Trạng thái trống được lưu ngay (D-046).
+- **Menu tạm dừng:** Escape hoặc nút Menu. Escape đóng panel trước. Tạm dừng khoá đầu vào. Có ngôn ngữ, giảm hiệu ứng, âm thanh, bắt đầu lại (D-047).
+- **Đổi ngôn ngữ:** Vi và En, HUD đổi ngay, lưu giữa các lần tải (D-047).
+- **Chuỗi hard-code đã chuyển:** Màn lỗi khởi động, nhãn canvas, và chữ màn tải nằm trong locale. Trong `src/ui` và `src/app` chỉ còn tên ngôn ngữ «Tiếng Việt» viết cứng ở menu (xem Vấn đề đã biết).
+- **Âm thanh tổng hợp:** Tám hiệu ứng bằng Web Audio. Mở khoá sau cử chỉ người chơi. Tắt được trong menu (D-048).
+- **Màn kết thúc được nhớ:** Cờ `end_card_seen` (D-045).
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 32 file, 254 test, tất cả đạt |
-| `npm run build` | Đạt. `index-*.js` 2,424.45 kB (gzip 639.07 kB). Hook dev không có trong bundle |
+| `npm test` | 36 file, 301 test, tất cả đạt |
+| `npm run build` | Đạt. `index-*.js` 2,440.41 kB (gzip 643.83 kB). Hook dev không có trong bundle |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -117,6 +129,11 @@ Test thuần (chạy trong Node), theo nhóm:
   - `shopContent`: nội dung thật không có lỗi. Giá 0, màu sai, hình lạ, đơn thiếu món, quầy thiếu, ô trùng đều bị loại có lý do.
   - `q02`: Q02 bắt đầu sau Q01, không nhận đơn trước khi nhiệm vụ hỏi, Kệ Đèn không bán trước Q01, mua và đặt đầy đủ đến khi xong, phần thưởng trả đúng một lần, từ chối cấp và ô đã có món.
   - `gameplayContent`: danh sách nhiệm vụ có Q02, và quầy cùng ô trưng bày không nằm trong vật cản.
+- **Module 08:**
+  - `saveDocument`: bản lưu do game ghi đọc lại đúng. Không phải đối tượng, thiếu phiên bản, phiên bản tương lai, coins sai kiểu, chất lượng và trạng thái nhiệm vụ lạ đều bị từ chối. Trường lạ được bỏ qua. Cài đặt hỏng về mặc định, tiến trình giữ nguyên.
+  - `saveRoundTrip`: tải lại giữ coins, cờ, nhiệm vụ đang chạy, kho, đèn, puzzle đã giải, số lần sai, đơn đã nhận, cờ kết thúc. Craft đang dở không được lưu, nhưng nguyên liệu thì còn. Tải hai lần không trả thưởng hai lần. Pickup đã xoá khỏi nội dung bị bỏ khi tải. Bắt đầu lại trả về trạng thái mở đầu và được lưu.
+  - `localSaveAdapter`: không có kho nào thì ghi báo `false`. Dự phòng localStorage. Bản sao tách khoá khỏi bản lưu. IndexedDB không mở được thì dùng localStorage. Ghi đầy hoặc đọc bị chặn thì không ném lỗi.
+  - `localeCoverage`: các khoá tạo lúc chạy (trạng thái đơn, chất lượng, hành động, tên ký hiệu, thông báo khởi động) có đủ trong cả hai ngôn ngữ.
 
 ### Kiểm tra trong trình duyệt (Q00 đầy đủ, bằng phím và chuột thật khi có thể)
 
@@ -142,6 +159,21 @@ Test thuần (chạy trong Node), theo nhóm:
 | Console | Không có lỗi mới sau khi khởi động lại. Lỗi `LanternHud is not defined` còn trong buffer là của phiên HMR cũ |
 
 Lỗi thao tác khi kiểm tra Module 05 (không phải lỗi game): chọn bằng toạ độ thay vì ref đã bấm nhầm vùng trống. Sau đó dùng ref và kết quả đúng.
+
+### Kiểm tra trong trình duyệt (Module 08: lưu, khôi phục, tạm dừng, ngôn ngữ)
+
+| Bước | Kết quả |
+|---|---|
+| Làm Q00, tải lại trang | Coins 30, Q01 đang chạy, shop_lamp đã đặt, cờ và thanh nhiệm vụ như trước khi tải lại |
+| Hỏng bản lưu trong IndexedDB, tải lại | Banner "Không đọc được tiến trình cũ…" hiện. Coins 0, Q00 đang chạy. Bản sao hỏng ở khoá `progress-backup` |
+| Esc, chọn English | Mở menu. HUD đổi ngay sang tiếng Anh, `lang="en"`. Gameplay bị khoá trong lúc menu mở |
+| Esc lần nữa | Đóng menu, gameplay mở lại |
+| Tải lại trang | Vẫn tiếng Anh: cài đặt được lưu |
+| Nhặt một pickup, Esc, Bắt đầu lại, Có | Nguyên liệu về 0, Q00 đang chạy. Tải lại vẫn ở trạng thái trống |
+| Lưu sau khi nhặt | Bản lưu IndexedDB có `pk_bamboo_2` và `"version":1` |
+| Console | Không có lỗi trong bản build hiện tại. Lỗi `shopStock.snapshot` còn trong buffer là của trang cũ đang rời đi, và đã sửa |
+
+Lỗi tìm ra khi viết: `flush` có thể ném lỗi đồng bộ trong hàm bất đồng bộ, thành lỗi không được bắt. Đã đưa vào try/catch, và coi là ghi thất bại. Lỗi `load` khi khôi phục nửa vời cũng đã được xử lý bằng cách coi là hỏng.
 
 ### Kiểm tra trong trình duyệt (Module 07: cửa hàng, đơn hàng, Q02, màn kết thúc)
 
@@ -182,6 +214,7 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 ## Chưa kiểm chứng (phải nói rõ)
 - **FPS thực tế:** không đo được trong pane lúc này. Cần kiểm tra lại trên máy thật khi môi trường ổn định.
 - **Minigame chế tạo là placeholder HTML:** chưa có khung 3D, chưa xoay vật thể, chưa có tiếng «tách» (D-040). Kéo thả bằng cảm ứng thật chưa được thử trên thiết bị. Chỉ thử bằng chuột và click ref trong trình duyệt.
+- **Module 08 trong trình duyệt:** âm thanh chưa được nghe (trình duyệt tự động không phát được để kiểm). Chưa thử ở chế độ riêng tư, nơi IndexedDB có thể bị chặn. Chưa thử mở hai tab cùng lúc, nơi hai bản lưu có thể ghi đè nhau. Menu tạm dừng chưa thử trên màn hình điện thoại.
 - **Module 07 trong trình duyệt:** chưa đi bộ tới quầy (mở bằng `openPanel`). Sự khác biệt đầu và cuối tiệm là có thật nhưng nhẹ, cần xem lại với mô hình thật (Module 09). Màn kết thúc không được lưu, nên tải lại thì hiện lại. Panel cửa hàng chưa thử trên màn hình điện thoại.
 - **Module 05 trong trình duyệt:** chưa thấy bằng mắt ba ký hiệu 3D và bước chuyển sáng của chúng, chưa quét ký hiệu bằng tay, chưa đi hết Q01 trong trình duyệt (chỉ có test đơn vị với nội dung thật), chưa thấy cầu sáng và hạt, chưa thử nút Q trên cảm ứng.
 - **Lưu và tải tiến trình:** chưa có. Mất khi tải lại trang (Module 08).
@@ -195,11 +228,12 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 5. **`speed` là vận tốc dự định** (D-014). Không ảnh hưởng vị trí.
 6. **Mất WebGL context** (GPU reset): chưa xử lý, chỉ có log lỗi.
 7. **Bundle 2.42 MB minify, 639 kB gzip,** chủ yếu do PlayCanvas. Xử lý ở Module 10.
-8. **Copy tiếng Việt còn hard-code** trong `StartupErrorPanel.tsx` và `TouchControls.tsx`. Sẽ chuyển sang locale ở Module 08.
+8. **Copy hard-code đã chuyển sang locale** ở Module 08. Chỉ còn tên "Tiếng Việt" và "English" trong menu là viết cứng, vì đó là tên ngôn ngữ.
+9. **Hai tab cùng mở** có thể ghi đè bản lưu của nhau. Chưa khoá đa tab, sẽ xem lại ở Module 10 nếu cần.
 
 ## Việc tiếp theo
-- **Module 08:** `SavePort` và `LocalSaveAdapter` (IndexedDB chính, localStorage dự phòng), SaveV1 có phiên bản, kiểm tra và migration. Tự lưu sau mốc quan trọng, khôi phục khi tải lại. Lưu cả cờ màn kết thúc đã xem. Cài đặt ngôn ngữ, âm thanh và giảm hiệu ứng. SFX tổng hợp kèm tiếng «tách» của minigame. Menu tạm dừng (Esc). Chuyển các chuỗi còn hard-code sang locale.
-- Sau đó: Module 09 (manifest tài sản, bộ nạp GLB có dự phòng hình khối), Module 10 (QA, kích thước bundle, hiệu năng), Module 11 (AnalyticsPort, PlatformPort, ghi chú riêng tư, checklist phát hành), Module 12 (thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`, gồm teaser chương 2).
+- **Module 09:** manifest tài sản và bộ nạp GLB có dự phòng hình khối, để bản chơi đầu tiên không cần Blender. Các hình khối hiện là placeholder viết trong code, nên Module 09 cần tách chúng thành tài sản có thể thay.
+- **Sau đó:** Module 10 (QA, kích thước bundle, hiệu năng), Module 11 (AnalyticsPort, PlatformPort, ghi chú riêng tư, checklist phát hành), Module 12 (thẻ câu chuyện có trạng thái `verified` hoặc `needs_review`, gồm teaser chương 2).
 
 ## Checklist kiểm thử thủ công (Module 07, Q02)
 - [ ] Hoàn thành Q01. Quầy tiệm (gần cửa tiệm) hiện Q02 "Phiên Chợ Đầu Tiên" trong bảng nhiệm vụ.
