@@ -1,0 +1,116 @@
+/* Palette from the Art Bible. The game is dark-only, so the page never switches to light mode. */
+:root {
+  --night-navy: #18283b;
+  --deep-indigo: #283458;
+  --lantern-gold: #f2b759;
+  --parchment: #e7d4ad;
+  --text-main: #f5ecd7;
+  --panel-bg: rgba(16, 24, 38, 0.9);
+  --focus-ring: #65d4bd;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--night-navy);
+  color: var(--text-main);
+  font-family: system-ui, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-shell {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.game-viewport {
+  position: absolute;
+  inset: 0;
+}
+
+.game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+}
+
+/* The HUD root is transparent and passes pointer events through to the canvas. Only panels opt in. */
+.hud-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.status-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  padding: 12px 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 12px;
+  background: var(--panel-bg);
+  font-size: 16px;
+}
+
+.startup-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(calc(100% - 32px), 420px);
+  padding: 20px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--deep-indigo);
+  border-radius: 14px;
+  background: var(--panel-bg);
+  pointer-events: auto;
+}
+
+.startup-error h1 {
+  margin: 0 0 8px;
+  color: var(--lantern-gold);
+  font-size: 20px;
+}
+
+.startup-error p {
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.startup-error button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--lantern-gold);
+  color: var(--night-navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.startup-error button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
