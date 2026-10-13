@@ -19,15 +19,10 @@ export const QUALITY_PROFILES: Readonly<Record<QualityPreset, QualityProfile>> =
   high: { pixelRatioCap: 2 },
 };
 
-/** The preset to use. An explicit choice always wins. `auto` follows the pointer: touch devices get the mobile preset. */
-export function resolveQualityPreset(choice: QualityChoice, coarsePointer: boolean): QualityPreset {
+/** The preset to use. An explicit choice always wins. `auto` follows the device: touch-first gets the mobile preset. */
+export function resolveQualityPreset(choice: QualityChoice, touchFirst: boolean): QualityPreset {
   if (choice !== 'auto') {
     return choice;
   }
-  return coarsePointer ? 'mobile' : 'high';
-}
-
-/** True on touch-first devices. Missing `matchMedia` (old browsers, tests) counts as a fine pointer. */
-export function isCoarsePointer(): boolean {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  return touchFirst ? 'mobile' : 'high';
 }

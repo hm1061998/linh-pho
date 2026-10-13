@@ -14,6 +14,7 @@ import { WorldView } from '../engine/world/WorldView';
 import { AssetLoader } from '../engine/assets/AssetLoader';
 import { ASSET_MANIFEST, toAssetEntries } from '../engine/assets/manifest';
 import type { QualityProfile } from '../engine/quality/qualityPresets';
+import { NO_ANALYTICS, type AnalyticsPort } from '../ports/AnalyticsPort';
 import { playSfx } from '../shared/audio/sfx';
 import { clampPixelRatio } from '../shared/utils/display';
 import { radToDeg } from '../shared/utils/math';
@@ -190,6 +191,11 @@ export class GameApp {
   /** Optional models, and their loading state. Every entry has a fallback, so none of them is required. */
   get assets(): AssetLoader {
     return this.assetLoader;
+  }
+
+  /** Where analytics events go. The shipped port does nothing: nothing leaves the device (docs/PRIVACY.md). */
+  get analytics(): AnalyticsPort {
+    return NO_ANALYTICS;
   }
 
   /** Applies a quality preset. The canvas is re-sized at once, so the change shows without a reload. */

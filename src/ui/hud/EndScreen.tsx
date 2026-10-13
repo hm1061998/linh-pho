@@ -24,6 +24,7 @@ export function EndScreen({ game }: { readonly game: GameApp }) {
     if (game.session.currentPanel) {
       game.session.closePanel();
     }
+    game.analytics.track({ name: 'chapter.completed', chapter: 'first_chapter' });
     game.input.pushBlocker(ENDING_BLOCKER);
     return () => game.input.popBlocker(ENDING_BLOCKER);
   }, [game, visible]);

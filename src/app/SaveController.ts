@@ -1,7 +1,9 @@
 import { setLanguage } from '../content';
 import { parseSaveDocument, serializeSaveDocument, DEFAULT_SETTINGS, type Settings } from '../domain/save/SaveDocument';
 import type { SavePort } from '../ports/SavePort';
-import { QUALITY_PROFILES, isCoarsePointer, resolveQualityPreset } from '../engine/quality/qualityPresets';
+import { browserPlatform } from '../adapters/BrowserPlatform';
+import { QUALITY_PROFILES, resolveQualityPreset } from '../engine/quality/qualityPresets';
+import type { PlatformPort } from '../ports/PlatformPort';
 import { setSfxEnabled } from '../shared/audio/sfx';
 import type { GameApp } from './GameApp';
 
@@ -19,6 +21,7 @@ export type LoadOutcome = 'new' | 'loaded' | 'recovered';
 export class SaveController {
   private readonly game: GameApp;
   private readonly port: SavePort;
+  private readonly platform: PlatformPort;
   private settings: Settings = DEFAULT_SETTINGS;
   private timer: number | null = null;
   private attached = false;
@@ -33,9 +36,10 @@ export class SaveController {
     void this.flush();
   };
 
-  constructor(game: GameApp, port: SavePort) {
+  constructor(game: GameApp, port: SavePort, platform: PlatformPort = browserPlatform()) {
     this.game = game;
     this.port = port;
+    this.platform = platform;
   }
 
   /** Reads the save and applies it. Call once, before the player can act. Autosave starts when this resolves. */
@@ -149,7 +153,7 @@ export class SaveController {
     document.documentElement.dataset.largeText = String(this.settings.largeText);
     this.game.setReducedVfx(this.settings.reducedEffects);
     setSfxEnabled(this.settings.soundOn);
-    const preset = resolveQualityPreset(this.settings.quality, isCoarsePointer());
+    const preset = resolveQualityPreset(this.settings.quality, this.platform.touchFirst);
     this.game.setQuality(QUALITY_PROFILES[preset]);
   }
 
