@@ -2,7 +2,7 @@
 
 Cập nhật: 2026-10-14. Tài liệu này là hợp đồng giữa code và Blender. Mọi model 3D phải khớp với dòng tương ứng ở đây trước khi nhập vào game.
 
-**Tình trạng hiện tại:** 16 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 7 vật trong hub (mục 3), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật không nằm trong các mục trên (cửa, cổng, cột đèn, gian hàng, lan can cầu...) vẫn là khối placeholder từ `src/engine/scene/hubLayout.ts`. **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
+**Tình trạng hiện tại:** 17 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 8 vật trong hub (mục 3, có thêm mái xưởng), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật không nằm trong các mục trên (cửa, cổng, cột đèn, gian hàng, lan can cầu...) vẫn là khối placeholder từ `src/engine/scene/hubLayout.ts`. **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
 
 ---
 
@@ -44,7 +44,7 @@ Các vật này có hình khối placeholder ngay trong JSON. Khi có model, th�
 
 ## 3. Vật thể trong hub (hiện là blockout trong code)
 
-Kích thước và vị trí đọc trực tiếp từ `src/engine/scene/hubLayout.ts`. Khi thay bằng GLB, giữ đúng vị trí và kích thước đó. Không đổi bố cục để vừa model. Pivot của model hub là tâm khối blockout, không phải giữa đáy: đây là ngoại lệ có chủ đích (xem D-062 trong `docs/DECISIONS.md`).
+Kích thước và vị trí đọc trực tiếp từ `src/engine/scene/hubLayout.ts`. Khi thay bằng GLB, giữ đúng vị trí và kích thước đó. Không đổi bố cục để vừa model. Pivot của model hub là tâm khối blockout, không phải giữa đáy: đây là ngoại lệ có chủ đích (xem D-062 trong `docs/DECISIONS.md`). Mái xưởng (`ENV_House_Workshop_Roof`) không có trong bảng gốc, nhưng được thêm vì khối phẳng trên thân nhà trông lạc; kích thước vẫn lấy từ blockout.
 
 | Node (tên đề xuất) | Hiện tại (code) | Ghi chú cho Blender | Trạng thái |
 |---|---|---|---|
@@ -124,7 +124,7 @@ Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thê
 
 | Asset | Có GLB | Đã kiểm tra trên desktop | Đã kiểm tra trên Android |
 |---|---|---|---|
-| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 16 file | chưa thử |
-| Bảy vật trong hub (mục 3) | có | nạp trong dev; production tải đủ 16 file | chưa thử |
-| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 16 file | chưa thử |
+| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 17 file | chưa thử |
+| Tám vật trong hub (mục 3, gồm mái xưởng thêm vào) | có | nạp trong dev; production tải đủ 17 file; cầu và tiệm sáng đúng khi bật cờ | chưa thử |
+| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 17 file | chưa thử |
 | `dev.test_crate` (mục 7) | sinh bằng code | đã nạp trong Chrome (dev) | chưa thử |

@@ -10,6 +10,7 @@
     { "id": "hub.ENV_House_Shop_Roof", "source": { "kind": "url", "url": "/assets/env_house_shop_roof.glb" }, "idleAnimation": null },
     { "id": "hub.PROP_Signboard_Shop", "source": { "kind": "url", "url": "/assets/prop_signboard_shop.glb" }, "idleAnimation": null },
     { "id": "hub.ENV_House_Workshop_Body", "source": { "kind": "url", "url": "/assets/env_house_workshop_body.glb" }, "idleAnimation": null },
+    { "id": "hub.ENV_House_Workshop_Roof", "source": { "kind": "url", "url": "/assets/env_house_workshop_roof.glb" }, "idleAnimation": null },
     { "id": "hub.PROP_Workbench_Workshop", "source": { "kind": "url", "url": "/assets/prop_workbench_workshop.glb" }, "idleAnimation": null },
     { "id": "hub.PROP_Lantern_Workshop", "source": { "kind": "url", "url": "/assets/prop_lantern_workshop.glb" }, "idleAnimation": null },
     { "id": "hub.ENV_Bridge_Deck", "source": { "kind": "url", "url": "/assets/env_bridge_deck.glb" }, "idleAnimation": null },

@@ -406,7 +406,7 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Chọn:** `GameApp.create()` chờ `AssetLoader.loadAll()` (mỗi model có timeout 8 s và không bao giờ reject) rồi mới `start()`. Hub và NPC được dựng một lần với model cuối cùng, hoặc với placeholder nếu model lỗi.
 - **Lý do:** Lớp glow của tiệm và bến cầu clone material của node lúc đang dựng. Nếu model đến sau rồi thay node, glow đã cache sẽ trỏ vào vật đã bị hủy. Chờ trước thì không có trạng thái nửa vời.
 - **Đánh đổi:** Lần khởi động chậm bằng thời gian tải model lâu nhất, tối đa 8 s khi mạng xấu. Model lỗi không làm treo game vì có timeout và placeholder.
-- **Glow:** `WorldView` clone mọi material chuẩn dưới node, không chỉ material của chính node. Nhờ vậy một model nhiều mesh vẫn sáng đúng.
+- **Glow:** `WorldView` clone material của từng `meshInstance` dưới node, không qua `render.material`. Đặt `render.material` chỉ đổi mesh instance đầu tiên. Vì vậy một model có nhiều material (cửa sổ tiệm, ván cầu) không sáng. Lỗi này được tìm thấy khi kiểm tra trong game: code chạy không lỗi nhưng cầu và tiệm không sáng. Test không bắt được lỗi này, vì glow cần WebGL, nên kiểm chứng bằng trình duyệt.
 
 ## D-062 — Pivot của hub là tâm khối blockout; NPC tự căn chân
 

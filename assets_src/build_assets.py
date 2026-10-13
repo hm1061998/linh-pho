@@ -43,6 +43,9 @@ PALETTE = {
     "MAT_Shoe_A": ("#2E2620", 0.6, None, 0.0),
     "MAT_Hat_A": ("#D9C08A", 0.8, None, 0.0),
     "MAT_Jade_A": ("#65D4BD", 0.3, "#65D4BD", 0.5),
+    "MAT_Window_A": ("#1F2A44", 0.35, None, 0.0),
+    "MAT_Lips_A": ("#8E4A4A", 0.6, None, 0.0),
+    "MAT_Belt_A": ("#3A2A1E", 0.7, None, 0.0),
 }
 
 
@@ -113,18 +116,17 @@ class Shape:
         matrix = Matrix.Translation(center) @ Matrix.Diagonal((scale[0], scale[1], scale[2], 1.0))
         self._add(bmesh.ops.create_uvsphere, mat, u_segments=u, v_segments=v, radius=radius, matrix=matrix)
 
-    def frustum(self, mat: str, bottom_half, top_half, z_bottom: float, z_top: float) -> None:
-        """A four-sided truncated pyramid, used for hip roofs. Half extents are (x, y)."""
-        bx, by = bottom_half
-        tx, ty = top_half
-        low = [self.bm.verts.new(p) for p in ((-bx, -by, z_bottom), (bx, -by, z_bottom), (bx, by, z_bottom), (-bx, by, z_bottom))]
-        high = [self.bm.verts.new(p) for p in ((-tx, -ty, z_top), (tx, -ty, z_top), (tx, ty, z_top), (-tx, ty, z_top))]
-        faces = [low, high[::-1]]
-        for i in range(4):
-            j = (i + 1) % 4
-            faces.append([low[i], low[j], high[j], high[i]])
+    def hip_roof(self, mat: str, eaves_half, ridge_half: float, z_eaves: float, z_ridge: float) -> None:
+        """A hip roof: a rectangle at the eaves and a ridge along X. eaves_half is (x, y); ridge_half is the ridge's half length."""
+        bx, by = eaves_half
+        b0 = self.bm.verts.new((-bx, -by, z_eaves))
+        b1 = self.bm.verts.new((bx, -by, z_eaves))
+        b2 = self.bm.verts.new((bx, by, z_eaves))
+        b3 = self.bm.verts.new((-bx, by, z_eaves))
+        r0 = self.bm.verts.new((-ridge_half, 0.0, z_ridge))
+        r1 = self.bm.verts.new((ridge_half, 0.0, z_ridge))
         index = self.slot[mat]
-        for vertices in faces:
+        for vertices in ([b0, b1, r1, r0], [b2, b3, r0, r1], [b1, b2, r1], [b3, b0, r0]):
             face = self.bm.faces.new(vertices)
             face.material_index = index
 
@@ -217,28 +219,50 @@ def furniture_hanging_lamp():
 # Blender sizes are glTF sizes with Y and Z swapped, because the hub layout is written in game (Y-up) coordinates.
 
 
+# Windows stand 0.02 m proud of the long walls. The walls are 0.02 m thinner on each side to make room, so every piece
+# still measures exactly the blockout size.
+
+
 def hub_env_house_shop_body():
-    shape = Shape(["MAT_Paper_A"])
-    shape.box("MAT_Paper_A", (0.0, 0.0, 0.0), (8.0, 6.0, 4.0))
+    shape = Shape(["MAT_Paper_A", "MAT_Window_A"])
+    shape.box("MAT_Paper_A", (0.0, 0.0, 0.0), (8.0, 5.96, 4.0))
+    for x in (-2.2, 2.2):  # both long faces; the door on the front stays clear between them
+        for side in (1, -1):
+            shape.box("MAT_Window_A", (x, side * 2.99, 0.2), (1.2, 0.02, 1.3))
     return [shape.finish("ENV_House_Shop_Body")], []
 
 
 def hub_env_house_shop_roof():
     shape = Shape(["MAT_Terracotta_A"])
-    shape.frustum("MAT_Terracotta_A", (4.6, 3.6), (3.2, 2.2), -0.4, 0.4)
+    shape.hip_roof("MAT_Terracotta_A", (4.6, 3.6), 2.4, -0.4, 0.4)
     return [shape.finish("ENV_House_Shop_Roof")], []
 
 
 def hub_prop_signboard_shop():
-    shape = Shape(["MAT_Paper_A"])
-    shape.box("MAT_Paper_A", (0.0, 0.0, 0.0), (4.0, 0.15, 0.9))
+    # A dark frame around a blank paper panel. The panel is 0.01 m behind the frame, so it reads as recessed.
+    frame, paper = "MAT_WoodDark_A", "MAT_Paper_A"
+    shape = Shape([frame, paper])
+    shape.box(frame, (0.0, 0.0, 0.4), (4.0, 0.15, 0.1))  # top bar
+    shape.box(frame, (0.0, 0.0, -0.4), (4.0, 0.15, 0.1))  # bottom bar
+    shape.box(frame, (-1.95, 0.0, 0.0), (0.1, 0.15, 0.7))  # left bar
+    shape.box(frame, (1.95, 0.0, 0.0), (0.1, 0.15, 0.7))  # right bar
+    shape.box(paper, (0.0, 0.0, 0.0), (3.8, 0.13, 0.7))
     return [shape.finish("PROP_Signboard_Shop")], []
 
 
 def hub_env_house_workshop_body():
-    shape = Shape(["MAT_WoodLight_A"])
-    shape.box("MAT_WoodLight_A", (0.0, 0.0, 0.0), (7.0, 6.0, 3.5))
+    shape = Shape(["MAT_WoodLight_A", "MAT_Window_A"])
+    shape.box("MAT_WoodLight_A", (0.0, 0.0, 0.0), (7.0, 5.96, 3.5))
+    for x in (-2.0, 2.0):
+        for side in (1, -1):
+            shape.box("MAT_Window_A", (x, side * 2.99, 0.0), (1.0, 0.02, 1.1))
     return [shape.finish("ENV_House_Workshop_Body")], []
+
+
+def hub_env_house_workshop_roof():
+    shape = Shape(["MAT_Terracotta_A"])
+    shape.hip_roof("MAT_Terracotta_A", (4.1, 3.4), 2.6, -0.35, 0.35)
+    return [shape.finish("ENV_House_Workshop_Roof")], []
 
 
 def hub_prop_workbench_workshop():
@@ -258,11 +282,13 @@ def hub_prop_lantern_workshop():
 
 
 def hub_env_bridge_deck():
-    shape = Shape(["MAT_WoodWarm_A"])
+    # Planks alternate between two wood tones, so the deck reads as boards rather than one slab.
+    shape = Shape(["MAT_WoodWarm_A", "MAT_WoodLight_A"])
     planks, width, gap = 10, 0.202, 0.02  # 10 planks across 2.2 m, with 0.02 m gaps
     for i in range(planks):
         x = -1.1 + width / 2 + i * (width + gap)
-        shape.box("MAT_WoodWarm_A", (x, 0.0, 0.0), (width, 8.4, 0.25))
+        mat = "MAT_WoodWarm_A" if i % 2 == 0 else "MAT_WoodLight_A"
+        shape.box(mat, (x, 0.0, 0.0), (width, 8.4, 0.25))
     return [shape.finish("ENV_Bridge_Deck")], []
 
 
@@ -314,7 +340,7 @@ def _idle_human(arm: bpy.types.Object) -> bpy.types.Action:
     return action
 
 
-def _human(node: str, tunic_hex: str, *, long_tunic: bool, hair: str, hat: bool = False, head_z: float = 1.605):
+def _human(node: str, tunic_hex: str, *, long_tunic: bool, hair: str, hat: bool = False, beard: bool = False, head_z: float = 1.605):
     """A stylised person, 1.70 m to the top of the head (1.70 m with the hat), feet on y = 0."""
     tunic = "MAT_Tunic_" + node
     PALETTE[tunic] = (tunic_hex, 0.8, None, 0.0)
@@ -334,14 +360,22 @@ def _human(node: str, tunic_hex: str, *, long_tunic: bool, hair: str, hat: bool 
 
     hem = 0.42 if long_tunic else 0.85
     add("Tunic", "Spine", [tunic], lambda s: s.cylinder(tunic, (0.0, 0.0, (hem + 1.48) / 2), 0.2 + (0.04 if long_tunic else 0.0), 1.48 - hem, segments=16, radius2=0.18))
+    # A belt just proud of the tunic at waist height. The tunic's radius there is about 0.195 m short, 0.207 m long.
+    belt_r = 0.213 if long_tunic else 0.2
+    add("Belt", "Spine", ["MAT_Belt_A"], lambda s: s.cylinder("MAT_Belt_A", (0.0, 0.0, 1.0), belt_r, 0.04, segments=16))
     add("Neck", "Head", ["MAT_Skin_A"], lambda s: s.cylinder("MAT_Skin_A", (0.0, 0.0, 1.5), 0.045, 0.1, segments=10))
     add("Head", "Head", ["MAT_Skin_A"], lambda s: s.sphere("MAT_Skin_A", (0.0, 0.0, head_z), 0.095, scale=(1.0, 1.0, 1.0), u=16, v=10))
+    # Face on the front (+Y) of the head: two dark eyes and a small mouth, all just proud of the skin.
+    add("Eyes", "Head", ["MAT_Ink_A"], lambda s: [s.sphere("MAT_Ink_A", (x, 0.088, head_z + 0.012), 0.013, u=8, v=6) for x in (-0.032, 0.032)])
+    add("Mouth", "Head", ["MAT_Lips_A"], lambda s: s.box("MAT_Lips_A", (0.0, 0.09, head_z - 0.035), (0.03, 0.01, 0.008)))
     if hair == "bun":
         add("Hair", "Head", ["MAT_Hair_A"], lambda s: (s.sphere("MAT_Hair_A", (0.0, 0.0, head_z), 0.096, scale=(1.0, 1.0, 0.7), u=16, v=10), s.sphere("MAT_Hair_A", (0.0, -0.085, head_z + 0.03), 0.05, u=12, v=8)))
     elif hair == "long":
         add("Hair", "Head", ["MAT_Hair_A"], lambda s: (s.sphere("MAT_Hair_A", (0.0, 0.0, head_z), 0.096, scale=(1.0, 1.0, 0.75), u=16, v=10), s.cylinder("MAT_Hair_A", (0.0, -0.05, head_z - 0.12), 0.09, 0.26, segments=12)))
     else:
         add("Hair", "Head", ["MAT_Hair_A"], lambda s: s.sphere("MAT_Hair_A", (0.0, 0.0, head_z), 0.096, scale=(1.0, 1.0, 0.75), u=16, v=10))
+    if beard:
+        add("Beard", "Head", ["MAT_Hair_A"], lambda s: s.sphere("MAT_Hair_A", (0.0, 0.05, head_z - 0.07), 0.035, scale=(1.0, 0.8, 1.2), u=10, v=6))
     if hat:
         add("Hat", "Head", ["MAT_Hat_A"], lambda s: s.cylinder("MAT_Hat_A", (0.0, 0.0, head_z + 0.135), 0.34, 0.12, segments=20, radius2=0.06))
     for side in (1, -1):
@@ -365,7 +399,7 @@ def npc_co_lam():
 
 def npc_ong_do():
     # The hat sits on the head, so the head is lower to keep the whole figure at 1.70 m.
-    return _human("NPC_OngDo", "#5A6B8C", long_tunic=False, hair="short", hat=True, head_z=1.505)
+    return _human("NPC_OngDo", "#5A6B8C", long_tunic=False, hair="short", hat=True, beard=True, head_z=1.505)
 
 
 def npc_bac():
@@ -402,6 +436,7 @@ ASSETS = {
     "hub.ENV_House_Shop_Roof": ("env_house_shop_roof", hub_env_house_shop_roof),
     "hub.PROP_Signboard_Shop": ("prop_signboard_shop", hub_prop_signboard_shop),
     "hub.ENV_House_Workshop_Body": ("env_house_workshop_body", hub_env_house_workshop_body),
+    "hub.ENV_House_Workshop_Roof": ("env_house_workshop_roof", hub_env_house_workshop_roof),
     "hub.PROP_Workbench_Workshop": ("prop_workbench_workshop", hub_prop_workbench_workshop),
     "hub.PROP_Lantern_Workshop": ("prop_lantern_workshop", hub_prop_lantern_workshop),
     "hub.ENV_Bridge_Deck": ("env_bridge_deck", hub_env_bridge_deck),

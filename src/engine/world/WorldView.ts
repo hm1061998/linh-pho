@@ -65,26 +65,27 @@ interface SlotView {
 }
 
 /**
- * The render components with a standard material at or under a node. That is the blockout box itself, or the meshes of
- * a model placed under the node.
+ * The mesh instances with a standard material at or under a node. That is the blockout box itself, or each mesh of a
+ * model placed under the node. A model can have one mesh per material, so the mesh instance is the unit that counts.
  */
-function standardRenders(node: pc.GraphNode | null): pc.RenderComponent[] {
+function standardInstances(node: pc.GraphNode | null): pc.MeshInstance[] {
   if (!(node instanceof pc.Entity)) {
     return [];
   }
-  return (node.findComponents('render') as pc.RenderComponent[]).filter(
-    (render) => render.material instanceof pc.StandardMaterial,
+  return (node.findComponents('render') as pc.RenderComponent[]).flatMap((render) =>
+    render.meshInstances.filter((instance) => instance.material instanceof pc.StandardMaterial),
   );
 }
 
 /**
  * Gives every standard material under a node its own clone, so the glow lights only this node and not the other objects
- * that shared the blockout material. Returns the clones, which the caller then drives.
+ * that shared the blockout material. The clones are assigned to each mesh instance, because setting a render component's
+ * material changes only its first. Returns the clones, which the caller then drives.
  */
 function cloneGlowMaterials(node: pc.GraphNode | null, emissiveHex: string): pc.StandardMaterial[] {
   const clones = new Map<pc.StandardMaterial, pc.StandardMaterial>();
-  for (const render of standardRenders(node)) {
-    const shared = render.material as pc.StandardMaterial;
+  for (const instance of standardInstances(node)) {
+    const shared = instance.material as pc.StandardMaterial;
     let own = clones.get(shared);
     if (!own) {
       own = shared.clone();
@@ -92,7 +93,7 @@ function cloneGlowMaterials(node: pc.GraphNode | null, emissiveHex: string): pc.
       own.update();
       clones.set(shared, own);
     }
-    render.material = own;
+    instance.material = own;
   }
   return [...clones.values()];
 }
@@ -288,7 +289,7 @@ export class WorldView {
    */
   private syncShopBody(level: number): void {
     if (this.shopGlow.length === 0) {
-      if (!SHOP_GLOW_NODES.every((name) => standardRenders(this.parent.findByName(name)).length > 0)) {
+      if (!SHOP_GLOW_NODES.every((name) => standardInstances(this.parent.findByName(name)).length > 0)) {
         return;
       }
       this.shopGlow = SHOP_GLOW_NODES.flatMap((name) => cloneGlowMaterials(this.parent.findByName(name), LAMP_GOLD));

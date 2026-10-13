@@ -53,6 +53,7 @@ const HUB_NODES = [
   'ENV_House_Shop_Roof',
   'PROP_Signboard_Shop',
   'ENV_House_Workshop_Body',
+  'ENV_House_Workshop_Roof',
   'PROP_Workbench_Workshop',
   'PROP_Lantern_Workshop',
   'ENV_Bridge_Deck',
