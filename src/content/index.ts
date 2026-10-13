@@ -1,27 +1,59 @@
 import { validateContent } from '../domain/content/validate';
-import type { ContentIssue, GameContent, NpcDefinition } from '../domain/content/types';
+import { validateGameplay } from '../domain/content/validateGameplay';
+import type { ObjectiveType } from '../domain/content/gameplayTypes';
+import type { ContentIssue, NpcDefinition } from '../domain/content/types';
+import type { SessionContent } from '../domain/GameSession';
 import { createTranslator } from '../shared/i18n/translator';
 import dialoguesJson from './dialogues.json';
 import enLocale from './locales/en.json';
 import viLocale from './locales/vi.json';
+import itemsJson from './items.json';
 import npcsJson from './npcs.json';
+import questsJson from './quests.json';
+import recipesJson from './recipes.json';
+import worldJson from './world.json';
 
 const LOCALES = { vi: viLocale, en: enLocale };
 const PRIMARY_LOCALE = 'vi';
 const FALLBACK_LOCALE = 'en';
+const hasTextKey = (key: string) => Object.hasOwn(viLocale, key);
 
-const validated = validateContent({
+const npcResult = validateContent({
   npcs: npcsJson,
   dialogues: dialoguesJson,
   locales: LOCALES,
   primaryLocale: PRIMARY_LOCALE,
 });
+const npcIds = new Set(npcResult.content.npcs.map((npc) => npc.id));
+const placementIds = new Set(worldJson.placements.map((placement) => placement.id));
 
-/** Validated game content. Invalid entries were dropped, and `CONTENT_ISSUES` says why. */
-export const GAME_CONTENT: GameContent = validated.content;
+const gameplayResult = validateGameplay(
+  { items: itemsJson, recipes: recipesJson, quests: questsJson, world: worldJson },
+  {
+    npcIds,
+    hasTextKey,
+    targetExists: (type: ObjectiveType, targetId: string) => {
+      if (type === 'talk') {
+        return npcIds.has(targetId);
+      }
+      if (type === 'place') {
+        return placementIds.has(targetId);
+      }
+      // Other objective types get targets in later modules. Until then, quests that use them are reported.
+      return false;
+    },
+  },
+);
+
+/** Everything the game needs, validated. Invalid entries were dropped, and `CONTENT_ISSUES` says why. */
+export const GAME_CONTENT: SessionContent = {
+  npcs: npcResult.content.npcs,
+  dialogues: npcResult.content.dialogues,
+  ...gameplayResult.content,
+};
 
 /** Problems found while loading content. The game still starts, so log them and fix the JSON. */
-export const CONTENT_ISSUES: readonly ContentIssue[] = validated.issues;
+export const CONTENT_ISSUES: readonly ContentIssue[] = [...npcResult.issues, ...gameplayResult.issues];
 
 const translator = createTranslator(LOCALES, PRIMARY_LOCALE, FALLBACK_LOCALE);
 

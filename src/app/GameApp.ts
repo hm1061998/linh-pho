@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
-import { CONTENT_ISSUES, GAME_CONTENT, findNpc } from '../content';
-import { DialogueSystem } from '../domain/dialogue/DialogueSystem';
-import { FlagStore } from '../domain/flags/FlagStore';
+import { CONTENT_ISSUES, GAME_CONTENT, findNpc, t } from '../content';
+import { GameSession, type PanelState, type SessionSnapshot } from '../domain/GameSession';
+import type { DialogueSystem } from '../domain/dialogue/DialogueSystem';
 import { CameraController } from '../engine/camera/CameraController';
 import { InputService } from '../engine/input/InputService';
 import { InteractionSystem } from '../engine/interaction/InteractionSystem';
@@ -9,7 +9,9 @@ import { NpcRenderer } from '../engine/npc/NpcRenderer';
 import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
 import { HUB_WORLD } from '../engine/scene/hubCollision';
+import { WorldView } from '../engine/world/WorldView';
 import { clampPixelRatio } from '../shared/utils/display';
+import { radToDeg } from '../shared/utils/math';
 import { GameStartupError, toGraphicsStartupError } from './startupErrors';
 
 export interface GameAppOptions {
@@ -27,27 +29,35 @@ export interface GameDebugSnapshot {
   readonly interactionFocus: string | null;
   readonly dialogue: { readonly open: boolean; readonly dialogueId: string | null; readonly nodeId: string | null };
   readonly flags: Record<string, boolean>;
+  readonly coins: number;
+  readonly reputation: number;
+  readonly activeQuest: string | null;
+  readonly panel: string | null;
+  readonly inventory: Record<string, number>;
 }
 
-/** Blocker name while a dialogue is open. Movement and interaction stay locked until it closes. */
+/** Blocker names. Each one locks gameplay input while it is active. */
 const DIALOGUE_BLOCKER = 'dialogue';
+const PANEL_BLOCKER = 'panel';
+
+type TargetKind = 'npc' | 'pickup' | 'station' | 'placement';
 
 /**
- * Owns the PlayCanvas Application lifecycle (device, canvas sizing, visibility pause, teardown) and the
- * per-frame gameplay loop: input, player, camera, NPCs, then interaction. It also connects systems through
- * typed events: an interaction opens a dialogue, and an open dialogue blocks input.
- * React reads the systems through the getters below. It never drives the engine directly.
+ * Owns the PlayCanvas Application lifecycle (device, canvas sizing, visibility pause, teardown), the per-frame
+ * gameplay loop (input, player, camera, NPCs, interaction), and the connections between the engine and the
+ * game session. Rules live in the session, so this class only turns engine events into session calls.
  */
 export class GameApp {
   private readonly app: pc.Application;
   private readonly container: HTMLElement;
   private readonly inputService: InputService;
-  private readonly flagStore: FlagStore;
+  private readonly sessionState: GameSession;
   private readonly interactionSystem: InteractionSystem;
-  private readonly dialogueSystem: DialogueSystem;
   private readonly npcs: NpcRenderer;
+  private readonly world: WorldView;
   private readonly player: PlayerController;
   private readonly camera: CameraController;
+  private readonly targetKinds = new Map<string, TargetKind>();
   private readonly cleanups: Array<() => void> = [];
   private disposed = false;
 
@@ -61,37 +71,36 @@ export class GameApp {
     }
 
     this.inputService = new InputService(canvas);
-    this.flagStore = new FlagStore();
+    this.sessionState = new GameSession(GAME_CONTENT);
     this.interactionSystem = new InteractionSystem();
-    this.dialogueSystem = new DialogueSystem(GAME_CONTENT.dialogues, this.flagStore);
     this.npcs = new NpcRenderer(app.root, GAME_CONTENT.npcs, HUB_WORLD);
+    this.world = new WorldView(app.root, GAME_CONTENT, HUB_WORLD);
     this.player = new PlayerController(app.root, HUB_WORLD);
     this.camera = new CameraController(app.root, this.player.groundPosition, HUB_WORLD.bounds);
 
-    for (const npc of GAME_CONTENT.npcs) {
-      this.interactionSystem.register({ id: npc.id, labelKey: npc.nameKey, position: npc.position });
-    }
+    this.registerTargets();
 
     this.cleanups.push(
       () => this.inputService.dispose(),
       () => this.npcs.dispose(),
+      () => this.world.dispose(),
       () => this.player.dispose(),
       () => this.camera.dispose(),
-      this.interactionSystem.events.on('interaction.triggered', (event) =>
-        this.routeInteraction(event.targetId),
-      ),
-      this.dialogueSystem.events.on('dialogue.opened', (event) =>
-        this.onDialogueOpened(event.view.speakerId),
-      ),
-      this.dialogueSystem.events.on('dialogue.closed', () =>
-        this.inputService.popBlocker(DIALOGUE_BLOCKER),
-      ),
+      this.sessionState.events.on('panel.opened', () => this.inputService.pushBlocker(PANEL_BLOCKER)),
+      this.sessionState.events.on('panel.closed', () => this.inputService.popBlocker(PANEL_BLOCKER)),
+      this.sessionState.events.on('changed', () => this.world.sync(this.sessionState.snapshot())),
+      this.interactionSystem.events.on('interaction.triggered', (event) => this.routeInteraction(event.targetId)),
+      this.sessionState.dialogue.events.on('dialogue.opened', (event) => {
+        this.inputService.pushBlocker(DIALOGUE_BLOCKER);
+        this.npcs.faceToward(event.view.speakerId, this.player.groundPosition);
+      }),
+      this.sessionState.dialogue.events.on('dialogue.closed', () => this.inputService.popBlocker(DIALOGUE_BLOCKER)),
     );
   }
 
   /**
-   * Creates the WebGL2 device, builds the hub with the player, camera, and NPCs, and starts the main loop.
-   * Rejects with GameStartupError so the caller can show a specific message.
+   * Creates the WebGL2 device, builds the hub with the player, camera, NPCs, and world objects, and starts the
+   * loop. Rejects with GameStartupError so the caller can show a specific message.
    */
   static async create({ canvas, container }: GameAppOptions): Promise<GameApp> {
     let device: pc.GraphicsDevice;
@@ -145,16 +154,18 @@ export class GameApp {
     return this.inputService;
   }
 
+  /** The game session: state, rules, and the dialogue system. The HUD reads it and sends it actions. */
+  get session(): GameSession {
+    return this.sessionState;
+  }
+
+  /** Dialogue system, kept for the existing HUD code. Same instance as `session.dialogue`. */
+  get dialogue(): DialogueSystem {
+    return this.sessionState.dialogue;
+  }
+
   get interaction(): InteractionSystem {
     return this.interactionSystem;
-  }
-
-  get dialogue(): DialogueSystem {
-    return this.dialogueSystem;
-  }
-
-  get flags(): FlagStore {
-    return this.flagStore;
   }
 
   /** Stops the loop, removes listeners, and destroys the engine and its graphics device. Safe to call twice. */
@@ -172,18 +183,24 @@ export class GameApp {
 
   debugSnapshot(): GameDebugSnapshot {
     const { x, z } = this.player.groundPosition;
-    const view = this.dialogueSystem.view;
+    const view = this.sessionState.dialogue.view;
+    const snap: SessionSnapshot = this.sessionState.snapshot();
     return {
       player: { x, z, speed: this.player.speed },
-      camera: { yawDeg: (this.camera.yawRadians * 180) / Math.PI, distance: this.camera.currentDistance },
+      camera: { yawDeg: radToDeg(this.camera.yawRadians), distance: this.camera.currentDistance },
       inputBlocked: this.inputService.isBlocked,
       interactionFocus: this.interactionSystem.focus?.id ?? null,
       dialogue: {
-        open: this.dialogueSystem.isOpen,
+        open: this.sessionState.dialogue.isOpen,
         dialogueId: view?.dialogueId ?? null,
         nodeId: view?.nodeId ?? null,
       },
-      flags: this.flagStore.snapshot(),
+      flags: snap.flags as Record<string, boolean>,
+      coins: snap.coins,
+      reputation: snap.reputation,
+      activeQuest: snap.activeQuest?.id ?? null,
+      panel: snap.panel?.kind ?? null,
+      inventory: Object.fromEntries(snap.inventory.map((stack) => [stack.itemId, stack.count])),
     };
   }
 
@@ -196,6 +213,8 @@ export class GameApp {
     this.attachLifecycle();
     this.app.on('update', this.tick);
     this.cleanups.push(() => this.app.off('update', this.tick));
+    this.sessionState.start();
+    this.world.sync(this.sessionState.snapshot());
     this.app.start();
   }
 
@@ -207,32 +226,81 @@ export class GameApp {
     this.npcs.update(dt);
     this.interactionSystem.update(this.player.groundPosition);
     if (frame.interactPressed) {
-      // Interaction is only accepted from a press in range. The event handler opens the dialogue.
       this.interactionSystem.press();
     }
   };
 
-  /**
-   * Maps an interaction target to what it does. Today every target is an NPC that opens its dialogue.
-   * Unknown targets and missing dialogues are logged and ignored, so the game keeps running.
-   */
-  private routeInteraction(targetId: string): void {
-    const npc = findNpc(targetId);
-    if (!npc) {
-      console.error(`[Interaction] Target "${targetId}" has no NPC definition; nothing opened`);
-      return;
+  /** Registers every interactable from content. Each one shows a hint when the player is close. */
+  private registerTargets(): void {
+    for (const npc of GAME_CONTENT.npcs) {
+      this.addTarget(npc.id, 'npc', npc.nameKey, npc.position, 'ui.hint.talk');
     }
-    const result = this.dialogueSystem.start(npc.dialogueId);
-    if (!result.ok) {
-      console.error(
-        `[Interaction] Could not open dialogue "${npc.dialogueId}" for "${targetId}": ${result.reason}`,
-      );
+    for (const pickup of GAME_CONTENT.pickups) {
+      const item = GAME_CONTENT.items.find((candidate) => candidate.id === pickup.itemId);
+      this.addTarget(pickup.id, 'pickup', item?.nameKey ?? pickup.itemId, pickup.position, 'ui.action.collect');
+    }
+    for (const station of GAME_CONTENT.stations) {
+      this.addTarget(station.id, 'station', station.labelKey, station.position, 'ui.action.work');
+    }
+    for (const placement of GAME_CONTENT.placements) {
+      this.addTarget(placement.id, 'placement', placement.labelKey, placement.position, 'ui.action.place');
     }
   }
 
-  private onDialogueOpened(speakerId: string): void {
-    this.inputService.pushBlocker(DIALOGUE_BLOCKER);
-    this.npcs.faceToward(speakerId, this.player.groundPosition);
+  private addTarget(
+    id: string,
+    kind: TargetKind,
+    labelKey: string,
+    position: { x: number; z: number },
+    actionKey: string,
+  ): void {
+    this.targetKinds.set(id, kind);
+    this.interactionSystem.register({ id, labelKey, actionKey, position });
+  }
+
+  /**
+   * Maps a pressed target to its action. Results that the player needs to know about already produce
+   * session notices. Here we only log content problems and unregister targets that are used up.
+   */
+  private routeInteraction(targetId: string): void {
+    const kind = this.targetKinds.get(targetId);
+    switch (kind) {
+      case 'npc': {
+        const npc = findNpc(targetId);
+        if (!npc) {
+          console.error(`[Interaction] NPC "${targetId}" has no definition; nothing opened`);
+          return;
+        }
+        const result = this.sessionState.dialogue.start(npc.dialogueId);
+        if (!result.ok) {
+          console.error(`[Interaction] Could not open dialogue "${npc.dialogueId}" for "${targetId}": ${result.reason}`);
+        }
+        return;
+      }
+      case 'pickup': {
+        const result = this.sessionState.collectPickup(targetId);
+        if (result.ok) {
+          this.interactionSystem.unregister(targetId);
+        }
+        return;
+      }
+      case 'station': {
+        const station = this.sessionState.stationById(targetId);
+        if (station) {
+          this.sessionState.openPanel({ kind: 'craft', stationId: station.id } satisfies PanelState);
+        }
+        return;
+      }
+      case 'placement': {
+        const result = this.sessionState.placeItem(targetId);
+        if (result.ok) {
+          this.interactionSystem.unregister(targetId);
+        }
+        return;
+      }
+      default:
+        console.error(`[Interaction] Target "${targetId}" has no action; nothing happened (${t('error.generic')})`);
+    }
   }
 
   private resize(): void {

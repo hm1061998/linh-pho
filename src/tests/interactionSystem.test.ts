@@ -27,12 +27,12 @@ describe('InteractionSystem range', () => {
     const events = collect(system);
 
     system.update({ x: 1.5, z: 0 });
-    expect(system.focus).toEqual({ id: 'npc_a', labelKey: 'npc.a.name' });
+    expect(system.focus).toEqual({ id: 'npc_a', labelKey: 'npc.a.name', actionKey: 'ui.hint.talk' });
 
     system.update({ x: 5, z: 0 });
     expect(system.focus).toBeNull();
     expect(events).toEqual([
-      { type: 'interaction.focusChanged', target: { id: 'npc_a', labelKey: 'npc.a.name' } },
+      { type: 'interaction.focusChanged', target: { id: 'npc_a', labelKey: 'npc.a.name', actionKey: 'ui.hint.talk' } },
       { type: 'interaction.focusChanged', target: null },
     ]);
   });

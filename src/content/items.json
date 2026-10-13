@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    { "id": "bamboo", "nameKey": "item.bamboo.name", "stackLimit": 99, "qualifiable": false },
+    { "id": "paper", "nameKey": "item.paper.name", "stackLimit": 99, "qualifiable": false },
+    { "id": "ink", "nameKey": "item.ink.name", "stackLimit": 99, "qualifiable": false },
+    { "id": "indigo", "nameKey": "item.indigo.name", "stackLimit": 99, "qualifiable": false },
+    { "id": "rope", "nameKey": "item.rope.name", "stackLimit": 99, "qualifiable": false },
+    { "id": "wood_scrap", "nameKey": "item.wood_scrap.name", "stackLimit": 99, "qualifiable": false },
+    { "id": "wooden_lantern", "nameKey": "item.wooden_lantern.name", "stackLimit": 20, "qualifiable": true },
+    { "id": "spirit_lantern", "nameKey": "item.spirit_lantern.name", "stackLimit": 20, "qualifiable": true }
+  ]
+}

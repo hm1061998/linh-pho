@@ -175,3 +175,43 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Phạm vi:** Áp dụng cho mọi phần tử HUD và overlay. Chữ trong panel hội thoại, nhãn nút, hint đều không chọn được (đã kiểm chứng: nhấp ba lần không chọn gì).
 - **Lưu ý:** Nhấp ba lần lên thân hội thoại vẫn đi tiếp hội thoại, vì đó là chạm để tiếp tục (đúng thiết kế, không phải lỗi bôi đen).
 - **Kiểm tra tự động:** `localeKeys.test.ts` đảm bảo mọi chuỗi `t('...')` trong code đều có trong `vi.json`, và hai locale có cùng tập khoá. Overlay mới được bắt bởi test này.
+
+## D-026 — Ánh xạ vật phẩm theo GDD
+
+- **Tám vật phẩm:** tre, giấy dó, mực, màu lam, dây gai, gỗ vụn (nguyên liệu), Đèn Mộc, Đèn Vân Linh.
+- **Lồng đèn soi vết:** GDD liệt kê "lồng đèn soi vết" trong danh sách 8 vật phẩm, nhưng Prompt 05 gọi cùng món là Spirit Pattern Lantern (Đèn Vân Linh) và GDD B4 làm công thức phụ ra Đèn Vân Linh. Ta dùng một món duy nhất: `spirit_lantern` = Đèn Vân Linh. Nếu cần món thứ tám riêng, thêm vào `items.json`.
+
+## D-027 — Kho đồ: giữ chỗ trước, tiêu một lần khi xong
+
+- **Chọn:** `Inventory.reserve` giữ nguyên liệu cho một lần chế tạo. `commit` tiêu đúng một lần khi thành công. `release` trả lại khi huỷ. Mọi thao tác là nguyên tử: thiếu một mục thì không đổi gì.
+- **Chất lượng:** Chỉ vật phẩm `qualifiable` có chất lượng (thường, đẹp, hoàn mỹ), mỗi chất lượng một stack riêng. Nguyên liệu thô không có chất lượng, và yêu cầu chất lượng với nguyên liệu thô là lỗi nội dung.
+- **Lý do:** Prompt 06 yêu cầu nguyên liệu bị giữ, chỉ tiêu khi thành công, và huỷ không mất đồ.
+
+## D-028 — Nhiệm vụ đếm nguồn riêng biệt, thưởng đúng một lần
+
+- **Chọn:** Mỗi mục tiêu đếm các `sourceId` khác nhau. Một lần nhặt, một lần chế tạo, một lần đặt chỉ tính một lần, dù sự kiện lặp lại. Khi mọi mục tiêu xong, nhiệm vụ chuyển `completed` và phát `quest.completed` một lần. Nhiệm vụ đã xong bỏ qua mọi sự kiện sau đó.
+- **Kích hoạt:** `autoStart` nhiệm vụ không có tiên quyết bắt đầu khi `start()`. Nhiệm vụ có tiên quyết bắt đầu khi tiên quyết xong. `startQuest` cho nhiệm vụ không tự bắt đầu.
+- **Phần thưởng:** `GameSession` áp dụng thưởng khi nhận `quest.completed`, nên thưởng chỉ đến một lần. Test: `pays 30 coins exactly once`.
+- **Khôi phục:** `restore` bỏ qua ID nhiệm vụ và mục tiêu không còn trong nội dung, để save cũ vẫn tải được.
+
+## D-029 — Phiên chơi là domain thuần, engine chỉ gửi và nhận sự kiện
+
+- **Chọn:** `domain/GameSession.ts` nối cờ, ví, kho, chế tạo, nhiệm vụ, hội thoại và điểm đặt. Không có import PlayCanvas hay DOM, nên toàn bộ luồng Q00 chạy được trong test Node với nội dung thật (`gameSession.test.ts`).
+- **Engine:** `GameApp` chỉ chuyển tương tác thành lời gọi phiên (`routeInteraction`), và đẩy trạng thái thế giới qua `WorldView.sync(snapshot)`. Không giữ trạng thái gameplay riêng.
+- **Thông báo:** Phiên phát `notice` với khoá locale. Tham số kết thúc bằng `Key` (ví dụ `itemKey`) là khoá và được dịch ở giao diện (`renderNotice`).
+
+## D-030 — Tương tác: loại mục tiêu và panel khoá đầu vào
+
+- **Loại:** `npc` (hội thoại), `pickup` (nhặt), `station` (mở panel chế tạo), `placement` (đặt đồ). Mỗi loại có động từ hint riêng (`ui.action.*`).
+- **Hết việc:** Pickup đã nhặt và placement đã đầy được gỡ khỏi `InteractionSystem`, nên hint biến mất.
+- **Panel:** Phiên giữ một panel mở tại một thời điểm (`craft` hoặc `inventory`). Mở panel đẩy blocker `panel`, đóng thì gỡ. Đóng panel chế tạo đang dở sẽ trả nguyên liệu (`cancelCraft`).
+- **Phím:** I mở kho, Escape đóng panel. Hai phím bị bỏ qua khi có hội thoại mở, vì hội thoại dùng chúng trước.
+
+## D-031 — Minigame chế tạo là placeholder xác nhận (tạm thời)
+
+- Module 04 chỉ có nút "Lắp" để chế tạo ngay, để kiểm chứng luồng kho và nhiệm vụ. Module 06 thay bằng minigame lắp khung và khắc, theo Prompt 06. `recipe.miniGame` đã có trong dữ liệu để đổi mà không sửa phiên.
+
+## D-032 — Đo khung hình trong pane trình duyệt không đáng tin lúc này
+
+- Ở phiên kiểm thử Module 04, pane trình duyệt cho khung hình chỉ khoảng 3 lần/giây. Đã kiểm tra: GPU rảnh, luồng chính không bị chặn (độ trễ timer bình thường), iframe trống cũng 3 lần/giây, và scene rỗng cũng chậm. Lỗi nằm ở môi trường, không ở game.
+- Khi khung hình thấp, `dt` bị giới hạn ở 0.1 s nên nhân vật đi chậm hơn. Trong phiên kiểm thử đã tăng `app.maxDeltaTime` lên 0.5 s **chỉ trong trình duyệt** để rút ngắn thời gian. Đây không phải thay đổi code, và không có trong bản build.

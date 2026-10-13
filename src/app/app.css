@@ -363,3 +363,167 @@ textarea,
     animation: none;
   }
 }
+
+/* Top-right currency. Top-left quest tracker. Both sit under the safe area on phones. */
+.currency-bar {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.currency-bar span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--panel-bg);
+}
+
+.currency-bar b {
+  color: var(--lantern-gold);
+}
+
+.quest-tracker {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  max-width: min(60%, 300px);
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--panel-bg);
+  font-size: 14px;
+}
+
+.quest-tracker h2 {
+  margin: 0 0 6px;
+  color: var(--lantern-gold);
+  font-size: 15px;
+}
+
+.quest-tracker ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest-tracker li {
+  display: flex;
+  gap: 8px;
+  margin: 3px 0;
+  opacity: 0.9;
+}
+
+.quest-tracker li.done {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+/* Notices: short-lived, stacked above the interaction hint. */
+.notice-stack {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.notice-stack p {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--panel-bg);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* The open panel: crafting table or inventory. Centered over the scene. */
+.panel-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(calc(100% - 24px), 420px);
+  max-height: 72%;
+  overflow: auto;
+  padding: 16px 18px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--deep-indigo);
+  border-radius: 16px;
+  background: var(--panel-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  color: var(--lantern-gold);
+  font-size: 18px;
+}
+
+.panel-close,
+.recipe-list button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--deep-indigo);
+  border-radius: 10px;
+  background: var(--deep-indigo);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+}
+
+.recipe-list button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.recipe-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recipe-list .need,
+.recipe-list .locked {
+  margin: 4px 0 8px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.inventory-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inventory-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(231, 212, 173, 0.12);
+}
+
+.inventory-list .quality {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.inventory-list b {
+  margin-left: auto;
+  color: var(--lantern-gold);
+}

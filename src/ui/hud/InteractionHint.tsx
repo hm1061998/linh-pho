@@ -4,8 +4,8 @@ import { useCoarsePointer } from '../state/useCoarsePointer';
 import { useDialogueView, useInteractionFocus } from '../state/useGameplayState';
 
 /**
- * Small hint near the bottom of the screen: "E · Talk to Auntie Nghiêm". It appears only when a target is in
- * range and no dialogue is open. Touch devices use the interact button label instead, so the hint stays hidden.
+ * Small hint near the bottom of the screen: "E · Nói chuyện với Bà Nghiêm", "E · Nhặt Tre". It appears only when
+ * a target is in range and no dialogue is open. Touch devices use the interact button instead, so the hint stays hidden.
  */
 export function InteractionHint({ game }: { readonly game: GameApp }) {
   const focus = useInteractionFocus(game);
@@ -18,7 +18,7 @@ export function InteractionHint({ game }: { readonly game: GameApp }) {
   return (
     <div className="interaction-hint" role="status">
       <kbd aria-hidden="true">{t('ui.key.interact')}</kbd>
-      <span>{t('ui.hint.talk', { name: t(focus.labelKey) })}</span>
+      <span>{t(focus.actionKey, { name: t(focus.labelKey) })}</span>
     </div>
   );
 }

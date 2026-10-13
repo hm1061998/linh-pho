@@ -9,14 +9,19 @@ export interface InteractableTarget {
   readonly id: string;
   /** Locale key for the target's name. The engine never translates. */
   readonly labelKey: string;
+  /** Locale key for the hint verb, with a `{name}` slot. Defaults to talking. */
+  readonly actionKey?: string;
   readonly position: GroundPoint;
   /** Optional per-target range in meters. Defaults to `DEFAULT_INTERACTION_RANGE_M`. */
   readonly range?: number;
 }
 
+export const DEFAULT_ACTION_KEY = 'ui.hint.talk';
+
 export interface FocusedTarget {
   readonly id: string;
   readonly labelKey: string;
+  readonly actionKey: string;
 }
 
 export type InteractionEvent =
@@ -26,6 +31,7 @@ export type InteractionEvent =
 interface RegisteredTarget {
   readonly id: string;
   readonly labelKey: string;
+  readonly actionKey: string;
   readonly position: GroundPoint;
   readonly range: number;
 }
@@ -54,6 +60,7 @@ export class InteractionSystem {
     this.targets.set(target.id, {
       id: target.id,
       labelKey: target.labelKey,
+      actionKey: target.actionKey ?? DEFAULT_ACTION_KEY,
       position: { x: target.position.x, z: target.position.z },
       range,
     });
@@ -75,7 +82,7 @@ export class InteractionSystem {
       return null;
     }
     const target = this.targets.get(this.focusId);
-    return target ? { id: target.id, labelKey: target.labelKey } : null;
+    return target ? { id: target.id, labelKey: target.labelKey, actionKey: target.actionKey } : null;
   }
 
   /**

@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { DialoguePanel } from '../ui/dialogue/DialoguePanel';
+import { PanelHost } from '../ui/panels/PanelHost';
+import { CurrencyBar, QuestTracker } from '../ui/hud/HudBars';
 import { InteractionHint } from '../ui/hud/InteractionHint';
+import { NoticeStack } from '../ui/hud/NoticeStack';
 import { OrientationGate } from '../ui/hud/OrientationGate';
 import { StartupErrorPanel, type StartupErrorReason } from '../ui/hud/StartupErrorPanel';
 import { TouchControls } from '../ui/hud/TouchControls';
@@ -83,7 +86,11 @@ export function GameView() {
         )}
         {state.status === 'ready' && (
           <>
+            <CurrencyBar game={state.game} />
+            <QuestTracker game={state.game} />
+            <NoticeStack game={state.game} />
             <InteractionHint game={state.game} />
+            <PanelHost game={state.game} />
             <DialoguePanel game={state.game} />
             <TouchControls game={state.game} />
           </>

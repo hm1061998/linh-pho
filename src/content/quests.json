@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "quests": [
+    {
+      "id": "q00_dem_mo_cho",
+      "titleKey": "quest.q00.title",
+      "autoStart": true,
+      "prerequisites": [],
+      "objectives": [
+        { "id": "talk_ba_nghiem", "type": "talk", "targetId": "npc_ba_nghiem", "count": 1, "textKey": "quest.q00.obj.talk" },
+        { "id": "gather_bamboo", "type": "collect", "targetId": "bamboo", "count": 2, "textKey": "quest.q00.obj.bamboo" },
+        { "id": "gather_paper", "type": "collect", "targetId": "paper", "count": 1, "textKey": "quest.q00.obj.paper" },
+        { "id": "gather_rope", "type": "collect", "targetId": "rope", "count": 1, "textKey": "quest.q00.obj.rope" },
+        { "id": "craft_lantern", "type": "craft", "targetId": "recipe_wooden_lantern", "count": 1, "textKey": "quest.q00.obj.craft" },
+        { "id": "place_lantern", "type": "place", "targetId": "shop_lamp", "count": 1, "textKey": "quest.q00.obj.place" }
+      ],
+      "rewards": { "coins": 30, "reputation": 0 },
+      "unlocks": { "flags": ["q00_complete", "shop_lamp_lit"], "shopLevel": 1 }
+    }
+  ]
+}

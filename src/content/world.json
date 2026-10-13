@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "pickups": [
+    { "id": "pk_bamboo_1", "itemId": "bamboo", "position": { "x": 18.5, "z": -8 } },
+    { "id": "pk_bamboo_2", "itemId": "bamboo", "position": { "x": 19.5, "z": -6.5 } },
+    { "id": "pk_bamboo_3", "itemId": "bamboo", "position": { "x": 18.5, "z": -4.5 } },
+    { "id": "pk_bamboo_4", "itemId": "bamboo", "position": { "x": 20.5, "z": -9.5 } },
+    { "id": "pk_paper_1", "itemId": "paper", "position": { "x": -6, "z": -19 } },
+    { "id": "pk_paper_2", "itemId": "paper", "position": { "x": -5, "z": -22 } },
+    { "id": "pk_paper_3", "itemId": "paper", "position": { "x": -2, "z": -18.5 } },
+    { "id": "pk_rope_1", "itemId": "rope", "position": { "x": -22, "z": 2 } },
+    { "id": "pk_rope_2", "itemId": "rope", "position": { "x": -23, "z": 6 } },
+    { "id": "pk_rope_3", "itemId": "rope", "position": { "x": -25, "z": 0 } },
+    { "id": "pk_ink_1", "itemId": "ink", "position": { "x": 2, "z": -26 } },
+    { "id": "pk_indigo_1", "itemId": "indigo", "position": { "x": 6.5, "z": 28.5 } },
+    { "id": "pk_wood_1", "itemId": "wood_scrap", "position": { "x": -21, "z": -26 } },
+    { "id": "pk_wood_2", "itemId": "wood_scrap", "position": { "x": -14, "z": -27 } }
+  ],
+  "stations": [
+    {
+      "id": "station_workbench",
+      "kind": "workbench",
+      "labelKey": "station.workbench.name",
+      "position": { "x": -12.6, "z": -12.6 }
+    },
+    {
+      "id": "station_engraving",
+      "kind": "engraving",
+      "labelKey": "station.engraving.name",
+      "position": { "x": 6.5, "z": -12 }
+    }
+  ],
+  "placements": [
+    {
+      "id": "shop_lamp",
+      "labelKey": "placement.shop_lamp.name",
+      "position": { "x": -11.5, "z": 13.5 },
+      "acceptsItemId": "wooden_lantern"
+    }
+  ]
+}

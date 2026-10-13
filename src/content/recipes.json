@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "recipes": [
+    {
+      "id": "recipe_wooden_lantern",
+      "nameKey": "recipe.wooden_lantern.name",
+      "inputs": [
+        { "itemId": "bamboo", "count": 2 },
+        { "itemId": "paper", "count": 1 },
+        { "itemId": "rope", "count": 1 }
+      ],
+      "output": { "itemId": "wooden_lantern", "count": 1 },
+      "stationId": "station_workbench",
+      "miniGame": "assembly",
+      "unlockFlag": null
+    },
+    {
+      "id": "recipe_spirit_lantern",
+      "nameKey": "recipe.spirit_lantern.name",
+      "inputs": [
+        { "itemId": "wooden_lantern", "count": 1 },
+        { "itemId": "ink", "count": 1 },
+        { "itemId": "indigo", "count": 1 }
+      ],
+      "output": { "itemId": "spirit_lantern", "count": 1 },
+      "stationId": "station_engraving",
+      "miniGame": "engraving",
+      "unlockFlag": "recipe_spirit_lantern_known"
+    }
+  ]
+}
