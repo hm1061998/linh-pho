@@ -76,7 +76,6 @@ describe('crafting minigames through the session', () => {
     expect(view.sockets.map((socket) => [socket.id, socket.filled])).toEqual([
       ['socket_a', true],
       ['socket_b', false],
-      ['socket_c', false],
     ]);
   });
 

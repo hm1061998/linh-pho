@@ -5,8 +5,8 @@
 
 /** Distance from the lantern's centre to each socket and each mark. */
 export const CRAFT_RING_M = 0.18;
-/** The sockets, in order a, b, c: their angles from +X toward +Z, in degrees. */
-export const CRAFT_SOCKET_ANGLES_DEG: readonly number[] = [0, 120, 240];
+/** The sockets, in order a, b: their angles from +X toward +Z, in degrees. The two sit on opposite sides of the ring. */
+export const CRAFT_SOCKET_ANGLES_DEG: readonly number[] = [0, 180];
 /** The height of a rib's bottom when it stands in its socket: on top of the bottom ring. */
 export const CRAFT_SOCKET_BASE_Y_M = 0.16;
 /** The height of the engraving lantern's middle, where its marks sit. */
@@ -23,7 +23,7 @@ export interface Point {
   readonly z: number;
 }
 
-/** Where a rib stands when it is in socket `index` (0 for a, 1 for b, 2 for c). The stage's own origin is the base. */
+/** Where a rib stands when it is in socket `index` (0 for a, 1 for b). The stage's own origin is the base. */
 export function socketPosition(index: number): Point {
   const angle = degreesToRadians(CRAFT_SOCKET_ANGLES_DEG[index] ?? 0);
   return { x: CRAFT_RING_M * Math.cos(angle), y: CRAFT_SOCKET_BASE_Y_M, z: CRAFT_RING_M * Math.sin(angle) };

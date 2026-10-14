@@ -19,11 +19,10 @@ const KEYBOARD_OFFSET = 0.5;
 /** How long a snap or miss stays on screen. */
 const FEEDBACK_MS = 450;
 
-/** Socket centres in percent of the frame. Placeholder layout for the three sockets. */
+/** Socket centres in percent of the frame, one per socket in order. Placeholder layout for the two sockets. */
 const SOCKET_POSITIONS = [
   { left: '50%', top: '24%' },
-  { left: '28%', top: '70%' },
-  { left: '72%', top: '70%' },
+  { left: '50%', top: '70%' },
 ] as const;
 
 /** Mark centres in percent of the ring. Placeholder layout for the three marks, in display order. */

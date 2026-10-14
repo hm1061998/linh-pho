@@ -19,16 +19,15 @@ import {
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 describe('craft layout', () => {
-  it('puts the three sockets on one circle, at evenly spaced angles, standing on the bottom ring', () => {
-    const points = [0, 1, 2].map((index) => socketPosition(index));
+  it('puts the two sockets on one circle, on opposite sides, standing on the bottom ring', () => {
+    const points = [0, 1].map((index) => socketPosition(index));
     for (const point of points) {
       expect(Math.hypot(point.x, point.z)).toBeCloseTo(CRAFT_RING_M, 6);
       expect(point.y).toBe(CRAFT_SOCKET_BASE_Y_M);
     }
-    // 120 degrees apart: the three points are the corners of an equilateral triangle, so their distances match.
-    const d01 = Math.hypot(points[0]!.x - points[1]!.x, points[0]!.z - points[1]!.z);
-    const d12 = Math.hypot(points[1]!.x - points[2]!.x, points[1]!.z - points[2]!.z);
-    expect(d01).toBeCloseTo(d12, 6);
+    // 180 degrees apart: the two sockets are a full diameter of the ring, so they sit 2 × the ring radius apart.
+    const distance = Math.hypot(points[0]!.x - points[1]!.x, points[0]!.z - points[1]!.z);
+    expect(distance).toBeCloseTo(2 * CRAFT_RING_M, 6);
   });
 
   it('spreads the marks of a ring evenly, all at the lantern middle', () => {

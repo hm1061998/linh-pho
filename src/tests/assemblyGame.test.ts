@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { GAME_CONTENT } from '../content';
 import { AssemblyGame, ASSEMBLY_SOCKET_IDS } from '../domain/minigame/AssemblyGame';
 
 function fitAll(game: AssemblyGame, offset: number): void {
@@ -8,12 +9,17 @@ function fitAll(game: AssemblyGame, offset: number): void {
 }
 
 describe('AssemblyGame', () => {
-  it('starts playing, and completes after the third fit', () => {
+  it('has one socket for each bamboo the wooden lantern recipe takes', () => {
+    const recipe = GAME_CONTENT.recipes.find((candidate) => candidate.id === 'recipe_wooden_lantern');
+    const bamboo = recipe?.inputs.find((input) => input.itemId === 'bamboo');
+    expect(bamboo?.count).toBe(ASSEMBLY_SOCKET_IDS.length);
+  });
+
+  it('starts playing, and completes after the second fit', () => {
     const game = new AssemblyGame(ASSEMBLY_SOCKET_IDS);
     expect(game.status).toBe('playing');
     expect(game.place('socket_a', 0)).toEqual({ ok: true, status: 'playing' });
-    expect(game.place('socket_b', 0)).toEqual({ ok: true, status: 'playing' });
-    expect(game.place('socket_c', 0)).toEqual({ ok: true, status: 'complete' });
+    expect(game.place('socket_b', 0)).toEqual({ ok: true, status: 'complete' });
     expect(game.status).toBe('complete');
   });
 

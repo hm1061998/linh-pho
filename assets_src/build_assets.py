@@ -561,10 +561,11 @@ ASSETS.update({f"hub.{name}": (name.lower(), builder) for name, builder in _hub_
 
 
 # ---- Craft models (GDD B5, art bible BLENDER-P03) ----------------------------------------------------------------
-# The craft stage is built in the game's own coordinates (Y up). The three sockets sit on a circle of radius
-# CRAFT_RING_M, at 0, 120 and 240 degrees from +X toward +Z. src/engine/craft/craftLayout.ts uses the same numbers.
+# The craft stage is built in the game's own coordinates (Y up). The two sockets sit on a circle of radius
+# CRAFT_RING_M, at 0 and 180 degrees from +X toward +Z, one per bamboo rib the recipe takes.
+# src/engine/craft/craftLayout.ts uses the same numbers.
 CRAFT_RING_M = 0.18
-CRAFT_SOCKET_ANGLES_DEG = (0.0, 120.0, 240.0)
+CRAFT_SOCKET_ANGLES_DEG = (0.0, 180.0)
 CRAFT_BOTTOM_RING_Y = 0.14  # the top of the stand: the frame and the lantern start here
 CRAFT_TOP_RING_Y = 0.56
 
@@ -582,7 +583,7 @@ def _craft_stand(shape: Shape) -> None:
 
 
 def craft_lantern_frame():
-    """The frame the player fills with three bamboo ribs. Its three sockets are the slots the ribs slide into."""
+    """The frame the player fills with two bamboo ribs. Its two sockets are the slots the ribs slide into."""
     shape = Shape(["MAT_WoodDark_A", "MAT_Bamboo_A"])
     _craft_stand(shape)
     shape.cylinder("MAT_Bamboo_A", (0.0, 0.0, 0.15), CRAFT_RING_M, 0.02, segments=8)  # bottom ring, y 0.14 to 0.16
@@ -688,14 +689,14 @@ ASSETS.update(
 
 
 def station_workbench():
-    """The assembly bench (GDD B5.1): a wooden table with three bamboo ribs standing on top, ready for the frame."""
+    """The assembly bench (GDD B5.1): a wooden table with two bamboo ribs standing on top, ready for the frame."""
     wood, dark, bamboo = "MAT_WoodWarm_A", "MAT_WoodDark_A", "MAT_Bamboo_A"
     shape = Shape([wood, dark, bamboo])
     shape.box(wood, (0.0, 0.0, 0.74), (1.2, 0.8, 0.06))  # top, z 0.71 to 0.77
     for x in (-0.54, 0.54):
         for y in (-0.34, 0.34):
             shape.box(dark, (x, y, 0.355), (0.06, 0.06, 0.71))  # legs, z 0 to 0.71
-    for x in (-0.25, 0.0, 0.25):
+    for x in (-0.15, 0.15):
         shape.cylinder(bamboo, (x, 0.0, 0.9), 0.018, 0.26, segments=10)  # ribs, z 0.77 to 1.03
     return [shape.finish("STATION_Workbench")], []
 

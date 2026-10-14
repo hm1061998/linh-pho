@@ -3,13 +3,17 @@ import { clampScore, qualityFromScore } from './quality';
 import type { MiniGameStatus, MiniGameStep } from './types';
 
 /**
- * Three bamboo parts go into three snap sockets on the lamp frame. A drop has an offset: its distance from the
- * socket centre in snap radii, where 0 is dead centre and 1 is the edge. A drop past the edge is a miss. A miss
- * costs a little and never undoes a fitted part, and a fitted part never comes out.
+ * Two bamboo parts go into two snap sockets on the lamp frame, one per part the recipe takes (GDD B5.1, recipe
+ * «2 tre + 1 giấy + 1 dây»). A drop has an offset: its distance from the socket centre in snap radii, where 0 is dead
+ * centre and 1 is the edge. A drop past the edge is a miss. A miss costs a little and never undoes a fitted part, and
+ * a fitted part never comes out.
  */
 
-/** The three sockets of the lamp frame. Part of the minigame design, not of the content. */
-export const ASSEMBLY_SOCKET_IDS: readonly string[] = ['socket_a', 'socket_b', 'socket_c'];
+/**
+ * The two sockets of the lamp frame. Their count matches the bamboo in `recipe_wooden_lantern`: a test checks that they
+ * stay equal. Part of the minigame design, not of the content.
+ */
+export const ASSEMBLY_SOCKET_IDS: readonly string[] = ['socket_a', 'socket_b'];
 
 /** Largest offset that still fits. Anything further is a miss. */
 export const ASSEMBLY_SNAP_RADII = 1;

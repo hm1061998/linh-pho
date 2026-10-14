@@ -7,7 +7,7 @@ import { ASSEMBLY_SOCKET_IDS } from '../domain/minigame/AssemblyGame';
  * the domain, so they exercise the real path: begin the craft, play the minigame, the session finishes it.
  */
 
-/** Fits all three parts. `offset` is the drop distance in snap radii: 0 is dead centre. The last fit completes the craft. */
+/** Fits every socket's part. `offset` is the drop distance in snap radii: 0 is dead centre. The last fit completes the craft. */
 export function fitFrame(session: GameSession, offset = 0): void {
   for (const socketId of ASSEMBLY_SOCKET_IDS) {
     const step = session.assemblyPlace(socketId, offset);
