@@ -13,6 +13,14 @@ const HUMAN_RADIUS_M = 0.35;
 const BOB_AMPLITUDE_M = 0.08;
 const BOB_SPEED = 2.2;
 const SPIRIT_DIAMETER_M = 0.36;
+/**
+ * A ring of light on the ground under each NPC. From the default camera a person is only a few pixels tall, and the
+ * ring is what makes them read against the dark ground (GDD E3, visual acceptance). A spirit's ring keeps its own colour.
+ */
+const HALO_DIAMETER_M = 1.1;
+const HALO_THICKNESS_M = 0.02;
+const HALO_HUMAN_HEX = '#F2B759';
+const HALO_INTENSITY = 0.6;
 
 interface NpcView {
   readonly root: pc.Entity;
@@ -61,6 +69,7 @@ export class NpcRenderer {
 
       const baseY = surface + (isSpirit ? npc.hoverHeight : 0);
       root.setLocalPosition(point.x, baseY, point.z);
+      root.addChild(this.groundHalo(npc.id, isSpirit ? npc.color : HALO_HUMAN_HEX, surface - baseY));
       parent.addChild(root);
       this.views.set(npc.id, {
         root,
@@ -118,6 +127,23 @@ export class NpcRenderer {
     const { x, z } = view.root.getLocalPosition();
     const yaw = Math.atan2(point.x - x, point.z - z);
     view.root.setLocalEulerAngles(0, radToDeg(yaw), 0);
+  }
+
+  /**
+   * A flat ring of light on the ground. `groundOffsetM` is the ground's height relative to the NPC's root, so a spirit's
+   * ring sits on the ground under its hover. The ring stays when the model replaces the placeholder.
+   */
+  private groundHalo(id: string, hex: string, groundOffsetM: number): pc.Entity {
+    const material = new pc.StandardMaterial();
+    material.diffuse = colorFromHex(hex);
+    material.emissive = colorFromHex(hex);
+    material.emissiveIntensity = HALO_INTENSITY;
+    material.update();
+    const halo = new pc.Entity(`${id}_Halo`);
+    halo.addComponent('render', { type: 'cylinder', material });
+    halo.setLocalScale(HALO_DIAMETER_M, HALO_THICKNESS_M, HALO_DIAMETER_M);
+    halo.setLocalPosition(0, groundOffsetM + HALO_THICKNESS_M / 2, 0);
+    return halo;
   }
 
   /** Removes the NPC entities. The parent belongs to the app and is not touched. */
