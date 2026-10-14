@@ -100,3 +100,22 @@ Lệnh: `npm test` (Vitest). Kết quả: 41 tệp, 340 test, tất cả đạt.
 - Thử toàn bộ Q00–Q02 trên điện thoại (cảm ứng, xoay ngang, minigame kéo thả).
 - Thử trên Firefox và Safari.
 - Thay ít nhất một hình khối bằng model GLB thật theo `docs/ASSET_MANIFEST.md`, và đo lại.
+
+## 9. Lượt chơi Q00 → Q02 (T1, bản dev trên trình duyệt)
+
+Cách làm: bắt đầu lại từ Q00 (Menu → Bắt đầu lại). Phím E, Q, Enter, nút trong panel và minigame là thao tác thật. Vị trí nhân vật đặt bằng hook dev (`window.__linhPho.game.player.position`) vì đi bộ tới từng vật mất quá nhiều bước; vì vậy lượt này không kiểm lại va chạm khi đi.
+
+| Chặng | Việc đã làm | Kết quả kiểm tra |
+|---|---|---|
+| Q00 | Nói Bà Nghiêm; nhặt 2 tre, 1 giấy dó, 1 dây gai; chế Đèn Mộc ở bàn nghề; đặt lên bệ trước tiệm | `q00_complete`, `shop_lamp_lit`; +30 xu; tiệm cấp 1 |
+| Q01 | Nói Cô Lam; bật Đèn Soi Linh (Q); quét ba glyph; giải thứ tự «Sóng → Vòng → Lửa» ở bàn khắc; chế Đèn Vân Linh | `q01_complete`; uy tín 10 |
+| Q02 | Nhận hai đơn; giao đơn giấy dó và dây gai; chế Đèn Mộc thứ ba và giao; mua Kệ Đèn; đặt vào ô trưng bày 1 | `q02_complete`, `mvp_complete`; tiệm cấp 2; màn «Tiệm đã sáng» hiện |
+
+Điểm ghi nhận:
+
+- **Công thức Đèn Mộc lệch số ổ.** Minigame lắp khung có ba ổ (`AssemblyGame`, ba thanh tre) nhưng công thức `recipe_wooden_lantern` chỉ trừ 2 tre. Thanh thứ ba được lắp mà không lấy từ kho, nên khung đủ ba thanh với 2 tre. GDD mâu thuẫn: dòng 57 và mục nhiệm vụ Q00 ghi 2 tre, dòng 69 ghi 3 vị trí snap. Chưa sửa vì cần quyết định thiết kế.
+- **Thẻ «Chuyện Đằng Sau» chặn input.** Thẻ mở tự động sau mỗi nhiệm vụ (Q00 mở hai thẻ nối nhau) và chặn phím cho tới khi đóng. Đây là thiết kế đúng theo GDD B6.
+- **Phím E đôi khi bị bỏ qua.** Một số lần nhấn E ngay sau khi đổi vị trí hoặc sau khi bấm nút đóng panh bằng chuột không được nhận; lần nhấn thứ hai thì được. Chưa cô lập được nguyên nhân.
+- Ảnh chụp từng chặng nằm trong phiên làm việc, không lưu vào repo.
+
+Kết luận: luồng Q00 → Q02 đi hết và các cờ hoàn thành đều bật. Còn một mục mở là số tre của Đèn Mộc (xem trên).

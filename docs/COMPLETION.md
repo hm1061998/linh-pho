@@ -42,7 +42,7 @@ Không nằm trong định nghĩa (cần thiết bị hoặc người khác, mô
 
 | Mã | Mục | Trạng thái |
 |---|---|---|
-| T1 | Một lượt Q00 → Q02 trong trình duyệt, có ảnh chụp mỗi chặng | chưa |
+| T1 | Một lượt Q00 → Q02 trong trình duyệt, có ảnh chụp mỗi chặng | xong, có mục mở: số tre của Đèn Mộc lệch với số ổ khung (`docs/QA_REPORT.md` mục 9). Di chuyển bằng hook dev, thao tác là phím và chuột thật |
 | T2 | Typecheck, test, build production | liên tục |
 
 ## Ghi chú tiến độ
