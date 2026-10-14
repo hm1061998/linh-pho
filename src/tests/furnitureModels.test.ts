@@ -78,12 +78,22 @@ const CRAFT: readonly ModelSpec[] = [
   { id: 'craft.engraving_lantern', node: 'CRAFT_EngravingLantern', size: [0.36, 0.5, 0.36], pivot: 'floor', triangleBudget: 1500 },
 ];
 
+/** The six materials the player collects (GDD B4). Each lies on the ground, centred on its own origin. */
+const PICKUPS: readonly ModelSpec[] = [
+  { id: 'pickup.bamboo', node: 'PICKUP_Bamboo', size: [0.1, 0.3, 0.1], pivot: 'floor', triangleBudget: 300 },
+  { id: 'pickup.paper', node: 'PICKUP_Paper', size: [0.164, 0.26, 0.164], pivot: 'floor', triangleBudget: 300 },
+  { id: 'pickup.rope', node: 'PICKUP_Rope', size: [0.22, 0.17, 0.22], pivot: 'floor', triangleBudget: 300 },
+  { id: 'pickup.ink', node: 'PICKUP_Ink', size: [0.14, 0.255, 0.14], pivot: 'floor', triangleBudget: 300 },
+  { id: 'pickup.indigo', node: 'PICKUP_Indigo', size: [0.21, 0.21, 0.21], pivot: 'floor', triangleBudget: 300 },
+  { id: 'pickup.wood_scrap', node: 'PICKUP_WoodScrap', size: [0.2, 0.15, 0.2], pivot: 'floor', triangleBudget: 300 },
+];
+
 /** The playable character: 1.70 m tall, feet on the floor, with its idle and walk loops (GDD E2). */
 const PLAYER: readonly ModelSpec[] = [
   { id: 'player.hero', node: 'PLAYER_Hero', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 8000, animations: ['idle', 'walk'] },
 ];
 
-const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT, ...PLAYER];
+const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT, ...PICKUPS, ...PLAYER];
 
 function readGlbJson(path: string): GltfJson {
   const bytes = readFileSync(path);

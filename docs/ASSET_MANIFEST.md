@@ -70,6 +70,7 @@ Các vật sau không có trong bảng mục 3, nhưng đã được làm thành
 | Cổng cũ | `ENV_Gate_Pillar_West`, `_East`, `ENV_Gate_Beam`, `PROP_Lantern_Gate` | 4 |
 | Cửa tiệm | `ENV_House_Shop_Door` | 1 |
 | Bụi cây | `ENV_Bush_East`, `_West`, `_North` | 3 |
+| Vật nhặt được (GDD B4) | `pickup.bamboo`, `pickup.paper`, `pickup.rope`, `pickup.ink`, `pickup.indigo`, `pickup.wood_scrap` (gốc ở đáy giữa, đặt trên mặt đất) | 6 |
 
 ---
 
@@ -137,7 +138,8 @@ Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thê
 
 | Asset | Có GLB | Đã kiểm tra trên desktop | Đã kiểm tra trên Android |
 |---|---|---|---|
-| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 56 file | chưa thử |
+| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 66 file | chưa thử |
 | 47 vật trong hub (mục 3 và 3b) | có | nạp trong dev; cầu và tiệm sáng đúng khi bật cờ; gian hàng, cổng và đèn góc đã kiểm tra ở 30 m | chưa thử |
-| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 56 file | chưa thử |
+| Sáu vật nhặt được (mục 3b) | có | nạp trong dev; mỗi pickup hiện model thay cho hộp, đúng vị trí và vật liệu; đã xem bó tre và cuộn giấy trong trình duyệt | chưa thử |
+| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 66 file | chưa thử |
 | `dev.test_crate` (mục 7) | sinh bằng code | đã nạp trong Chrome (dev) | chưa thử |

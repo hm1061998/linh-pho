@@ -60,6 +60,12 @@
     { "id": "craft.lantern_frame", "source": { "kind": "url", "url": "/assets/craft_lantern_frame.glb" }, "idleAnimation": null },
     { "id": "craft.bamboo_rib", "source": { "kind": "url", "url": "/assets/craft_bamboo_rib.glb" }, "idleAnimation": null },
     { "id": "craft.engraving_lantern", "source": { "kind": "url", "url": "/assets/craft_engraving_lantern.glb" }, "idleAnimation": null },
+    { "id": "pickup.bamboo", "source": { "kind": "url", "url": "/assets/pickup_bamboo.glb" }, "idleAnimation": null },
+    { "id": "pickup.paper", "source": { "kind": "url", "url": "/assets/pickup_paper.glb" }, "idleAnimation": null },
+    { "id": "pickup.rope", "source": { "kind": "url", "url": "/assets/pickup_rope.glb" }, "idleAnimation": null },
+    { "id": "pickup.ink", "source": { "kind": "url", "url": "/assets/pickup_ink.glb" }, "idleAnimation": null },
+    { "id": "pickup.indigo", "source": { "kind": "url", "url": "/assets/pickup_indigo.glb" }, "idleAnimation": null },
+    { "id": "pickup.wood_scrap", "source": { "kind": "url", "url": "/assets/pickup_wood_scrap.glb" }, "idleAnimation": null },
     { "id": "player.hero", "source": { "kind": "url", "url": "/assets/player_hero.glb" }, "idleAnimation": "idle" },
     { "id": "dev.test_crate", "source": { "kind": "generated", "generator": "crate" }, "idleAnimation": "idle" }
   ]

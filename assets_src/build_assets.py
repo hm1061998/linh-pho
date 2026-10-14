@@ -48,6 +48,8 @@ PALETTE = {
     "MAT_Lips_A": ("#8E4A4A", 0.6, None, 0.0),
     "MAT_Belt_A": ("#3A2A1E", 0.7, None, 0.0),
     "MAT_StoneDark_A": ("#6B5C47", 0.9, None, 0.0),
+    "MAT_Hemp_A": ("#B89A5E", 0.8, None, 0.0),
+    "MAT_Indigo_A": ("#3F5FA8", 0.6, None, 0.0),
     "MAT_Foliage_A": ("#3E6B4F", 0.9, None, 0.0),
 }
 
@@ -599,6 +601,69 @@ def craft_engraving_lantern():
     shape.sphere("MAT_PaperGlow_A", (0.0, 0.0, 0.32), 0.18, u=24, v=16)  # body, y 0.14 to 0.50
     return [shape.finish("CRAFT_EngravingLantern")], []
 
+
+# ---- Pickups (GDD B4, E2) -----------------------------------------------------------------------------------------
+# Each material fits inside the 0.32 m cube the game uses for a pickup, stands on the floor (pivot at the bottom),
+# and is centred on x and y.
+
+
+def pickup_bamboo():
+    shape = Shape(["MAT_Bamboo_A", "MAT_Hemp_A"])
+    for dx in (-0.03, 0.03):  # four poles, bundled symmetrically about the centre
+        for dy in (-0.03, 0.03):
+            shape.cylinder("MAT_Bamboo_A", (dx, dy, 0.15), 0.02, 0.30, segments=10)
+    shape.cylinder("MAT_Hemp_A", (0.0, 0.0, 0.10), 0.05, 0.02, segments=12)  # a tie round the bundle
+    return [shape.finish("PICKUP_Bamboo")], []
+
+
+def pickup_paper():
+    shape = Shape(["MAT_Paper_A", "MAT_Hemp_A"])
+    shape.cylinder("MAT_Paper_A", (0.0, 0.0, 0.13), 0.08, 0.26, segments=16)  # a roll of dó paper
+    shape.cylinder("MAT_Hemp_A", (0.0, 0.0, 0.13), 0.082, 0.02, segments=16)  # its band
+    return [shape.finish("PICKUP_Paper")], []
+
+
+def pickup_rope():
+    shape = Shape(["MAT_Hemp_A"])
+    for z in (0.025, 0.085, 0.145):  # three turns of a coil
+        shape.cylinder("MAT_Hemp_A", (0.0, 0.0, z), 0.11, 0.05, segments=16)
+    return [shape.finish("PICKUP_Rope")], []
+
+
+def pickup_ink():
+    shape = Shape(["MAT_Ink_A", "MAT_WoodDark_A"])
+    shape.box("MAT_Ink_A", (0.0, 0.0, 0.08), (0.14, 0.14, 0.16))  # the stone body
+    shape.box("MAT_Ink_A", (0.0, 0.0, 0.195), (0.05, 0.05, 0.07))  # the neck
+    shape.box("MAT_WoodDark_A", (0.0, 0.0, 0.24), (0.07, 0.07, 0.03))  # the cap
+    return [shape.finish("PICKUP_Ink")], []
+
+
+def pickup_indigo():
+    shape = Shape(["MAT_Indigo_A", "MAT_WoodDark_A"])
+    shape.cylinder("MAT_Indigo_A", (0.0, 0.0, 0.09), 0.10, 0.18, segments=16)  # the jar
+    shape.cylinder("MAT_WoodDark_A", (0.0, 0.0, 0.195), 0.105, 0.03, segments=16)  # its lid
+    return [shape.finish("PICKUP_Indigo")], []
+
+
+def pickup_wood_scrap():
+    shape = Shape(["MAT_WoodLight_A", "MAT_WoodDark_A"])
+    # Three scraps crossed over the centre, so the pile is symmetric. The bottom one sits on the floor.
+    shape.box("MAT_WoodLight_A", (0.0, 0.0, 0.025), (0.20, 0.06, 0.05))
+    shape.box("MAT_WoodDark_A", (0.0, 0.0, 0.075), (0.06, 0.20, 0.05))
+    shape.box("MAT_WoodLight_A", (0.0, 0.0, 0.125), (0.12, 0.05, 0.05))
+    return [shape.finish("PICKUP_WoodScrap")], []
+
+
+ASSETS.update(
+    {
+        "pickup.bamboo": ("pickup_bamboo", pickup_bamboo),
+        "pickup.paper": ("pickup_paper", pickup_paper),
+        "pickup.rope": ("pickup_rope", pickup_rope),
+        "pickup.ink": ("pickup_ink", pickup_ink),
+        "pickup.indigo": ("pickup_indigo", pickup_indigo),
+        "pickup.wood_scrap": ("pickup_wood_scrap", pickup_wood_scrap),
+    }
+)
 
 ASSETS.update(
     {
