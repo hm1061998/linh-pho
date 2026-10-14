@@ -84,6 +84,8 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 
 ## D-013 — Camera 3/4 có giới hạn
 
+- **Trạng thái:** Góc nghiêng 45° đã thay bằng 40° (D-076). Các phần còn lại vẫn đúng.
+
 - **Chọn:** Góc nghiêng 45° cố định, yaw đổi bằng kéo ngang trên canvas (0.008 rad/px), zoom 30–90 m (wheel hoặc pinch), camera bám người chơi với `followRate` 6/s, tiêu điểm luôn nằm trong biên hub.
 - **Không xuyên mái nhà:** Ở khoảng cách tối thiểu 30 m, camera cao khoảng 21 m so với mặt đất. Mái nhà cao tối đa 4.8 m, nên camera không bị kẹt trong mái. Mờ mái (roof fade) chưa làm vì chưa cần.
 - **Yaw và di chuyển:** Phím W luôn đi về phía xa khỏi camera (`worldMoveDirection` theo yaw). Khi yaw đổi, W/D thay đổi theo hướng màn hình.
@@ -499,3 +501,43 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Hàng đợi cũ không có hạn. Khi khung hình bị chậm, một lần nhấn cũ có thể mở hội thoại hoặc nhặt đồ khi người chơi đã đi chỗ khác. Đây là kết quả điều tra phím E trong `docs/QA_REPORT.md` mục 9.
 - **Đánh đổi:** Một lần nhấn mà khung hình chậm hơn 250 ms bị bỏ, người chơi phải nhấn lại. Trong pane, nơi khung hình chỉ chạy khi có thao tác, E sẽ bị bỏ thay vì được xử lý muộn. Chọn 250 ms vì đủ cho một khung hình chậm và đủ ngắn để không kích hoạt nhầm. Đây là giá trị đề xuất, chưa đo trên máy thật.
 - **Kiểm chứng:** `queuedPress.test.ts` (7 test: biên thời gian, nhấn lại làm mới, huỷ). Trong trình duyệt (dev, gọi `app.tick` thủ công): nhấn E rồi chạy khung hình ngay thì hội thoại Bà Nghiêm mở; nhấn E, giả lập đã chờ 400 ms rồi chạy khung hình thì không mở. Typecheck đạt; `npm test` 50 file, 779 test đạt; build đạt.
+
+## D-075 — Camera mở ở 40 m thay vì 70 m
+
+- **Chọn:** `CAMERA_CONFIG.defaultDistance` từ 70 xuống 40 m. Góc nghiêng 45°, FOV 50°, khoảng zoom 30–90 m và yaw giữ nguyên. Khung zoom tối thiểu vẫn cho camera cao khoảng 21 m, nên mái không chặn camera.
+- **Lý do:** Ở 70 m, người chơi và NPC chỉ vài pixel (D-072). Ở 40 m, người chơi, NPC, gian hàng và đèn trung tâm đọc được cùng lúc, còn cầu và bờ sông nằm ở tiền cảnh. Đây là bước đầu của nâng cấp camera trong `docs/visual-upgrade/ART_UPGRADE_PLAN.md`.
+- **Đánh đổi:** Khung nhìn mở đầu gần hơn nên người chơi thấy ít vùng xa hơn cùng lúc; cần zoom ra để xem toàn cảnh. Góc nghiêng chưa hạ: GDD (dòng 38) ghi 40–50°, và D-013 chốt 45°. Hạ xuống 35–40° là quyết định thiết kế riêng, cần cập nhật D-013 trước.
+- **Kiểm chứng:** `typecheck` đạt; `npm test` 50 file, 779 test đạt (không test nào khóa giá trị 70); `npm run build` đạt. Trong trình duyệt (dev, cổng 5174): chụp ở mặc định 70 m và 40 m cùng một trạng thái; người chơi và NPC đọc được ở 40 m.
+
+## D-076 — Góc nghiêng camera 40° (thay 45° của D-013)
+
+- **Chọn:** `CAMERA_CONFIG.pitchDeg` từ 45 xuống 40°, là biên dưới của GDD (dòng 38: 40–50°). FOV, zoom 30–90 m và bám người chơi giữ nguyên. Ở khoảng cách tối thiểu 30 m, camera cao khoảng 19 m (30·sin 40°), vẫn trên mái cao tối đa 4.8 m.
+- **Lý do:** Người chơi yêu cầu bớt cảm giác nhìn từ trên xuống, giống bản đồ. 40° vẫn nằm trong GDD, nên không cần sửa GDD.
+- **Đánh đổi:** Góc thấp hơn làm đường từ camera tới nhân vật gần phẳng hơn, nên mái nhà sẽ chắn đường nhìn nhiều hơn ở cùng khoảng cách. `RoofFader` (D-072) xử lý việc này, nhưng cần kiểm lại khi chơi, vì chưa đo số lần mái bị mờ.
+- **Kiểm chứng:** `typecheck` đạt; `movement.test.ts` không phụ thuộc `CAMERA_CONFIG` nên không cần sửa. Trong trình duyệt (dev, cổng 5174): chụp ở 40 m, 40°; người chơi, NPC, gian hàng và đèn trung tâm đọc được. Chưa kiểm tra roof fade khi nhân vật đứng sau mái.
+
+## D-077 — Làn từ cầu lên quảng trường, cụm gian hàng và prop trang trí
+
+- **Chọn:** Gian hàng 3 dời về (13, 4), xe hàng về (13, 9). Thêm gian hàng 5 (3, 14) và 6 (13, 14) hai bên làn từ cầu lên quảng trường. Thêm 29 prop trang trí (thùng, giỏ, chum, ghế dài, thùng rượu, cờ, kệ cuộn giấy, bao vải, bó tre), đặt cạnh gian hàng, nhà tiệm, xưởng và quảng trường. Không dời NPC, trạm, glyph, quầy, nơi đặt đèn hay pickup.
+- **Lý do:** Quảng trường vuông trống và các gian hàng đối xứng khiến khu chợ giống bản đồ. Làn dẫn từ cầu vào đèn trung tâm để mắt người chơi đi theo.
+- **Đánh đổi:** Gian hàng 5 ở phía tây làn chặn đường chéo từ quảng trường tới cầu; người chơi phải đi vòng. Đường từ đông nam quảng trường qua cầu thì thông. Prop vẫn nhỏ ở khoảng cách mặc định; cần model tốt hơn (xem D-079).
+- **Kiểm chứng:** `npm test` 935 test đạt, gồm `gameplayContent.test.ts` (anchor không bị solid chặn). Trong trình duyệt (cổng 5174): chụp ở 40 m; mô phỏng đi từ quảng trường qua làn đông nam tới cầu, và từ cầu sang bờ bên kia đều tới đích.
+
+## D-078 — Đèn point ấm tại năm đèn landmark, không đổ bóng
+
+- **Chọn:** Năm đèn `omni` màu `#F2B759` đặt tại đèn trung tâm (range 9, cường độ 1.2), đèn cổng, đèn xưởng và hai đèn gian hàng 5–6 (range 5–6, cường độ 0.8). `castShadows: false`. Các đèn còn lại chỉ có emissive, theo Art Bible §4. Danh sách nằm trong `buildHubBlockout.ts` (`LANDMARK_LIGHTS`) và lấy vị trí từ `hubLayout.ts`.
+- **Lý do:** Có vùng sáng ấm quanh đèn trung tâm, mà vẫn chỉ có năm đèn thực để chạy được trên di động.
+- **Đánh đổi:** Chưa có bóng tiếp xúc (AO) và chưa có bloom. Chưa đo độ sáng bằng số; chỉ đánh giá bằng mắt.
+- **Kiểm chứng:** `typecheck` đạt. Trong trình duyệt: quảng trường có vùng sáng ấm quanh đèn trung tâm, không cháy sáng ở 40 m.
+
+## D-079 — Mái cong, đèn thùng bát giác, sơn mài, đom đóm và NPC chào
+
+- **Chọn:**
+  - Mái: `curved_hip_roof` nâng mép về phía góc (0.25 m cho nhà tiệm, 0.22 m cho xưởng), nằm trong đúng hộp kích thước cũ.
+  - Đèn: thùng bát giác 8 cạnh thay quả cầu, cùng kích thước (đèn gian hàng, đầu đèn góc, đèn trung tâm, đèn cổng, đèn xưởng).
+  - Vật liệu: `MAT_Lacquer_A` cho cổng, `MAT_Iron_A` cho dải đai thùng.
+  - Đom đóm: `Fireflies`, 14 hạt sáng ấm trôi quanh đèn trung tâm và làn gian hàng. Bật giảm hiệu ứng thì ẩn (`setReducedVfx`).
+  - NPC chào: `NpcRenderer.update(dt, player)` quay mặt NPC về người chơi khi trong 4.5 m (`GREET_RADIUS_M`). Quay mặt khi hội thoại vẫn như cũ.
+- **Lý do:** Silhouette kiến trúc và đèn cần đọc được ở khoảng cách mặc định. Chuyển động nhẹ tạo cảm giác có người sống trong khu chợ.
+- **Đánh đổi:** Chưa có hoạt ảnh chào, NPC chỉ quay mặt. Đom đóm là chấm sáng trơn, chưa có texture. Đèn thùng chỉ 8 cạnh, chưa có nan chi tiết hơn. Mái chưa có ngói riêng, vẫn là một màu đất nung.
+- **Kiểm chứng:** Test model đạt. Trong trình duyệt: đom đóm hiện; cổng đổi sang sơn mài; Bà Nghiêm xoay từ 14° sang 51° khi người chơi lại gần (góc tới người chơi là 51°), hội thoại đóng; mô phỏng tương tác E mở hội thoại `dlg_ba_nghiem` và đặt cờ `met_ba_nghiem`.

@@ -6,6 +6,7 @@ import { CameraController } from '../engine/camera/CameraController';
 import { InputService } from '../engine/input/InputService';
 import { InteractionSystem } from '../engine/interaction/InteractionSystem';
 import { SpiritBurst } from '../engine/fx/SpiritBurst';
+import { Fireflies, type FireflyAnchor } from '../engine/fx/Fireflies';
 import { NpcRenderer } from '../engine/npc/NpcRenderer';
 import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
@@ -50,6 +51,12 @@ export interface GameDebugSnapshot {
 const DIALOGUE_BLOCKER = 'dialogue';
 const PANEL_BLOCKER = 'panel';
 
+/** Where the fireflies drift: around the plaza lantern, and along the bridge lane between the two stalls. */
+const FIREFLY_ANCHORS: readonly FireflyAnchor[] = [
+  { x: 0, z: 0, radiusM: 5 },
+  { x: 8, z: 12, radiusM: 4 },
+];
+
 type TargetKind = 'npc' | 'pickup' | 'station' | 'placement' | 'glyph' | 'counter';
 
 /**
@@ -68,6 +75,7 @@ export class GameApp {
   private readonly craftStage: CraftStage;
   private readonly assetLoader: AssetLoader;
   private readonly fx: SpiritBurst;
+  private readonly fireflies: Fireflies;
   private readonly player: PlayerController;
   private readonly camera: CameraController;
   /** Fades the roofs that hide the player. Built in start, once the hub's roof entities exist. */
@@ -97,6 +105,7 @@ export class GameApp {
     this.world = new WorldView(app.root, GAME_CONTENT, HUB_WORLD, this.assetLoader);
     this.craftStage = new CraftStage(app.root, this.assetLoader, craftStationPositions());
     this.fx = new SpiritBurst(app.root);
+    this.fireflies = new Fireflies(app.root, FIREFLY_ANCHORS);
     this.player = new PlayerController(app.root, HUB_WORLD);
     this.camera = new CameraController(app.root, this.player.groundPosition, HUB_WORLD.bounds);
 
@@ -105,6 +114,7 @@ export class GameApp {
     this.cleanups.push(
       () => this.inputService.dispose(),
       () => this.npcs.dispose(),
+      () => this.fireflies.dispose(),
       () => this.world.dispose(),
       () => this.craftStage.dispose(),
       () => this.player.dispose(),
@@ -197,6 +207,7 @@ export class GameApp {
   /** Reduced effects: no lantern burst. Saved as a setting. */
   setReducedVfx(reduced: boolean): void {
     this.reducedVfx = reduced;
+    this.fireflies.setEnabled(!reduced);
   }
 
   /** Optional models, and their loading state. Every entry has a fallback, so none of them is required. */
@@ -301,11 +312,12 @@ export class GameApp {
     }
     this.sessionState.updateLantern(dt);
     this.fx.update(dt);
+    this.fireflies.update(dt);
     this.player.update(dt, frame.move, this.camera.yawRadians);
     this.camera.update(dt, this.player.groundPosition, frame.yawDelta, frame.zoomDelta);
     const { x, z } = this.player.groundPosition;
     this.roofs?.update(dt, this.camera.position, { x, y: HUB_WORLD.surfaceHeightAt({ x, z }) + PLAYER_HEAD_HEIGHT_M, z });
-    this.npcs.update(dt);
+    this.npcs.update(dt, this.player.groundPosition);
     this.craftStage.update(dt);
     this.interactionSystem.update(this.player.groundPosition);
     if (frame.interactPressed) {

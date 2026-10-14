@@ -134,8 +134,11 @@ export const HUB_PROPS: readonly BlockoutProp[] = [
   // A — Quảng trường: four stalls flanking the plaza.
   ...stall(1, 9, -4),
   ...stall(2, -9, -4),
-  ...stall(3, 9, 4),
+  ...stall(3, 13, 4),
   ...stall(4, -9, 4),
+  // The lane from the bridge to the plaza: two stalls on either side lead the eye to the central lantern.
+  ...stall(5, 3, 14),
+  ...stall(6, 13, 14),
 
   // Big central lantern on the plaza (landmark #1).
   solid(box('PROP_Lamp_Plaza_Base', [0, 0.25, 0], [1.6, 0.5, 1.6], STONE_DARK)),
@@ -153,8 +156,48 @@ export const HUB_PROPS: readonly BlockoutProp[] = [
   solid(sphere('ENV_Bush_West', [-23, 0.7, -6], [2.0, 1.4, 2.0], FOLIAGE)),
   solid(sphere('ENV_Bush_North', [3, 0.6, -20], [1.8, 1.2, 1.8], FOLIAGE)),
 
-  // Street dressing: a hand cart by the east bush, and a pot by the shop door and one by the counter.
-  solid(box('PROP_Cart', [16.5, 0.4, 9], [2.0, 0.8, 1.2], WOOD_WARM)),
+  // Street dressing: a hand cart on the bridge lane, and a pot by the shop door and one by the counter.
+  solid(box('PROP_Cart', [13, 0.4, 9], [2.0, 0.8, 1.2], WOOD_WARM)),
   solid(cylinder('PROP_Pot_1', [-19.5, 0.3, 13.8], [0.6, 0.6, 0.6], TERRACOTTA)),
   solid(cylinder('PROP_Pot_2', [-11.2, 0.3, 14.6], [0.6, 0.6, 0.6], TERRACOTTA)),
+
+  // Stage 3 dressing: small props grouped by what they belong to (stall, house, lane, square). None sits on an
+  // anchor, a pickup or the plaza. Solid ones are heavy things a customer would not walk through.
+  // By the east stall: a crate and a basket.
+  solid(box('PROP_Crate_1', [11.0, 0.3, -2.2], [0.8, 0.6, 0.6], WOOD_WARM)),
+  box('PROP_Basket_1', [7.0, 0.2, -2.0], [0.56, 0.4, 0.56], STONE),
+  // By the west stall: a crate and a clay jar.
+  solid(box('PROP_Crate_2', [-11.0, 0.3, -2.2], [0.8, 0.6, 0.6], WOOD_WARM)),
+  box('PROP_Jar_1', [-7.0, 0.275, -1.2], [0.5, 0.55, 0.5], TERRACOTTA),
+  // By the shop house: a basket by the west wall, a jar by the east wall, and a sack near the counter.
+  box('PROP_Basket_2', [-23.0, 0.2, 11.0], [0.56, 0.4, 0.56], STONE),
+  box('PROP_Jar_2', [-11.0, 0.275, 9.5], [0.5, 0.55, 0.5], TERRACOTTA),
+  box('PROP_Sack_1', [-9.0, 0.225, 16.5], [0.5, 0.45, 0.4], STONE),
+  // Benches on the lane and by the east stall.
+  solid(box('PROP_Bench_1', [-3.0, 0.225, 9.0], [1.6, 0.45, 0.5], WOOD_WARM)),
+  solid(box('PROP_Bench_2', [17.0, 0.225, 14.0], [1.6, 0.45, 0.5], WOOD_WARM)),
+  // Barrels by the gate and by the workshop.
+  solid(box('PROP_Barrel_1', [10.5, 0.4, -20.6], [0.6, 0.8, 0.6], WOOD_WARM)),
+  solid(box('PROP_Barrel_2', [-22.0, 0.4, -16.0], [0.6, 0.8, 0.6], WOOD_WARM)),
+  // Banners on poles: one on the north-west corner of the square, one west of the lane.
+  box('PROP_Banner_1', [-4.0, 1.1, -8.0], [0.5, 2.2, 0.06], TERRACOTTA),
+  box('PROP_Banner_2', [-14.5, 1.1, 2.0], [0.5, 2.2, 0.06], TERRACOTTA),
+  // A scroll rack behind the workshop, and a bundle of bamboo by the east bush.
+  solid(box('PROP_Rack_1', [-16.0, 0.8, -22.6], [1.2, 1.6, 0.4], WOOD_WARM)),
+  box('PROP_Bundle_1', [18.5, 0.08, 1.0], [0.56, 0.16, 0.18], STONE),
+  // Second wave: each stall gets three props beside it, on the side away from the lane and the plaza.
+  box('PROP_Jar_3', [11.4, 0.275, -5.6], [0.5, 0.55, 0.5], TERRACOTTA),
+  box('PROP_Basket_3', [-7.2, 0.2, -7.2], [0.56, 0.4, 0.56], STONE),
+  solid(box('PROP_Crate_3', [15.2, 0.3, 3.0], [0.8, 0.6, 0.6], WOOD_WARM)),
+  box('PROP_Basket_4', [15.0, 0.2, 5.6], [0.56, 0.4, 0.56], STONE),
+  box('PROP_Jar_4', [15.6, 0.275, 1.2], [0.5, 0.55, 0.5], TERRACOTTA),
+  solid(box('PROP_Crate_4', [-11.0, 0.3, 5.5], [0.8, 0.6, 0.6], WOOD_WARM)),
+  box('PROP_Jar_5', [-7.0, 0.275, 6.2], [0.5, 0.55, 0.5], TERRACOTTA),
+  box('PROP_Basket_5', [-11.2, 0.2, 2.2], [0.56, 0.4, 0.56], STONE),
+  box('PROP_Basket_6', [2.0, 0.2, 16.6], [0.56, 0.4, 0.56], STONE),
+  solid(box('PROP_Crate_5', [4.0, 0.3, 16.0], [0.8, 0.6, 0.6], WOOD_WARM)),
+  box('PROP_Jar_6', [5.2, 0.275, 13.6], [0.5, 0.55, 0.5], TERRACOTTA),
+  box('PROP_Basket_7', [15.0, 0.2, 13.0], [0.56, 0.4, 0.56], STONE),
+  solid(box('PROP_Crate_6', [15.4, 0.3, 15.6], [0.8, 0.6, 0.6], WOOD_WARM)),
+  box('PROP_Jar_7', [15.6, 0.275, 11.8], [0.5, 0.55, 0.5], TERRACOTTA),
 ];

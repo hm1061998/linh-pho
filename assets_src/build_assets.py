@@ -53,6 +53,9 @@ PALETTE = {
     "MAT_Foliage_A": ("#3E6B4F", 0.9, None, 0.0),
     "MAT_StoneLight_A": ("#B8A98A", 0.85, None, 0.0),
     "MAT_StonePale_A": ("#9C8F78", 0.9, None, 0.0),
+    # Stage 6: lacquer on the old gate (red-brown, glossier than wood) and iron bands on barrels.
+    "MAT_Lacquer_A": ("#7A2A22", 0.35, None, 0.0),
+    "MAT_Iron_A": ("#3A3F48", 0.5, None, 0.0),
 }
 
 
@@ -139,6 +142,33 @@ class Shape:
         r1 = self.bm.verts.new((ridge_half, 0.0, z_ridge))
         index = self.slot[mat]
         for vertices in ([b0, b1, r1, r0], [b2, b3, r0, r1], [b1, b2, r1], [b3, b0, r0]):
+            face = self.bm.faces.new(vertices)
+            face.material_index = index
+
+    def curved_hip_roof(self, mat: str, eaves_half, ridge_half: float, z_eaves: float, z_ridge: float, lift: float, steps: int = 8) -> None:
+        """A hip roof whose eaves curve up toward the corners, as on a Vietnamese roof. The eave sits at z_eaves in the
+        middle of each side and rises by `lift` at the corners. The roof stays inside the same box as hip_roof."""
+        bx, by = eaves_half
+        index = self.slot[mat]
+
+        def eave(x: float, y: float):
+            t = abs(x) / bx
+            return self.bm.verts.new((x, y, z_eaves + lift * t * t * t))
+
+        xs = [-bx + 2.0 * bx * i / steps for i in range(steps + 1)]
+        front = [eave(x, -by) for x in xs]
+        back = [eave(x, by) for x in xs]
+        r0 = self.bm.verts.new((-ridge_half, 0.0, z_ridge))
+        r1 = self.bm.verts.new((ridge_half, 0.0, z_ridge))
+        faces = []
+        # Each long side is a strip from the eave curve up to the ridge: a fan from r0 covers it.
+        for side in (front, back):
+            for i in range(steps):
+                faces.append([r0, side[i], side[i + 1]])
+            faces.append([r0, side[steps], r1])
+        faces.append([r0, back[0], front[0]])  # left hip
+        faces.append([r1, front[steps], back[steps]])  # right hip
+        for vertices in faces:
             face = self.bm.faces.new(vertices)
             face.material_index = index
 
@@ -246,7 +276,7 @@ def hub_env_house_shop_body():
 
 def hub_env_house_shop_roof():
     shape = Shape(["MAT_Terracotta_A"])
-    shape.hip_roof("MAT_Terracotta_A", (4.6, 3.6), 2.4, -0.4, 0.4)
+    shape.curved_hip_roof("MAT_Terracotta_A", (4.6, 3.6), 2.4, -0.4, 0.4, lift=0.25)
     return [shape.finish("ENV_House_Shop_Roof")], []
 
 
@@ -273,7 +303,7 @@ def hub_env_house_workshop_body():
 
 def hub_env_house_workshop_roof():
     shape = Shape(["MAT_Terracotta_A"])
-    shape.hip_roof("MAT_Terracotta_A", (4.1, 3.4), 2.6, -0.35, 0.35)
+    shape.curved_hip_roof("MAT_Terracotta_A", (4.1, 3.4), 2.6, -0.35, 0.35, lift=0.22)
     return [shape.finish("ENV_House_Workshop_Roof")], []
 
 
@@ -288,9 +318,7 @@ def hub_prop_workbench_workshop():
 
 
 def hub_prop_lantern_workshop():
-    shape = Shape(["MAT_LanternGlow_A"])
-    shape.sphere("MAT_LanternGlow_A", (0.0, 0.0, 0.0), 0.25, u=16, v=12)
-    return [shape.finish("PROP_Lantern_Workshop")], []
+    return _game_lantern("PROP_Lantern_Workshop", "MAT_LanternGlow_A", (0.5, 0.5, 0.5))
 
 
 def hub_env_bridge_deck():
@@ -499,6 +527,18 @@ def _game_ellipsoid(name: str, mat: str, size):
     return [shape.finish(name)], []
 
 
+def _game_lantern(name: str, mat: str, size):
+    """A paper lantern: an octagonal barrel, widest at the middle and narrower at both ends. Its bounding box is the size,
+    so it swaps in for the sphere of the same size."""
+    width, height = size[0], size[1]
+    shape = Shape([mat])
+    r_mid = width / 2.0
+    r_end = r_mid * 0.8
+    shape.cylinder(mat, (0.0, 0.0, -height / 4.0), r_end, height / 2.0, segments=8, radius2=r_mid)
+    shape.cylinder(mat, (0.0, 0.0, height / 4.0), r_mid, height / 2.0, segments=8, radius2=r_end)
+    return [shape.finish(name)], []
+
+
 def _game_pole(name: str, mat: str, diameter: float, height: float):
     shape = Shape([mat])
     shape.cylinder(mat, (0.0, 0.0, 0.0), diameter / 2, height, segments=16)
@@ -531,25 +571,25 @@ def _stall_canopy(name: str):
 def _hub_detail() -> dict:
     """Builders for the hub pieces beyond section 3, keyed by blockout id."""
     detail = {}
-    for i in range(1, 5):
+    for i in range(1, 7):
         stall = f"PROP_Stall_{i}"
         detail[f"{stall}_Table"] = partial(_stall_table, f"{stall}_Table")
         detail[f"{stall}_Canopy"] = partial(_stall_canopy, f"{stall}_Canopy")
         for side in ("PostWest", "PostEast"):
             detail[f"{stall}_{side}"] = partial(_game_box, f"{stall}_{side}", "MAT_WoodDark_A", (0.12, 2.5, 0.12))
-        detail[f"{stall}_Lantern"] = partial(_game_ellipsoid, f"{stall}_Lantern", "MAT_LanternGlow_A", (0.45, 0.45, 0.45))
+        detail[f"{stall}_Lantern"] = partial(_game_lantern, f"{stall}_Lantern", "MAT_LanternGlow_A", (0.45, 0.45, 0.45))
     for compass in ("NE", "NW", "SE", "SW"):
         lamp = f"PROP_Lamp_Corner_{compass}"
         detail[f"{lamp}_Pole"] = partial(_game_pole, f"{lamp}_Pole", "MAT_WoodDark_A", 0.18, 2.8)
-        detail[f"{lamp}_Head"] = partial(_game_ellipsoid, f"{lamp}_Head", "MAT_LanternGlow_A", (0.36, 0.36, 0.36))
+        detail[f"{lamp}_Head"] = partial(_game_lantern, f"{lamp}_Head", "MAT_LanternGlow_A", (0.36, 0.36, 0.36))
     detail["PROP_Lamp_Plaza_Base"] = partial(_game_box, "PROP_Lamp_Plaza_Base", "MAT_StoneDark_A", (1.6, 0.5, 1.6))
     detail["PROP_Lamp_Plaza_Pole"] = partial(_game_pole, "PROP_Lamp_Plaza_Pole", "MAT_WoodDark_A", 0.35, 4.2)
-    detail["PROP_Lamp_Plaza_Head"] = partial(_game_ellipsoid, "PROP_Lamp_Plaza_Head", "MAT_LanternGlow_A", (1.6, 1.6, 1.6))
+    detail["PROP_Lamp_Plaza_Head"] = partial(_game_lantern, "PROP_Lamp_Plaza_Head", "MAT_LanternGlow_A", (1.6, 1.6, 1.6))
     for side in ("West", "East"):
         name = f"ENV_Gate_Pillar_{side}"
-        detail[name] = partial(_game_box, name, "MAT_WoodDark_A", (0.8, 4.5, 0.8))
+        detail[name] = partial(_game_box, name, "MAT_Lacquer_A", (0.8, 4.5, 0.8))
     detail["ENV_Gate_Beam"] = partial(_game_box, "ENV_Gate_Beam", "MAT_Terracotta_A", (6.6, 0.6, 1.0))
-    detail["PROP_Lantern_Gate"] = partial(_game_ellipsoid, "PROP_Lantern_Gate", "MAT_LanternGlow_A", (0.7, 0.7, 0.7))
+    detail["PROP_Lantern_Gate"] = partial(_game_lantern, "PROP_Lantern_Gate", "MAT_LanternGlow_A", (0.7, 0.7, 0.7))
     detail["ENV_House_Shop_Door"] = partial(_game_box, "ENV_House_Shop_Door", "MAT_WoodDark_A", (1.4, 2.4, 0.12))
     detail["ENV_Bush_East"] = partial(_game_ellipsoid, "ENV_Bush_East", "MAT_Foliage_A", (2.4, 1.6, 2.4))
     detail["ENV_Bush_West"] = partial(_game_ellipsoid, "ENV_Bush_West", "MAT_Foliage_A", (2.0, 1.4, 2.0))
@@ -558,6 +598,119 @@ def _hub_detail() -> dict:
 
 
 ASSETS.update({f"hub.{name}": (name.lower(), builder) for name, builder in _hub_detail().items()})
+
+
+# ---- Hub dressing (Stage 3, prop density) ------------------------------------------------------------------------
+# Small props that fill the market between the stalls and the houses. Each is one GLB built around its own centre
+# (hub rule), so the size in hubLayout.ts is the size the file must have. Cylinders use 16 segments so that their
+# extreme points sit exactly on the bounding box.
+
+
+def _gbox(shape: Shape, mat: str, c, s) -> None:
+    """A box in game coordinates: centre c and size s, both (x, y up, z)."""
+    shape.box(mat, (c[0], -c[2], c[1]), (s[0], s[2], s[1]))
+
+
+def _dress_crate(name: str):
+    wood, dark = "MAT_WoodWarm_A", "MAT_WoodDark_A"
+    shape = Shape([wood, dark])
+    _gbox(shape, wood, (0.0, 0.0, 0.0), (0.76, 0.56, 0.56))
+    _gbox(shape, dark, (0.0, 0.28, 0.0), (0.8, 0.04, 0.6))  # lid rim, top
+    _gbox(shape, dark, (0.0, -0.28, 0.0), (0.8, 0.04, 0.6))  # base rim, bottom
+    for x in (-0.3, 0.3):
+        _gbox(shape, dark, (x, 0.0, 0.29), (0.05, 0.6, 0.02))  # cleats on the front face
+    return [shape.finish(name)], []
+
+
+def _dress_basket(name: str):
+    shape = Shape(["MAT_Bamboo_A"])
+    shape.cylinder("MAT_Bamboo_A", (0.0, 0.0, 0.0), 0.2, 0.4, segments=16, radius2=0.28)
+    return [shape.finish(name)], []
+
+
+def _dress_bench(name: str):
+    wood = "MAT_WoodWarm_A"
+    shape = Shape([wood])
+    _gbox(shape, wood, (0.0, 0.185, 0.0), (1.6, 0.08, 0.5))  # seat, top at y 0.225
+    for x in (-0.7, 0.7):
+        for z in (-0.2, 0.2):
+            _gbox(shape, wood, (x, -0.04, z), (0.08, 0.37, 0.08))  # legs, down to y -0.225
+    return [shape.finish(name)], []
+
+
+def _dress_barrel(name: str):
+    wood, iron = "MAT_WoodWarm_A", "MAT_Iron_A"
+    shape = Shape([wood, iron])
+    shape.cylinder(wood, (0.0, 0.0, 0.0), 0.29, 0.8, segments=16)
+    for y in (-0.25, 0.25):  # iron bands, at game heights y, which are Blender z
+        shape.cylinder(iron, (0.0, 0.0, y), 0.3, 0.06, segments=16)
+    return [shape.finish(name)], []
+
+
+def _dress_banner(name: str):
+    shape = Shape(["MAT_WoodDark_A", "MAT_Indigo_A"])
+    shape.cylinder("MAT_WoodDark_A", (0.0, 0.0, 0.0), 0.03, 2.2, segments=8)  # pole, from y -1.1 to 1.1
+    _gbox(shape, "MAT_Indigo_A", (0.0, 0.25, 0.0), (0.5, 1.2, 0.02))  # cloth hanging from the pole
+    return [shape.finish(name)], []
+
+
+def _dress_rack(name: str):
+    wood, paper = "MAT_WoodDark_A", "MAT_Paper_A"
+    shape = Shape([wood, paper])
+    for x in (-0.575, 0.575):
+        for z in (-0.175, 0.175):
+            _gbox(shape, wood, (x, 0.0, z), (0.05, 1.6, 0.05))  # four posts
+    for y in (-0.72, 0.0, 0.72):
+        _gbox(shape, wood, (0.0, y, 0.0), (1.2, 0.04, 0.4))  # three shelves
+    for shelf_y in (-0.72, 0.0):  # scrolls lie on the two lower shelves, so they stay inside the box
+        for z in (-0.08, 0.08):
+            shape.cylinder(paper, (0.0, -z, shelf_y + 0.08), 0.06, 1.0, segments=16, axis="x")
+    return [shape.finish(name)], []
+
+
+def _dress_bundle(name: str):
+    bamboo = "MAT_Bamboo_A"
+    shape = Shape([bamboo])
+    for y in (-0.04, 0.04):
+        for z in (-0.05, 0.05):
+            shape.cylinder(bamboo, (0.0, -z, y), 0.04, 0.56, segments=8, axis="x")  # four tubes lying along X
+    return [shape.finish(name)], []
+
+
+HUB_DRESSING = {
+    "PROP_Crate_1": partial(_dress_crate, "PROP_Crate_1"),
+    "PROP_Crate_2": partial(_dress_crate, "PROP_Crate_2"),
+    "PROP_Basket_1": partial(_dress_basket, "PROP_Basket_1"),
+    "PROP_Basket_2": partial(_dress_basket, "PROP_Basket_2"),
+    "PROP_Jar_1": partial(_game_ellipsoid, "PROP_Jar_1", "MAT_Terracotta_A", (0.5, 0.55, 0.5)),
+    "PROP_Jar_2": partial(_game_ellipsoid, "PROP_Jar_2", "MAT_Terracotta_A", (0.5, 0.55, 0.5)),
+    "PROP_Bench_1": partial(_dress_bench, "PROP_Bench_1"),
+    "PROP_Bench_2": partial(_dress_bench, "PROP_Bench_2"),
+    "PROP_Barrel_1": partial(_dress_barrel, "PROP_Barrel_1"),
+    "PROP_Barrel_2": partial(_dress_barrel, "PROP_Barrel_2"),
+    "PROP_Banner_1": partial(_dress_banner, "PROP_Banner_1"),
+    "PROP_Banner_2": partial(_dress_banner, "PROP_Banner_2"),
+    "PROP_Rack_1": partial(_dress_rack, "PROP_Rack_1"),
+    "PROP_Sack_1": partial(_game_ellipsoid, "PROP_Sack_1", "MAT_Hemp_A", (0.5, 0.45, 0.4)),
+    "PROP_Bundle_1": partial(_dress_bundle, "PROP_Bundle_1"),
+    # Second wave: three props beside each stall, so every stall has a small group of its own.
+    "PROP_Jar_3": partial(_game_ellipsoid, "PROP_Jar_3", "MAT_Terracotta_A", (0.5, 0.55, 0.5)),
+    "PROP_Jar_4": partial(_game_ellipsoid, "PROP_Jar_4", "MAT_Terracotta_A", (0.5, 0.55, 0.5)),
+    "PROP_Jar_5": partial(_game_ellipsoid, "PROP_Jar_5", "MAT_Terracotta_A", (0.5, 0.55, 0.5)),
+    "PROP_Jar_6": partial(_game_ellipsoid, "PROP_Jar_6", "MAT_Terracotta_A", (0.5, 0.55, 0.5)),
+    "PROP_Jar_7": partial(_game_ellipsoid, "PROP_Jar_7", "MAT_Terracotta_A", (0.5, 0.55, 0.5)),
+    "PROP_Basket_3": partial(_dress_basket, "PROP_Basket_3"),
+    "PROP_Basket_4": partial(_dress_basket, "PROP_Basket_4"),
+    "PROP_Basket_5": partial(_dress_basket, "PROP_Basket_5"),
+    "PROP_Basket_6": partial(_dress_basket, "PROP_Basket_6"),
+    "PROP_Basket_7": partial(_dress_basket, "PROP_Basket_7"),
+    "PROP_Crate_3": partial(_dress_crate, "PROP_Crate_3"),
+    "PROP_Crate_4": partial(_dress_crate, "PROP_Crate_4"),
+    "PROP_Crate_5": partial(_dress_crate, "PROP_Crate_5"),
+    "PROP_Crate_6": partial(_dress_crate, "PROP_Crate_6"),
+}
+
+ASSETS.update({f"hub.{name}": (name.lower(), builder) for name, builder in HUB_DRESSING.items()})
 
 
 # ---- Craft models (GDD B5, art bible BLENDER-P03) ----------------------------------------------------------------

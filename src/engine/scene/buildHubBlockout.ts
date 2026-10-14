@@ -7,6 +7,17 @@ import { HUB_PROPS, type BlockoutProp } from './hubLayout';
 const AMBIENT_HEX = '#4A5685';
 const KEY_LIGHT_HEX = '#FFD9A8';
 
+// Warm point lights at the landmark lanterns (Art Bible §4). Only these are real lights, and none casts a shadow. The other
+// lanterns are glow only, which keeps the number of lights low for mobile.
+const LANTERN_LIGHT_HEX = '#F2B759';
+const LANDMARK_LIGHTS: readonly { readonly propId: string; readonly range: number; readonly intensity: number }[] = [
+  { propId: 'PROP_Lamp_Plaza_Head', range: 9, intensity: 1.2 },
+  { propId: 'PROP_Lantern_Gate', range: 6, intensity: 0.8 },
+  { propId: 'PROP_Lantern_Workshop', range: 5, intensity: 0.8 },
+  { propId: 'PROP_Stall_5_Lantern', range: 5, intensity: 0.8 },
+  { propId: 'PROP_Stall_6_Lantern', range: 5, intensity: 0.8 },
+];
+
 /**
  * Adds the hub and its lights to `app.root`. Each prop is a blockout box, unless its model (`hub.<prop id>` in
  * assets.json) has loaded: then the model replaces the box, at the same position. The camera and player are separate
@@ -65,5 +76,23 @@ export function buildHubBlockout(app: pc.Application, assets: AssetLoader): void
       root.setLocalScale(sx, sy, sz);
     }
     app.root.addChild(root);
+  }
+
+  for (const landmark of LANDMARK_LIGHTS) {
+    const prop = HUB_PROPS.find((candidate) => candidate.id === landmark.propId);
+    if (!prop) {
+      throw new Error(`hubLayout.ts has no prop named ${landmark.propId}`);
+    }
+    const light = new pc.Entity(`LIGHT_${prop.id}`);
+    light.addComponent('light', {
+      type: 'omni',
+      color: colorFromHex(LANTERN_LIGHT_HEX),
+      intensity: landmark.intensity,
+      range: landmark.range,
+      castShadows: false,
+    });
+    const [px, py, pz] = prop.position;
+    light.setPosition(px, py, pz);
+    app.root.addChild(light);
   }
 }

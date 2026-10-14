@@ -2,7 +2,7 @@
 
 Cập nhật: 2026-10-14. Tài liệu này là hợp đồng giữa code và Blender. Mọi model 3D phải khớp với dòng tương ứng ở đây trước khi nhập vào game.
 
-**Tình trạng hiện tại:** 56 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 47 vật trong hub (mục 3 và 3b), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật còn lại (mặt đất, sông, lan can cầu, cột bên lề) vẫn là khối placeholder từ `src/engine/scene/hubLayout.ts`. **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
+**Tình trạng hiện tại:** 122 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 94 vật trong hub (mục 3, 3b và 3c), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật còn lại (mặt đất và mặt nước) vẫn là khối hộp từ `src/engine/scene/hubLayout.ts`, theo chủ đích (D-072). **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
 
 ---
 
@@ -76,6 +76,27 @@ Các vật sau không có trong bảng mục 3, nhưng đã được làm thành
 
 ---
 
+### 3c. Cụm chợ (nâng cấp đồ họa, giai đoạn 2–4)
+
+Hai gian hàng mới (5 và 6) nằm trên làn từ cầu lên quảng trường. Mười lăm loại prop trang trí, mỗi loại một hoặc nhiều vật, xếp cạnh gian hàng, quầy và nhà tiệm. Mái nhà có mép cong về phía góc. Đèn lồng là thùng bát giác có nan, thay quả cầu. Cổng cũ sơn mài, dải đai thùng bằng sắt. Kích thước khớp `hubLayout.ts`, được `furnitureModels.test.ts` kiểm tra.
+
+| Nhóm | Id (tiền tố `hub.`) | Kích thước (m) | Vật chặn |
+|---|---|---|---|
+| Thùng gỗ | `PROP_Crate_1..6` | 0.8 × 0.6 × 0.6 | có |
+| Giỏ tre | `PROP_Basket_1..7` | 0.56 × 0.4 × 0.56 | không |
+| Chum gốm | `PROP_Jar_1..7` | 0.5 × 0.55 × 0.5 | không |
+| Ghế dài | `PROP_Bench_1..2` | 1.6 × 0.45 × 0.5 | có |
+| Thùng rượu | `PROP_Barrel_1..2` | 0.6 × 0.8 × 0.6 | có |
+| Cờ treo | `PROP_Banner_1..2` | 0.5 × 2.2 × 0.06 | không |
+| Kệ cuộn giấy | `PROP_Rack_1` | 1.2 × 1.6 × 0.4 | có |
+| Bao vải | `PROP_Sack_1` | 0.5 × 0.45 × 0.4 | không |
+| Bó tre | `PROP_Bundle_1` | 0.56 × 0.16 × 0.18 | không |
+| Gian hàng 5, 6 | `PROP_Stall_5_*`, `PROP_Stall_6_*` | như gian hàng 1–4 | như gian hàng 1–4 |
+
+Mái và đèn đã thay model, giữ nguyên kích thước: `ENV_House_Shop_Roof`, `ENV_House_Workshop_Roof` (mái cong), `PROP_Stall_1..6_Lantern`, `PROP_Lamp_Corner_*_Head`, `PROP_Lamp_Plaza_Head`, `PROP_Lantern_Gate`, `PROP_Lantern_Workshop` (thùng bát giác). Cổng cũ `ENV_Gate_Pillar_*` dùng vật liệu `MAT_Lacquer_A`, dải đai thùng dùng `MAT_Iron_A`.
+
+---
+
 ## 4. Nhân vật và animation
 
 | Nhân vật | Chiều cao (m) | Tam giác tối đa | Animation bắt buộc | Animation tùy chọn | Ghi chú |
@@ -141,7 +162,7 @@ Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thê
 | Asset | Có GLB | Đã kiểm tra trên desktop | Đã kiểm tra trên Android |
 |---|---|---|---|
 | Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 83 file | chưa thử |
-| 47 vật trong hub (mục 3 và 3b) | có | nạp trong dev; cầu và tiệm sáng đúng khi bật cờ; gian hàng, cổng và đèn góc đã kiểm tra ở 30 m | chưa thử |
+| 94 vật trong hub (mục 3, 3b và 3c) | có | nạp trong dev; cầu và tiệm sáng đúng khi bật cờ; gian hàng, cổng và đèn góc đã kiểm tra ở 30 m; cụm chợ và mái cong đã kiểm tra ở 40 m (nâng cấp đồ họa) | chưa thử |
 | Sáu vật nhặt được (mục 3b) | có | nạp trong dev; mỗi pickup hiện model thay cho hộp, đúng vị trí và vật liệu; đã xem bó tre và cuộn giấy trong trình duyệt | chưa thử |
 | Trạm, bệ, glyph, quầy, Đèn Mộc (mục 3b) | có | nạp trong dev; mỗi vật chứa đúng model, thay placeholder khi nạp; glyph chỉ dấu ngọc sáng | chưa thử |
 | Nền, lan can, bờ sông, xe, chậu (mục 3b) | có | nạp trong dev; hub có đủ model trừ mặt đất và mặt sông; mái mờ khi che nhân vật (D-072) | chưa thử |

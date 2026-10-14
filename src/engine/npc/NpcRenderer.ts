@@ -21,6 +21,8 @@ const HALO_DIAMETER_M = 1.1;
 const HALO_THICKNESS_M = 0.02;
 const HALO_HUMAN_HEX = '#F2B759';
 const HALO_INTENSITY = 0.6;
+/** Within this distance an NPC turns to greet the player (Stage 8). Dialogue turns them too, once it opens. */
+const GREET_RADIUS_M = 4.5;
 
 interface NpcView {
   readonly root: pc.Entity;
@@ -106,10 +108,19 @@ export class NpcRenderer {
     }
   }
 
-  /** Advances the spirit bob. `dt` is already clamped and is zero while paused. */
-  update(dt: number): void {
+  /**
+   * Advances the spirit bob, and turns each NPC within GREET_RADIUS_M of `player` to face them. `dt` is already clamped and
+   * is zero while paused. Without a player point, NPCs only bob.
+   */
+  update(dt: number, player?: GroundPoint): void {
     this.elapsed += dt;
-    for (const view of this.views.values()) {
+    for (const [id, view] of this.views) {
+      if (player) {
+        const { x, z } = view.root.getLocalPosition();
+        if (Math.hypot(player.x - x, player.z - z) <= GREET_RADIUS_M) {
+          this.faceToward(id, player);
+        }
+      }
       if (view.isSpirit) {
         const y = view.baseY + Math.sin(this.elapsed * BOB_SPEED + view.phase) * BOB_AMPLITUDE_M;
         const { x, z } = view.root.getLocalPosition();
