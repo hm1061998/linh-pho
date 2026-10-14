@@ -1,6 +1,6 @@
 # Tiến độ — Linh Phố
 
-Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy riêng, có bằng chứng và một commit. Mục tiêu hiện tại: màn chơi đầu tiên (vertical slice Q00 → Q02, theo GDD mục C3 và H).
+Cập nhật: 2026-10-14. Theo quy trình Prompt 00 (A–F), mỗi module chạy riêng, có bằng chứng và một commit. Trạng thái so với định nghĩa «hoàn chỉnh» nằm trong [COMPLETION.md](COMPLETION.md). File này ghi lịch sử theo module; các mục «Chưa kiểm chứng», «Vấn đề đã biết» và «Việc tiếp theo» đã đồng bộ tới 14/10.
 
 ## Lịch sử commit
 
@@ -20,7 +20,8 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 | `4d9a078` | `feat(module-09)`: manifest tài sản, bộ nạp GLB có dự phòng, test GLB, preset chất lượng, F3/F4 |
 | `67ad06c` | `feat(module-10)`: báo cáo QA, smoke test chương và HUD, migration, chữ lớn, icon nội tuyến |
 | `bf28497` | `feat(module-11)`: cổng analytics và nền tảng, tài liệu riêng tư, checklist phát hành, ghi chú PWA |
-| (module-12) | `feat(module-12)`: thẻ câu chuyện có nguồn, kiểm tra thẻ |
+| `f7912cf` | `feat(module-12)`: thẻ câu chuyện có nguồn, kiểm tra thẻ |
+| `0625cdd` → `a5c41ad` | Sau Module 12: model 3D cho thế giới và nhân vật, chế tác 3D, «Chuyện Đằng Sau» và nhật ký, khung đèn hai ổ (D-069 đến D-073). Chi tiết ở mục «Sau Module 12» dưới đây |
 
 ## Đã hoàn thành
 
@@ -110,7 +111,7 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Preset chất lượng:** Thấp, di động, cao, đổi mật độ điểm ảnh; mặc định tự động theo màn hình cảm ứng (D-051).
 - **Công cụ đo:** F3 hiện FPS, lệnh vẽ, và số model (mọi bản). F4 mở bảng asset (chỉ dev) để tải và đặt thử (D-052).
 - **Dev-only:** Asset `dev.*` không được tải trong bản phát hành.
-- **Chưa làm:** Phát animation trên NPC (NPC vẫn là placeholder). Lightmap và bake. Đo số tam giác thật. Color grading (không cần ở MVP). Cuối cùng là lưới Blender thật.
+- **Chưa làm:** Lightmap và bake. Đo số tam giác thật. Color grading (không cần ở MVP). NPC đã có model và animation idle (commit `f830d8b`), nhưng chưa đo lại trên máy thật.
 
 ### Module 10 — QA, smoke test, khả năng truy cập, báo cáo bundle
 - **Báo cáo đầy đủ:** `docs/QA_REPORT.md`: bundle, tải về, 404, lỗi console, số lệnh vẽ, nhóm test, khả năng truy cập, thiết bị đã thử, và giới hạn. FPS được ghi là chưa đo (D-053).
@@ -136,13 +137,19 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
 - **Hướng dẫn:** `docs/STORY_CARDS.md` có bảng trạng thái, danh sách nguồn chưa đọc toàn văn, và cách chuyển sang `verified`.
 - **Cập nhật 14/10/2026 (D-069):** đã đọc ba nguồn qua WebFetch. Hai thẻ giấy dó và làng Bưởi chuyển sang `verified`. Thẻ thu hoạch vẫn `needs_review`. File VNPT không đọc được.
 
+### Sau Module 12 — chế tác 3D, thế giới, đèn (D-069 đến D-073)
+- **Thẻ và nhật ký (D-069, D-070):** hai thẻ văn hoá đã `verified`; «Chuyện Đằng Sau» mở sau nhiệm vụ, tách sự thật và hư cấu; phím J mở nhật ký. Phần sự thật còn dưới 50 từ (G4 còn biên tập).
+- **Chế tác 3D (D-071):** khung đèn và thanh tre rơi vào ổ; đường sáng quanh đèn khắc. Input vẫn ở panel HTML.
+- **Thế giới (D-072):** mọi vật nhìn thấy có model, trừ mặt đất và mặt nước; mái mờ khi che nhân vật; vầng sáng dưới NPC.
+- **Khung đèn hai ổ (D-073):** khớp công thức Đèn Mộc (hai tre). Lỗi này lộ ra khi chơi T1.
+
 ## Bằng chứng kiểm thử (đã chạy thật)
 
 | Lệnh | Kết quả |
 |---|---|
 | `npm run typecheck` | Đạt |
-| `npm test` | 42 file, 354 test, tất cả đạt (có smoke test HUD bằng jsdom) |
-| `npm run build` | Đạt. `index-*.js` 2,449.81 kB (gzip 647.02 kB), `index-*.css` 15.90 kB (gzip 3.34 kB). Hook dev và công cụ dev không có trong bundle. Id `dev.test_crate` nằm trong bundle như dữ liệu, không được tải |
+| `npm test` | 50 file, 779 test, tất cả đạt (14/10; có smoke test HUD bằng jsdom) |
+| `npm run build` | Đạt (14/10). `playcanvas-*.js` 2,082.79 kB (gzip 534.90 kB), `react-*.js` 218.77 kB (gzip 68.25 kB), `index-*.js` 183.31 kB (gzip 53.61 kB), `index-*.css` 16.65 kB (gzip 3.54 kB). Hook dev và công cụ dev không có trong bundle. Id `dev.test_crate` nằm trong bundle như dữ liệu, không được tải |
 
 Test thuần (chạy trong Node), theo nhóm:
 - **Module 01–03 và HUD:** `math`, `collision`, `movement`, `keyboardState`, `hubCollision`, `hubLayout`, `display`, `color`, `startupErrors`, `GameApp.startup`, `eventBus`, `translator`, `interactionSystem`, `dialogueSystem`, `contentValidation`, `interactPolicy`, `localeKeys`.
@@ -270,31 +277,33 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 
 ## Chưa kiểm chứng (phải nói rõ)
 - **FPS thực tế:** không đo được trong pane lúc này. Cần kiểm tra lại trên máy thật khi môi trường ổn định.
-- **Minigame chế tạo là placeholder HTML:** chưa có khung 3D, chưa xoay vật thể, chưa có tiếng «tách» (D-040). Kéo thả bằng cảm ứng thật chưa được thử trên thiết bị. Chỉ thử bằng chuột và click ref trong trình duyệt.
-- **Module 09 trong trình duyệt:** Chưa có model thật nên chưa đo được đường nhập Blender (hướng, pivot, vật liệu). Chưa thử nạp trên Android. Chưa phát animation trên NPC. Chưa đo số tam giác thật.
+- **Minigame chế tạo:** input vẫn là HTML. Khung 3D chỉ đọc trạng thái (D-071). Nam châm là thanh rơi có giảm tốc, tiếng «tách» vẫn từ HTML. Kéo thả bằng cảm ứng thật chưa được thử trên thiết bị. Chỉ thử bằng chuột và click ref trong trình duyệt.
+- **Model:** 83 GLB trong `public/assets`. Chưa đo số tam giác thật và chưa thử nạp trên Android.
 - **Module 08 trong trình duyệt:** âm thanh chưa được nghe (trình duyệt tự động không phát được để kiểm). Chưa thử ở chế độ riêng tư, nơi IndexedDB có thể bị chặn. Chưa thử mở hai tab cùng lúc, nơi hai bản lưu có thể ghi đè nhau. Menu tạm dừng chưa thử trên màn hình điện thoại.
 - **Module 07 trong trình duyệt:** chưa đi bộ tới quầy (mở bằng `openPanel`). Sự khác biệt đầu và cuối tiệm là có thật nhưng nhẹ, cần xem lại với mô hình thật (Module 09). Màn kết thúc không được lưu, nên tải lại thì hiện lại. Panel cửa hàng chưa thử trên màn hình điện thoại.
 - **Module 05 trong trình duyệt:** chưa thấy bằng mắt ba ký hiệu 3D và bước chuyển sáng của chúng, chưa quét ký hiệu bằng tay, chưa đi hết Q01 trong trình duyệt (chỉ có test đơn vị với nội dung thật), chưa thấy cầu sáng và hạt, chưa thử nút Q trên cảm ứng.
-- **Lưu và tải tiến trình:** chưa có. Mất khi tải lại trang (Module 08).
+- **Đi bộ bằng phím vật lý:** chưa làm. Lượt đi bộ ngày 14/10 dùng sự kiện phím giả lập và khung hình gọi tay (xem [QA_REPORT.md](QA_REPORT.md) mục 9).
 - **Đọc bằng trình đọc màn hình, giữ joystick lâu, pinch zoom, tạm dừng khi ẩn tab, thiết bị thật:** như các module trước.
 
 ## Vấn đề đã biết
-1. **Nội dung hội thoại và thông báo là bản nháp.** Module 12 sẽ biên tập và thêm `status` cho thẻ văn hoá.
-2. **Bàn nghề và bàn khắc dùng vạch sáng dưới đất.** Chưa có mô hình thật. Chấp nhận ở placeholder.
+1. **Nội dung hội thoại và thông báo còn là bản nháp.** Hai thẻ văn hoá đã `verified`, thẻ thu hoạch còn `needs_review`, và phần sự thật chưa đủ 50–100 từ (G4).
+2. **Đã xử lý (V3).** Bàn nghề và bàn khắc là model, không còn vạch sáng.
 3. **Vị trí tương tác chưa kiểm tra có hệ thống là không chặn đường đi.** Các điểm đã kiểm tra không nằm trong vật cản (test), nhưng đường đi tối ưu chưa được xem xét.
 4. **Lồng đèn soi vết** trong GDD được ánh xạ thành Đèn Vân Linh (D-026).
 5. **`speed` là vận tốc dự định** (D-014). Không ảnh hưởng vị trí.
 6. **Mất WebGL context** (GPU reset): chưa xử lý, chỉ có log lỗi.
 7. **Bundle đã tách thành ba chunk:** engine 2.08 MB (535 kB gzip), React 219 kB, game 159 kB. Vẫn chưa tải lười engine. Xem `docs/QA_REPORT.md` mục 1 và D-065.
 8. **Copy hard-code đã chuyển sang locale** ở Module 08. Chỉ còn tên "Tiếng Việt" và "English" trong menu là viết cứng, vì đó là tên ngôn ngữ.
-9. **Hai tab cùng mở** có thể ghi đè bản lưu của nhau. Chưa khoá đa tab, sẽ xem lại ở Module 10 nếu cần.
+9. **Đã xử lý (D-066).** Web Locks giữ một tab; tab thứ hai hiện thông báo và chờ. Trình duyệt không có Web Locks thì vẫn có thể ghi đè.
 10. **Bộ sinh test GLB** nằm trong bundle phát hành (vài trăm byte mã), dù asset `dev.*` không được tải. Chấp nhận được ở MVP, nhưng Module 10 có thể tách ra nếu bundle cần gọn.
+11. **Phím E có vẻ bị bỏ qua trong pane.** Đã điều tra 14/10: không có lỗi logic; pane chỉ chạy khung hình khi có thao tác. Đã thêm hạn 250 ms cho lần nhấn đang chờ (D-074), nên lần nhấn cũ không kích hoạt muộn. Chưa đo trên máy có khung hình liên tục.
+12. **Đèn Vân Linh chưa có vật trong thế giới** (V5). Chỉ có trong bàn khắc và kho.
 
 ## Việc tiếp theo
-- **Đã xong các module 00–12 theo prompt kit.** Phần còn lại không thể làm trong môi trường này: thiết bị thật, FPS thật, lưới Blender thật, và chính sách riêng tư đã duyệt.
+- **Đã xong các module 00–12, và các mục G và V trong [COMPLETION.md](COMPLETION.md), trừ V5.** Phần còn lại cần thiết bị thật, người thật hoặc pháp lý: FPS thật, Android, iOS, Firefox, Safari, trình đọc màn hình thật, playtest, và chính sách riêng tư đã duyệt.
 - **Trước khi gọi là "chơi thử được":** Làm các việc trong mục 8 của `docs/QA_REPORT.md`. Đo FPS thật trên desktop và Android, thử cảm ứng và xoay ngang trên điện thoại, thử Firefox và Safari. Cần thiết bị thật, nên không làm được trong môi trường này.
-- **Song song:** lưới Blender thật theo `docs/ASSET_MANIFEST.md`, bắt đầu bằng khối kiểm tra pipeline.
-- **Nợ kỹ thuật đã biết:** trình đọc màn hình chưa thử với phần mềm thật. Đổi phím, khoá đa tab và tách chunk đã làm (D-065 đến D-068).
+- **Song song:** đối chiếu 83 model với `docs/ASSET_MANIFEST.md` (kích thước, số tam giác, tên node).
+- **Nợ kỹ thuật đã biết:** trình đọc màn hình chưa thử với phần mềm thật. Đã làm: tách chunk (D-065), khoá đa tab (D-066), rà soát focus (D-067), đổi phím (D-068).
 
 ## Checklist kiểm thử thủ công (Module 07, Q02)
 - [ ] Hoàn thành Q01. Quầy tiệm (gần cửa tiệm) hiện Q02 "Phiên Chợ Đầu Tiên" trong bảng nhiệm vụ.

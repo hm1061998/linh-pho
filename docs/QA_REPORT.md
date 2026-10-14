@@ -99,11 +99,11 @@ Lệnh: `npm test` (Vitest). Kết quả: 41 tệp, 340 test, tất cả đạt.
 - Đo FPS và thời gian khung hình trên Chrome desktop, và trên ít nhất một điện thoại Android tầm trung.
 - Thử toàn bộ Q00–Q02 trên điện thoại (cảm ứng, xoay ngang, minigame kéo thả).
 - Thử trên Firefox và Safari.
-- Thay ít nhất một hình khối bằng model GLB thật theo `docs/ASSET_MANIFEST.md`, và đo lại.
+- Đo lại FPS với model GLB trên máy thật. Bước thay hình khối bằng GLB đã xong: có 83 model trong `public/assets`.
 
 ## 9. Lượt chơi Q00 → Q02 (T1, bản dev trên trình duyệt)
 
-Cách làm: bắt đầu lại từ Q00 (Menu → Bắt đầu lại). Phím E, Q, Enter, nút trong panel và minigame là thao tác thật. Vị trí nhân vật đặt bằng hook dev (`window.__linhPho.game.player.position`) vì đi bộ tới từng vật mất quá nhiều bước; vì vậy lượt này không kiểm lại va chạm khi đi.
+Cách làm: bắt đầu lại từ Q00 (Menu → Bắt đầu lại). Phím E, Q, Enter, nút trong panel và minigame là thao tác thật. Vị trí nhân vật đặt bằng hook dev (`window.__linhPho.game.player.position`) vì đi bộ tới từng vật mất quá nhiều bước; vì vậy lượt này không kiểm lại va chạm khi đi (xem đi bộ thử bên dưới).
 
 | Chặng | Việc đã làm | Kết quả kiểm tra |
 |---|---|---|
@@ -115,7 +115,9 @@ Cách làm: bắt đầu lại từ Q00 (Menu → Bắt đầu lại). Phím E, 
 
 - **Công thức Đèn Mộc lệch số ổ (đã sửa, D-073).** Khung trước đó có ba ổ nhưng công thức chỉ trừ hai tre, nên thanh thứ ba được lắp mà không tốn nguyên liệu. Nay khung có hai ổ, khớp hai tre của công thức.
 - **Thẻ «Chuyện Đằng Sau» chặn input.** Thẻ mở tự động sau mỗi nhiệm vụ (Q00 mở hai thẻ nối nhau) và chặn phím cho tới khi đóng. Đây là thiết kế đúng theo GDD B6.
-- **Phím E đôi khi bị bỏ qua.** Một số lần nhấn E ngay sau khi đổi vị trí hoặc sau khi bấm nút đóng panel bằng chuột không được nhận; lần nhấn thứ hai thì được. Chưa cô lập được nguyên nhân.
+- **Phím E đôi khi bị bỏ qua: đã điều tra 14/10, không thấy lỗi trong code.** Nhấn E được xếp vào hàng đợi (`InputService.interactQueued`) và xử lý ở khung hình kế tiếp. Trong pane, engine chỉ chạy khung hình khi có thao tác (chụp màn hình, phím). Đã xác nhận: đặt người chơi cạnh Bà Nghiêm rồi nhấn E thì hàng đợi vẫn `true` và khung hình đứng yên; chụp màn hình thì khung hình chạy, hàng đợi được xử lý và hội thoại mở. Trong code, phím chỉ mất khi cửa sổ mất focus hoặc khi một blocker mới được bật trước khung hình kế tiếp (`resetTransientInput`). Từ D-074, lần nhấn chờ quá 250 ms bị bỏ, nên không còn kích hoạt muộn. Trên máy có khung hình liên tục, độ trễ dưới một khung hình (chưa đo trên máy thật).
 - Ảnh chụp từng chặng nằm trong phiên làm việc, không lưu vào repo.
+- **Đi bộ thử (14/10).** Người chơi đi tới 29 mục tương tác: 4 NPC, 18 vật nhặt, 2 trạm, 1 bệ đặt, quầy tiệm và 3 glyph (bật Đèn Soi Linh để chúng hiện). Tới được 29/29. Hai mục cần qua cầu (Ông Độ và glyph cầu) đều tới được, vì sông chặn mọi chỗ ngoài cầu (x khoảng 6.9 đến 9.1). Một điểm kẹt khi đi thẳng (quanh (-19.5, 6.65), gần glyph bảng hiệu) thoát được bằng đi vòng. Phương pháp: phím là sự kiện `KeyboardEvent` gửi vào `window`, khung hình gọi bằng tay (`app.tick`) với dt 1/30 s. Hiệu chỉnh: giữ phím 1 s đi khoảng 3.9 m theo cả bốn hướng, vận tốc đạt 4.2 m/s. Chưa kiểm bằng phím vật lý và chưa kiểm xuyên vật bằng mắt.
+- **Tầm tương tác chồng nhau.** Khi hai mục cùng nằm trong tầm 2 m, focus lấy mục gần nhất. Đứng gần Cô Lam có thể focus là giấy dó bên cạnh (`pk_paper_4`), nên E nhặt giấy thay vì nói chuyện. Đây là thiết kế hiện tại; nên xem lại khi playtest.
 
 Kết luận: luồng Q00 → Q02 đi hết và các cờ hoàn thành đều bật. Lỗi số tre đã sửa ở D-073 và được kiểm lại trong trình duyệt.

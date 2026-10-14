@@ -66,7 +66,7 @@
 
 ### B5. Chế tạo 3D không phải chỉ progress bar
 
-1. **Lắp Khung Đèn** (MVP): kéo/chọn từng thanh tre vào 3 vị trí snap trên một đối tượng 3D; có hiệu ứng nam châm, tiếng «tách», xoay vật thể; hỗ trợ nút auto-align nhẹ trên mobile, nhưng vẫn tương tác.
+1. **Lắp Khung Đèn** (MVP): kéo/chọn từng thanh tre vào 2 ổ trên một đối tượng 3D (hai tre, đúng công thức Đèn Mộc; D-073); có hiệu ứng nam châm, tiếng «tách», xoay vật thể; hỗ trợ nút auto-align nhẹ trên mobile, nhưng vẫn tương tác.
 2. **Vẽ Nét Sáng** (MVP): chạm các điểm khắc theo thứ tự đã khám phá; phản hồi bằng một đường sáng chạy vòng quanh đèn. Câu đố thứ tự là từ dấu vết khi khám phá, kết nối hai mechanic.
 3. **Nhuộm Giấy** (post-MVP): phối màu/sắp họa tiết; dùng các mẫu được nghiên cứu riêng và có thông tin nguồn.
 
