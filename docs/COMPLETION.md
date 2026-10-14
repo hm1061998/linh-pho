@@ -30,7 +30,7 @@ Không nằm trong định nghĩa (cần thiết bị hoặc người khác, mô
 | Mã | Mục | Nguồn | Trạng thái |
 |---|---|---|---|
 | V1 | Nhân vật người chơi: model, Idle và Walk | GDD E2, Art bible §5 | xong: model cùng bộ xương với NPC, idle khi đứng và walk khi đi (đo được góc xương đùi thay đổi khi đi, đứng yên khi dừng) |
-| V2 | Pickup cho 6 loại vật liệu: tre, giấy dó, mực, màu lam, dây gai, gỗ vụn | GDD B4 | chưa (đang là hộp) |
+| V2 | Pickup cho 6 loại vật liệu: tre, giấy dó, mực, màu lam, dây gai, gỗ vụn | GDD B4 | xong: 6 model thay hộp, gốc ở đáy giữa, kích thước và vật liệu kiểm bằng `furnitureModels.test.ts`; trong trình duyệt mỗi pickup có model đúng vị trí, hộp chỉ còn khi model chưa nạp |
 | V3 | Bàn nghề, bàn khắc, điểm trạm | GDD E2 | chưa (đang là hộp) |
 | V4 | Chân đèn trước tiệm và vật đặt lên đó | GDD C3 Q00 | chưa |
 | V5 | Đèn Mộc và Đèn Vân Linh (2 mẫu craftable) | GDD E2 | chưa |

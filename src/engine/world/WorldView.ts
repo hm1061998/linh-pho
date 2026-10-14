@@ -6,7 +6,7 @@ import type { WalkableWorld } from '../player/collision';
 import { colorFromHex } from '../scene/colorFromHex';
 
 /**
- * Placeholder world objects built from content: pickups (small boxes in the item's color), stations (a glowing
+ * World objects built from content: pickups (the item's model once loaded, else a small box in the item's color), stations (a glowing
  * floor marker), placements (a pedestal whose lamp lights up when filled), glyphs (glowing discs that show only in
  * spirit phase), and the bridge glow that Q01 unlocks. Each frame is driven by session snapshots, not by its own
  * state, so reloads and rules changes stay consistent.
@@ -45,6 +45,13 @@ export interface WorldContent {
   readonly placements: readonly PlacementDef[];
   readonly glyphs: readonly GlyphDef[];
   readonly shop: ShopContent;
+}
+
+interface PickupView {
+  readonly root: pc.Entity;
+  readonly itemId: string;
+  /** The placeholder box. Null once the item's model has replaced it. */
+  placeholder: pc.Entity | null;
 }
 
 interface PlacementView {
@@ -99,7 +106,7 @@ function cloneGlowMaterials(node: pc.GraphNode | null, emissiveHex: string): pc.
 }
 
 export class WorldView {
-  private readonly pickupViews = new Map<string, pc.Entity>();
+  private readonly pickupViews = new Map<string, PickupView>();
   private readonly placementViews = new Map<string, PlacementView>();
   private readonly glyphViews = new Map<string, GlyphView>();
   private readonly slotViews = new Map<string, SlotView>();
@@ -113,12 +120,16 @@ export class WorldView {
     this.parent = parent;
     this.assets = assets;
     for (const pickup of content.pickups) {
-      const entity = this.box(`PICKUP_${pickup.id}`, colorFromHex(ITEM_COLORS[pickup.itemId] ?? FALLBACK_COLOR));
-      entity.setLocalScale(PICKUP_SIZE_M, PICKUP_SIZE_M, PICKUP_SIZE_M);
+      // The root stands on the ground. The placeholder box sits on it until attachPickupModels swaps in the item's model.
+      const root = new pc.Entity(`PICKUP_${pickup.id}`);
       const surface = world.surfaceHeightAt(pickup.position);
-      entity.setLocalPosition(pickup.position.x, surface + PICKUP_SIZE_M / 2, pickup.position.z);
-      parent.addChild(entity);
-      this.pickupViews.set(pickup.id, entity);
+      root.setLocalPosition(pickup.position.x, surface, pickup.position.z);
+      const placeholder = this.box('PickupBox', colorFromHex(ITEM_COLORS[pickup.itemId] ?? FALLBACK_COLOR));
+      placeholder.setLocalScale(PICKUP_SIZE_M, PICKUP_SIZE_M, PICKUP_SIZE_M);
+      placeholder.setLocalPosition(0, PICKUP_SIZE_M / 2, 0);
+      root.addChild(placeholder);
+      parent.addChild(root);
+      this.pickupViews.set(pickup.id, { root, itemId: pickup.itemId, placeholder });
     }
 
     for (const station of content.stations) {
@@ -182,11 +193,30 @@ export class WorldView {
     this.buildShop(content.shop, world);
   }
 
+  /**
+   * Swaps each pickup's placeholder box for its item's model, when that model has loaded. A pickup whose model is missing
+   * keeps its box. Safe to call twice: a pickup that already has its model is skipped.
+   */
+  attachPickupModels(): void {
+    for (const view of this.pickupViews.values()) {
+      if (!view.placeholder) {
+        continue;
+      }
+      const model = this.assets.instantiateLoaded(`pickup.${view.itemId}`);
+      if (!model) {
+        continue;
+      }
+      view.placeholder.destroy();
+      view.placeholder = null;
+      view.root.addChild(model);
+    }
+  }
+
   /** Brings every world object in line with the session. Safe to call often. */
   sync(snapshot: SessionSnapshot): void {
     const collected = new Set(snapshot.collectedPickups);
-    for (const [pickupId, entity] of this.pickupViews) {
-      entity.enabled = !collected.has(pickupId);
+    for (const [pickupId, view] of this.pickupViews) {
+      view.root.enabled = !collected.has(pickupId);
     }
 
     const filled = new Set(snapshot.placed);

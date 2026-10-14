@@ -59,7 +59,7 @@ Cập nhật: 2026-10-13. Theo quy trình Prompt 00 (A–F), mỗi module chạy
   - `QuestSystem`: mục tiêu đếm nguồn riêng biệt, thưởng đúng một lần, tự kích hoạt nhiệm vụ kế tiếp (D-028).
   - `GameSession` (`domain/GameSession.ts`): nối cờ, ví, kho, chế tạo, nhiệm vụ, hội thoại, điểm đặt. Không phụ thuộc engine (D-029).
   - `validateGameplay.ts`: kiểm tra vật phẩm, công thức, nhiệm vụ và tham chiếu chéo. Mục sai bị loại có báo lỗi.
-- **Engine:** `WorldView` vẽ vật nhặt được (hộp theo màu vật phẩm), trạm (vạch sáng dưới đất), điểm đặt (bệ đèn, đầu đèn sáng khi đã đặt). `GameApp` định tuyến tương tác theo loại (`npc`, `pickup`, `station`, `placement`) (D-030).
+- **Engine:** `WorldView` vẽ vật nhặt được (model theo vật phẩm, hộp theo màu khi model chưa nạp), trạm (vạch sáng dưới đất), điểm đặt (bệ đèn, đầu đèn sáng khi đã đặt). `GameApp` định tuyến tương tác theo loại (`npc`, `pickup`, `station`, `placement`) (D-030).
 - **HUD:** thanh tiền và uy tín (góc trên phải), bảng nhiệm vụ hiện tại (góc trên trái), thông báo ngắn, panel bàn nghề (xác nhận tạm thời, D-031), kho đồ (phím I).
 - **Q00 đầy đủ:** nói chuyện với Bà Nghiêm → nhặt 2 tre, 1 giấy dó, 1 dây gai → chế tạo Đèn Mộc ở bàn nghề → đặt lên chân đèn trước tiệm → nhận 30 Xu Đèn đúng một lần, đặt cờ `q00_complete` và `shop_lamp_lit`, cấp shop level 1.
 ### Module 05 — Đèn Soi Linh, ký hiệu, puzzle thứ tự, Q01
