@@ -115,7 +115,7 @@ Cách làm: bắt đầu lại từ Q00 (Menu → Bắt đầu lại). Phím E, 
 
 - **Công thức Đèn Mộc lệch số ổ.** Minigame lắp khung có ba ổ (`AssemblyGame`, ba thanh tre) nhưng công thức `recipe_wooden_lantern` chỉ trừ 2 tre. Thanh thứ ba được lắp mà không lấy từ kho, nên khung đủ ba thanh với 2 tre. GDD mâu thuẫn: dòng 57 và mục nhiệm vụ Q00 ghi 2 tre, dòng 69 ghi 3 vị trí snap. Chưa sửa vì cần quyết định thiết kế.
 - **Thẻ «Chuyện Đằng Sau» chặn input.** Thẻ mở tự động sau mỗi nhiệm vụ (Q00 mở hai thẻ nối nhau) và chặn phím cho tới khi đóng. Đây là thiết kế đúng theo GDD B6.
-- **Phím E đôi khi bị bỏ qua.** Một số lần nhấn E ngay sau khi đổi vị trí hoặc sau khi bấm nút đóng panh bằng chuột không được nhận; lần nhấn thứ hai thì được. Chưa cô lập được nguyên nhân.
+- **Phím E đôi khi bị bỏ qua.** Một số lần nhấn E ngay sau khi đổi vị trí hoặc sau khi bấm nút đóng panel bằng chuột không được nhận; lần nhấn thứ hai thì được. Chưa cô lập được nguyên nhân.
 - Ảnh chụp từng chặng nằm trong phiên làm việc, không lưu vào repo.
 
 Kết luận: luồng Q00 → Q02 đi hết và các cờ hoàn thành đều bật. Còn một mục mở là số tre của Đèn Mộc (xem trên).
