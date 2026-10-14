@@ -71,6 +71,11 @@ export class CameraController {
     return this.distance;
   }
 
+  /** Where the camera stands in the world. Returns a copy, so a caller cannot move the camera through it. */
+  get position(): pc.Vec3 {
+    return this.entity.getPosition().clone();
+  }
+
   /**
    * Applies one frame of camera input and eases toward the follow point.
    * `follow` is normally the player's ground position. `yawDelta` is radians of drag. `zoomDelta` is meters.

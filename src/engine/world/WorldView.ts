@@ -4,12 +4,13 @@ import type { SessionSnapshot } from '../../domain/GameSession';
 import type { AssetLoader } from '../assets/AssetLoader';
 import type { WalkableWorld } from '../player/collision';
 import { colorFromHex } from '../scene/colorFromHex';
+import { cloneGlowMaterials, standardInstances } from '../scene/materialClones';
 
 /**
- * World objects built from content: pickups (the item's model once loaded, else a small box in the item's color), stations (a glowing
- * floor marker), placements (a pedestal whose lamp lights up when filled), glyphs (glowing discs that show only in
- * spirit phase), and the bridge glow that Q01 unlocks. Each frame is driven by session snapshots, not by its own
- * state, so reloads and rules changes stay consistent.
+ * World objects built from content: pickups, stations, placements (a pedestal with a lantern set on it), glyphs (stone
+ * tablets that show only in spirit phase), the shop counter and its display plinths, and the bridge glow that Q01
+ * unlocks. Every object starts as a placeholder, and attachModels swaps in its model once it has loaded. Each frame is
+ * driven by session snapshots, not by its own state, so reloads and rules changes stay consistent.
  */
 
 const ITEM_COLORS: Readonly<Record<string, string>> = {
@@ -28,6 +29,10 @@ const LAMP_GOLD = '#F2B759';
 const SPIRIT_JADE = '#65D4BD';
 const PEDESTAL_COLOR = '#6B5C47';
 const PICKUP_SIZE_M = 0.32;
+const PLACED_ITEM_SIZE_M = 0.36;
+const PLACEMENT_PEDESTAL_SIZE_M: readonly [number, number, number] = [0.7, 1.0, 0.7];
+const SLOT_PLATE_SIZE_M = 1.1;
+const SLOT_PLATE_HEIGHT_M = 0.05;
 const BRIDGE_DECK_NAME = 'ENV_Bridge_Deck';
 const BRIDGE_GLOW_INTENSITY = 0.9;
 const SHOP_GLOW_NODES: readonly string[] = ['ENV_House_Shop_Body', 'PROP_Signboard_Shop'];
@@ -38,6 +43,8 @@ const COUNTER_COLOR = '#6B4A2F';
 const COUNTER_SIZE_M: readonly [number, number, number] = [1.2, 0.9, 0.6];
 /** A hanging piece (a sphere) sits this high. Anything else stands on the floor. */
 const HANGING_HEIGHT_M = 1.3;
+/** The material name the glyph models use for their jade mark. Only this material glows; the stone does not. */
+const JADE_MATERIAL = 'MAT_Jade_A';
 
 export interface WorldContent {
   readonly pickups: readonly PickupDef[];
@@ -47,21 +54,14 @@ export interface WorldContent {
   readonly shop: ShopContent;
 }
 
-interface PickupView {
-  readonly root: pc.Entity;
-  readonly itemId: string;
-  /** The placeholder box. Null once the item's model has replaced it. */
-  placeholder: pc.Entity | null;
-}
-
 interface PlacementView {
-  readonly headMaterial: pc.StandardMaterial;
   readonly placed: pc.Entity;
 }
 
 interface GlyphView {
   readonly root: pc.Entity;
-  readonly material: pc.StandardMaterial;
+  /** The materials that glow. Before the model loads this is the placeholder disc's material. */
+  materials: pc.StandardMaterial[];
 }
 
 interface SlotView {
@@ -72,45 +72,23 @@ interface SlotView {
 }
 
 /**
- * The mesh instances with a standard material at or under a node. That is the blockout box itself, or each mesh of a
- * model placed under the node. A model can have one mesh per material, so the mesh instance is the unit that counts.
+ * One object's placeholder and where its model goes. `container` stays in the scene for the object's whole life, so the
+ * session can show and hide it. attachModels then moves the model into the container and drops the placeholder.
  */
-function standardInstances(node: pc.GraphNode | null): pc.MeshInstance[] {
-  if (!(node instanceof pc.Entity)) {
-    return [];
-  }
-  return (node.findComponents('render') as pc.RenderComponent[]).flatMap((render) =>
-    render.meshInstances.filter((instance) => instance.material instanceof pc.StandardMaterial),
-  );
-}
-
-/**
- * Gives every standard material under a node its own clone, so the glow lights only this node and not the other objects
- * that shared the blockout material. The clones are assigned to each mesh instance, because setting a render component's
- * material changes only its first. Returns the clones, which the caller then drives.
- */
-function cloneGlowMaterials(node: pc.GraphNode | null, emissiveHex: string): pc.StandardMaterial[] {
-  const clones = new Map<pc.StandardMaterial, pc.StandardMaterial>();
-  for (const instance of standardInstances(node)) {
-    const shared = instance.material as pc.StandardMaterial;
-    let own = clones.get(shared);
-    if (!own) {
-      own = shared.clone();
-      own.emissive = colorFromHex(emissiveHex);
-      own.update();
-      clones.set(shared, own);
-    }
-    instance.material = own;
-  }
-  return [...clones.values()];
+interface ModelSlot {
+  readonly assetId: string;
+  readonly container: pc.Entity;
+  placeholder: pc.Entity | null;
+  readonly onModel: ((model: pc.Entity) => void) | null;
 }
 
 export class WorldView {
-  private readonly pickupViews = new Map<string, PickupView>();
+  private readonly pickupViews = new Map<string, pc.Entity>();
   private readonly placementViews = new Map<string, PlacementView>();
   private readonly glyphViews = new Map<string, GlyphView>();
   private readonly slotViews = new Map<string, SlotView>();
   private readonly furnitureById = new Map<string, FurnitureDef>();
+  private readonly modelSlots: ModelSlot[] = [];
   private readonly parent: pc.Entity;
   private readonly assets: AssetLoader;
   private bridgeMaterials: pc.StandardMaterial[] = [];
@@ -119,60 +97,56 @@ export class WorldView {
   constructor(parent: pc.Entity, content: WorldContent, world: WalkableWorld, assets: AssetLoader) {
     this.parent = parent;
     this.assets = assets;
+
     for (const pickup of content.pickups) {
-      // The root stands on the ground. The placeholder box sits on it until attachPickupModels swaps in the item's model.
-      const root = new pc.Entity(`PICKUP_${pickup.id}`);
-      const surface = world.surfaceHeightAt(pickup.position);
-      root.setLocalPosition(pickup.position.x, surface, pickup.position.z);
-      const placeholder = this.box('PickupBox', colorFromHex(ITEM_COLORS[pickup.itemId] ?? FALLBACK_COLOR));
-      placeholder.setLocalScale(PICKUP_SIZE_M, PICKUP_SIZE_M, PICKUP_SIZE_M);
-      placeholder.setLocalPosition(0, PICKUP_SIZE_M / 2, 0);
-      root.addChild(placeholder);
+      const root = this.groundedRoot(`PICKUP_${pickup.id}`, pickup.position, world);
+      const box = this.box('PickupBox', colorFromHex(ITEM_COLORS[pickup.itemId] ?? FALLBACK_COLOR));
+      box.setLocalScale(PICKUP_SIZE_M, PICKUP_SIZE_M, PICKUP_SIZE_M);
+      box.setLocalPosition(0, PICKUP_SIZE_M / 2, 0);
+      root.addChild(box);
       parent.addChild(root);
-      this.pickupViews.set(pickup.id, { root, itemId: pickup.itemId, placeholder });
+      this.pickupViews.set(pickup.id, root);
+      this.addModelSlot(`pickup.${pickup.itemId}`, root, box);
     }
 
     for (const station of content.stations) {
-      const marker = this.box(`STATION_${station.id}`, colorFromHex(STATION_COLOR), true);
+      const root = this.groundedRoot(`STATION_${station.id}`, station.position, world);
+      const marker = this.box('StationMarker', colorFromHex(STATION_COLOR), true);
       marker.setLocalScale(1.1, 0.04, 1.1);
-      const surface = world.surfaceHeightAt(station.position);
-      marker.setLocalPosition(station.position.x, surface + 0.02, station.position.z);
-      parent.addChild(marker);
+      marker.setLocalPosition(0, 0.02, 0);
+      root.addChild(marker);
+      parent.addChild(root);
+      this.addModelSlot(`station.${station.kind}`, root, marker);
     }
 
     for (const placement of content.placements) {
-      const root = new pc.Entity(`PLACEMENT_${placement.id}`);
-      const surface = world.surfaceHeightAt(placement.position);
-      root.setLocalPosition(placement.position.x, surface, placement.position.z);
+      const root = this.groundedRoot(`PLACEMENT_${placement.id}`, placement.position, world);
+      const [pedestalWidth, pedestalHeight, pedestalDepth] = PLACEMENT_PEDESTAL_SIZE_M;
 
-      const pedestal = this.box('Pedestal', colorFromHex(PEDESTAL_COLOR));
-      pedestal.setLocalScale(0.7, 1.0, 0.7);
-      pedestal.setLocalPosition(0, 0.5, 0);
+      const pedestal = new pc.Entity('Pedestal');
+      const pedestalBox = this.box('PedestalBox', colorFromHex(PEDESTAL_COLOR));
+      pedestalBox.setLocalScale(pedestalWidth, pedestalHeight, pedestalDepth);
+      pedestalBox.setLocalPosition(0, pedestalHeight / 2, 0);
+      pedestal.addChild(pedestalBox);
       root.addChild(pedestal);
+      this.addModelSlot('placement.pedestal', pedestal, pedestalBox);
 
-      const headMaterial = new pc.StandardMaterial();
-      headMaterial.diffuse = colorFromHex(LAMP_GOLD);
-      headMaterial.emissive = colorFromHex(LAMP_GOLD);
-      headMaterial.emissiveIntensity = 0;
-      headMaterial.update();
-      const head = new pc.Entity('LampHead');
-      head.addComponent('render', { type: 'sphere', material: headMaterial });
-      head.setLocalScale(0.42, 0.42, 0.42);
-      head.setLocalPosition(0, 1.25, 0);
-      root.addChild(head);
-
-      const placed = this.box('PlacedItem', colorFromHex(ITEM_COLORS[placement.acceptsItemId] ?? FALLBACK_COLOR));
-      placed.setLocalScale(0.36, 0.36, 0.36);
-      placed.setLocalPosition(0, 0.95, 0);
+      // The lantern sits on the pedestal's top. It is hidden until the placement is filled.
+      const placed = new pc.Entity('PlacedItem');
+      const placedBox = this.box('PlacedBox', colorFromHex(ITEM_COLORS[placement.acceptsItemId] ?? FALLBACK_COLOR));
+      placedBox.setLocalScale(PLACED_ITEM_SIZE_M, PLACED_ITEM_SIZE_M, PLACED_ITEM_SIZE_M);
+      placedBox.setLocalPosition(0, PLACED_ITEM_SIZE_M / 2, 0);
+      placed.addChild(placedBox);
+      placed.setLocalPosition(0, pedestalHeight, 0);
       placed.enabled = false;
       root.addChild(placed);
-
       parent.addChild(root);
-      this.placementViews.set(placement.id, { headMaterial, placed });
+      this.placementViews.set(placement.id, { placed });
+      this.addModelSlot(`item.${placement.acceptsItemId}`, placed, placedBox);
     }
 
     for (const glyph of content.glyphs) {
-      const root = new pc.Entity(`GLYPH_${glyph.id}`);
+      const root = this.groundedRoot(`GLYPH_${glyph.id}`, glyph.position, world);
       const material = new pc.StandardMaterial();
       material.diffuse = colorFromHex(SPIRIT_JADE);
       material.emissive = colorFromHex(SPIRIT_JADE);
@@ -183,56 +157,60 @@ export class WorldView {
       disc.setLocalScale(0.9, 0.04, 0.9);
       disc.setLocalPosition(0, 0.03, 0);
       root.addChild(disc);
-      const surface = world.surfaceHeightAt(glyph.position);
-      root.setLocalPosition(glyph.position.x, surface, glyph.position.z);
+      // Glyphs exist only in spirit phase, so they start hidden. sync turns them on.
       root.enabled = false;
       parent.addChild(root);
-      this.glyphViews.set(glyph.id, { root, material });
+      const view: GlyphView = { root, materials: [material] };
+      this.glyphViews.set(glyph.id, view);
+      this.addModelSlot(`glyph.${glyph.id.replace(/^glyph_/, '')}`, root, disc, (model) => {
+        view.materials = cloneGlowMaterials(model, SPIRIT_JADE, (candidate) => candidate.name === JADE_MATERIAL);
+      });
     }
 
     this.buildShop(content.shop, world);
   }
 
   /**
-   * Swaps each pickup's placeholder box for its item's model, when that model has loaded. A pickup whose model is missing
-   * keeps its box. Safe to call twice: a pickup that already has its model is skipped.
+   * Replaces each placeholder with its model, once the model has loaded. A slot whose model is missing keeps its
+   * placeholder, and a slot that already has its model is skipped, so calling this twice changes nothing. GameApp calls
+   * it once, after the assets have loaded and before the first sync.
    */
-  attachPickupModels(): void {
-    for (const view of this.pickupViews.values()) {
-      if (!view.placeholder) {
+  attachModels(): void {
+    for (const slot of this.modelSlots) {
+      if (!slot.placeholder) {
         continue;
       }
-      const model = this.assets.instantiateLoaded(`pickup.${view.itemId}`);
+      const model = this.assets.instantiateLoaded(slot.assetId);
       if (!model) {
         continue;
       }
-      view.placeholder.destroy();
-      view.placeholder = null;
-      view.root.addChild(model);
+      slot.placeholder.destroy();
+      slot.placeholder = null;
+      slot.container.addChild(model);
+      slot.onModel?.(model);
     }
   }
 
   /** Brings every world object in line with the session. Safe to call often. */
   sync(snapshot: SessionSnapshot): void {
     const collected = new Set(snapshot.collectedPickups);
-    for (const [pickupId, view] of this.pickupViews) {
-      view.root.enabled = !collected.has(pickupId);
+    for (const [pickupId, root] of this.pickupViews) {
+      root.enabled = !collected.has(pickupId);
     }
 
     const filled = new Set(snapshot.placed);
     for (const [placementId, view] of this.placementViews) {
-      const isFilled = filled.has(placementId);
-      view.headMaterial.emissiveIntensity = isFilled ? 2.2 : 0;
-      view.headMaterial.update();
-      view.placed.enabled = isFilled;
+      view.placed.enabled = filled.has(placementId);
     }
 
     // Glyphs fade in with the spirit layer. They are invisible in the real phase, and they only take focus once settled.
     const spiritVisible = snapshot.lantern.spiritAmount > 0;
     for (const view of this.glyphViews.values()) {
       view.root.enabled = spiritVisible;
-      view.material.emissiveIntensity = snapshot.lantern.spiritAmount * 2;
-      view.material.update();
+      for (const material of view.materials) {
+        material.emissiveIntensity = snapshot.lantern.spiritAmount * 2;
+        material.update();
+      }
     }
 
     for (const material of this.resolveBridgeMaterials()) {
@@ -249,6 +227,24 @@ export class WorldView {
     this.placementViews.clear();
     this.glyphViews.clear();
     this.slotViews.clear();
+    this.modelSlots.length = 0;
+  }
+
+  /** An empty entity standing on the ground at a content position. */
+  private groundedRoot(name: string, position: { readonly x: number; readonly z: number }, world: WalkableWorld): pc.Entity {
+    const root = new pc.Entity(name);
+    root.setLocalPosition(position.x, world.surfaceHeightAt(position), position.z);
+    return root;
+  }
+
+  /** Registers an object's placeholder, and optionally a hook that runs once its model is in place. */
+  private addModelSlot(
+    assetId: string,
+    container: pc.Entity,
+    placeholder: pc.Entity,
+    onModel?: (model: pc.Entity) => void,
+  ): void {
+    this.modelSlots.push({ assetId, container, placeholder, onModel: onModel ?? null });
   }
 
   /** The counter and the three display sockets. Sockets stay hidden until the shop level reaches them. */
@@ -257,23 +253,27 @@ export class WorldView {
       this.furnitureById.set(piece.id, piece);
     }
     if (shop.counter) {
-      const counter = this.box(`SHOP_${shop.counter.id}`, colorFromHex(COUNTER_COLOR));
+      const counter = this.groundedRoot(`SHOP_${shop.counter.id}`, shop.counter.position, world);
       const [width, height, depth] = COUNTER_SIZE_M;
-      counter.setLocalScale(width, height, depth);
-      const surface = world.surfaceHeightAt(shop.counter.position);
-      counter.setLocalPosition(shop.counter.position.x, surface + height / 2, shop.counter.position.z);
+      const box = this.box('CounterBox', colorFromHex(COUNTER_COLOR));
+      box.setLocalScale(width, height, depth);
+      box.setLocalPosition(0, height / 2, 0);
+      counter.addChild(box);
       this.parent.addChild(counter);
+      this.addModelSlot('shop.counter', counter, box);
     }
     for (const slot of shop.slots) {
-      const root = new pc.Entity(`SHOP_SLOT_${slot.id}`);
-      root.setLocalPosition(slot.position.x, world.surfaceHeightAt(slot.position), slot.position.z);
-      const base = this.primitive('SlotBase', 'cylinder', colorFromHex(PEDESTAL_COLOR));
-      base.setLocalScale(1.1, 0.05, 1.1);
-      base.setLocalPosition(0, 0.025, 0);
+      const root = this.groundedRoot(`SHOP_SLOT_${slot.id}`, slot.position, world);
+      const base = new pc.Entity('SlotBase');
+      const plate = this.primitive('SlotPlate', 'cylinder', colorFromHex(PEDESTAL_COLOR));
+      plate.setLocalScale(SLOT_PLATE_SIZE_M, SLOT_PLATE_HEIGHT_M, SLOT_PLATE_SIZE_M);
+      plate.setLocalPosition(0, SLOT_PLATE_HEIGHT_M / 2, 0);
+      base.addChild(plate);
       root.addChild(base);
       root.enabled = false;
       this.parent.addChild(root);
       this.slotViews.set(slot.id, { root, base, furnitureId: null, piece: null });
+      this.addModelSlot('shop.plinth', base, plate);
     }
   }
 

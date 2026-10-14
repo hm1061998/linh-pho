@@ -10,8 +10,10 @@ import { NpcRenderer } from '../engine/npc/NpcRenderer';
 import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
 import { HUB_WORLD } from '../engine/scene/hubCollision';
+import { HUB_PROPS } from '../engine/scene/hubLayout';
 import { CraftStage, type CraftStations } from '../engine/craft/CraftStage';
 import { WorldView } from '../engine/world/WorldView';
+import { PLAYER_HEAD_HEIGHT_M, RoofFader } from '../engine/world/roofFade';
 import { AssetLoader } from '../engine/assets/AssetLoader';
 import { ASSET_MANIFEST, toAssetEntries } from '../engine/assets/manifest';
 import type { QualityProfile } from '../engine/quality/qualityPresets';
@@ -68,6 +70,8 @@ export class GameApp {
   private readonly fx: SpiritBurst;
   private readonly player: PlayerController;
   private readonly camera: CameraController;
+  /** Fades the roofs that hide the player. Built in start, once the hub's roof entities exist. */
+  private roofs: RoofFader | null = null;
   private readonly targetKinds = new Map<string, TargetKind>();
   private readonly cleanups: Array<() => void> = [];
   private reducedVfx = false;
@@ -274,7 +278,8 @@ export class GameApp {
     buildHubBlockout(this.app, this.assetLoader);
     this.npcs.attachModels(this.assetLoader);
     this.player.attachModel(this.assetLoader);
-    this.world.attachPickupModels();
+    this.world.attachModels();
+    this.roofs = this.createRoofFader();
     this.attachLifecycle();
     this.app.on('update', this.tick);
     this.cleanups.push(() => this.app.off('update', this.tick));
@@ -298,6 +303,8 @@ export class GameApp {
     this.fx.update(dt);
     this.player.update(dt, frame.move, this.camera.yawRadians);
     this.camera.update(dt, this.player.groundPosition, frame.yawDelta, frame.zoomDelta);
+    const { x, z } = this.player.groundPosition;
+    this.roofs?.update(dt, this.camera.position, { x, y: HUB_WORLD.surfaceHeightAt({ x, z }) + PLAYER_HEAD_HEIGHT_M, z });
     this.npcs.update(dt);
     this.craftStage.update(dt);
     this.interactionSystem.update(this.player.groundPosition);
@@ -403,6 +410,23 @@ export class GameApp {
       default:
         console.error(`[Interaction] Target "${targetId}" has no action; nothing happened (${t('error.generic')})`);
     }
+  }
+
+  /**
+   * The hub's roofs, each with its blockout box, so the fader can test whether a roof stands between the camera and the
+   * player's head. A roof with no entity is skipped.
+   */
+  private createRoofFader(): RoofFader {
+    const roofs = HUB_PROPS.filter((prop) => prop.id.endsWith('_Roof')).flatMap((prop) => {
+      const root = this.app.root.findByName(prop.id);
+      if (!(root instanceof pc.Entity)) {
+        return [];
+      }
+      const [x, y, z] = prop.position;
+      const [width, height, depth] = prop.size;
+      return [{ root, box: { center: { x, y, z }, half: { x: width / 2, y: height / 2, z: depth / 2 } } }];
+    });
+    return new RoofFader(roofs);
   }
 
   private resize(): void {
