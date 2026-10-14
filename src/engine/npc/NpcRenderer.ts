@@ -4,6 +4,7 @@ import { radToDeg } from '../../shared/utils/math';
 import type { AssetLoader } from '../assets/AssetLoader';
 import { playLoop } from '../assets/playLoop';
 import type { GroundPoint, WalkableWorld } from '../player/collision';
+import { dampToward } from '../player/movement';
 import { colorFromHex } from '../scene/colorFromHex';
 
 /** Human body height in meters. Matches the placeholder player capsule. */
@@ -23,14 +24,25 @@ const HALO_HUMAN_HEX = '#F2B759';
 const HALO_INTENSITY = 0.6;
 /** Within this distance an NPC turns to greet the player (Stage 8). Dialogue turns them too, once it opens. */
 const GREET_RADIUS_M = 4.5;
+/**
+ * Looking around while idle (Stage 8): the body turns this many degrees each way, and the turn wanders slowly. It eases
+ * toward zero while the NPC greets the player, so they keep their eyes on the player.
+ */
+const LOOK_AMPLITUDE_DEG = 10;
+const LOOK_SPEED = 0.5;
+const LOOK_RATE = 2;
 
 interface NpcView {
   readonly root: pc.Entity;
   /** The placeholder shape, until the NPC's model replaces it. */
   readonly body: pc.Entity;
+  /** Holds the body and the model. It turns for looking around; the root keeps the facing toward the player. */
+  readonly look: pc.Entity;
   readonly isSpirit: boolean;
   readonly baseY: number;
   readonly phase: number;
+  /** The current look-around angle, in degrees. */
+  lookYaw: number;
 }
 
 /**
@@ -67,7 +79,9 @@ export class NpcRenderer {
         body.setLocalScale(HUMAN_RADIUS_M * 2, HUMAN_HEIGHT_M / 2, HUMAN_RADIUS_M * 2);
         body.setLocalPosition(0, HUMAN_HEIGHT_M / 2, 0);
       }
-      root.addChild(body);
+      const look = new pc.Entity(`${npc.id}_Look`);
+      look.addChild(body);
+      root.addChild(look);
 
       const baseY = surface + (isSpirit ? npc.hoverHeight : 0);
       root.setLocalPosition(point.x, baseY, point.z);
@@ -76,10 +90,12 @@ export class NpcRenderer {
       this.views.set(npc.id, {
         root,
         body,
+        look,
         isSpirit,
         baseY,
         // Spread the spirits' bob phases so several spirits do not move in unison.
         phase: index * 1.7,
+        lookYaw: 0,
       });
     });
   }
@@ -100,7 +116,7 @@ export class NpcRenderer {
       if (!view.isSpirit) {
         model.setLocalEulerAngles(0, 180, 0);
       }
-      view.root.addChild(model);
+      view.look.addChild(model);
       const track = assets.trackFor(modelId, 'idle');
       if (track) {
         playLoop(model, 'idle', track);
@@ -115,15 +131,16 @@ export class NpcRenderer {
   update(dt: number, player?: GroundPoint): void {
     this.elapsed += dt;
     for (const [id, view] of this.views) {
-      if (player) {
-        const { x, z } = view.root.getLocalPosition();
-        if (Math.hypot(player.x - x, player.z - z) <= GREET_RADIUS_M) {
-          this.faceToward(id, player);
-        }
+      const { x, z } = view.root.getLocalPosition();
+      const greeting = player !== undefined && Math.hypot(player.x - x, player.z - z) <= GREET_RADIUS_M;
+      if (greeting && player) {
+        this.faceToward(id, player);
       }
+      const lookTarget = greeting ? 0 : LOOK_AMPLITUDE_DEG * Math.sin(this.elapsed * LOOK_SPEED + view.phase);
+      view.lookYaw = dampToward(view.lookYaw, lookTarget, LOOK_RATE, dt);
+      view.look.setLocalEulerAngles(0, view.lookYaw, 0);
       if (view.isSpirit) {
         const y = view.baseY + Math.sin(this.elapsed * BOB_SPEED + view.phase) * BOB_AMPLITUDE_M;
-        const { x, z } = view.root.getLocalPosition();
         view.root.setLocalPosition(x, y, z);
       }
     }

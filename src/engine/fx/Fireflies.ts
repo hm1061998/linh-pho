@@ -18,6 +18,8 @@ const MOTES_PER_ANCHOR = 7;
 const MOTE_SIZE_M = 0.07;
 const MOTE_HEX = '#F7D48A';
 const MOTE_EMISSIVE = 2.5;
+/** Extra brightness in the spirit layer. */
+const MOTE_SPIRIT_BOOST = 2;
 /** Height band the motes float in, above the ground, in metres. */
 const MIN_HEIGHT_M = 1.0;
 const MAX_HEIGHT_M = 2.4;
@@ -32,6 +34,7 @@ interface Mote {
 
 export class Fireflies {
   private readonly motes: Mote[] = [];
+  private readonly material: pc.StandardMaterial;
   private elapsed = 0;
 
   constructor(parent: pc.Entity, anchors: readonly FireflyAnchor[]) {
@@ -40,6 +43,7 @@ export class Fireflies {
     material.emissive = colorFromHex(MOTE_HEX);
     material.emissiveIntensity = MOTE_EMISSIVE;
     material.update();
+    this.material = material;
 
     let index = 0;
     for (const anchor of anchors) {
@@ -60,6 +64,14 @@ export class Fireflies {
         index++;
       }
     }
+  }
+
+  /**
+   * Brightens the motes as the lantern enters the spirit layer (`amount` 0 to 1, from LanternPhase). In the real layer they
+   * are the warm dust of the market; in the spirit layer they read as the light the spirit lantern shows.
+   */
+  setSpiritAmount(amount: number): void {
+    this.material.emissiveIntensity = MOTE_EMISSIVE + MOTE_SPIRIT_BOOST * amount;
   }
 
   /** Shows or hides every mote. Hidden motes do not move, so turning them back on costs nothing. */

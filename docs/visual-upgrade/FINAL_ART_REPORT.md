@@ -21,7 +21,7 @@ Chưa đạt mục tiêu hình ảnh của IMAGE A. Chất lượng model vẫn 
 | Đèn | Quả cầu vàng, không chiếu sáng | Thùng bát giác có nan; năm đèn omni ấm tại landmark |
 | Nhà và mái | Hình hộp phẳng | Khung gỗ sẫm, tường vôi hoặc ván, cửa sổ lưới, cửa hai cánh, mép mái cong (D-081) |
 | Vật liệu | Gỗ đồng đều, cổng màu gỗ | Cổng sơn mài đỏ nâu; dải đai thùng bằng sắt |
-| Sinh khí | Tĩnh | Đom đóm trôi quanh đèn; NPC quay về người chơi khi lại gần |
+| Sinh khí | Tĩnh | Đom đóm trôi quanh đèn; 13 đèn đung đưa nhẹ; NPC nhìn quanh khi rảnh và quay về người chơi khi lại gần |
 
 ## 3. Đánh giá theo tiêu chí (ước lượng từ ảnh, không tự chấm 5/5)
 
@@ -30,8 +30,8 @@ Chưa đạt mục tiêu hình ảnh của IMAGE A. Chất lượng model vẫn 
 | Camera & composition | 3/5 | 40 m, 40°. Vẫn nhìn từ trên, mép nền 60 m còn thấy ở góc |
 | Architecture quality | 3/5 | Kit nhà với hiên, khung gỗ, cửa sổ lưới, cửa hai cánh, mái cong có diềm và hàng ngói; chưa có lan can chạm |
 | Props & environment density | 3/5 | 29 prop mới, mỗi gian hàng ba prop; rìa hub vẫn thưa |
-| Lighting & atmosphere | 3/5 | Năm đèn omni ấm không đổ bóng; AO và bloom ở preset cao (D-083). Chưa đo trên điện thoại |
-| Material consistency | 2/5 | Hai vật liệu mới; chưa có texture, chưa có biến thể màu |
+| Lighting & atmosphere | 3/5 | Năm đèn omni ấm không đổ bóng; AO và bloom ở preset cao (D-083); ambient chuyển xanh ngọc ở Ánh Linh (D-085). Chưa đo trên điện thoại |
+| Material consistency | 3/5 | Ba tông gỗ và đá cho mỗi model hub (D-084); vải cho mái gian hàng; sơn mài; iron. Chưa có texture |
 | Vietnamese visual identity | 3/5 | Mái cong, khung gỗ sẫm, tường vôi, cửa lưới, cổng sơn mài, đèn lồng, hiên, hàng ngói. Chưa có lan can chạm |
 | Gameplay readability | 3/5 | Đèn trung tâm và làn đọc được; chưa có chỉ dẫn trong thế giới cho nhiệm vụ |
 | Runtime performance | Chưa đo | Xem mục 5 |
@@ -67,7 +67,7 @@ Chưa đo:
 - **Model:** nhà có kit (D-081), hiên và hàng ngói (D-082), nhưng chưa có lan can chạm. Gian hàng vẫn đơn giản.
 - **Nền và rìa hub:** mặt đất và mặt nước vẫn là hộp theo thiết kế. Nền xa là màu `#0F1A2A`, không có đường chân trời hay tầng kiến trúc xa. Rìa hub thưa.
 - **Đèn:** chưa có đèn treo dây và cụm đèn treo đúng như IMAGE A. AO và bloom chỉ bật ở preset cao; chưa đo chi phí trên điện thoại.
-- **Chuyển động:** chưa có hoạt ảnh chào cho NPC (chỉ quay mặt), chưa có đung đưa đèn và mái vải. Đom đóm là chấm sáng trơn.
+- **Chuyển động:** NPC chưa có hoạt ảnh chào hay cử động tay (chỉ có clip `idle`, nhìn quanh và quay mặt). Mái vải và biển cờ chưa đung đưa. Đom đóm là chấm sáng trơn.
 - **Gameplay:** đường chéo từ tây nam quảng trường tới cầu vẫn bị lan can cầu và mép sông chặn (hình học có sẵn). Người chơi đi qua làn đông nam. Chưa kiểm tra mái che nhân vật ở góc 40° khi đi sau mái.
 - **Kiểm thử gameplay:** đã mô phỏng đi bộ, tương tác với Bà Nghiêm, mở hội thoại và đặt cờ; không chơi hết chuỗi nhiệm vụ, chưa thử chế tác, mua hàng, lưu và tải.
 - **Di động:** chưa thử trên thiết bị thật.

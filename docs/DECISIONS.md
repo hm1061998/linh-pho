@@ -571,3 +571,24 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Art Bible §4 yêu cầu bóng tiếp xúc và lan sáng nhẹ quanh đèn, và không dùng shader riêng. `CameraFrame` có sẵn các pass này.
 - **Đánh đổi:** Tone mapping mặc định của frame làm nền và vàng nhạt đi, nên dùng LINEAR. Frame chạy HDR và áp gamma ở cuối, nên màu xóa nền phải chuyển sang tuyến tính khi bật; khi tắt thì trả về sRGB. Bóng tiếp xúc chỉ nhìn thấy nhẹ ở khoảng cách mặc định. Chưa đo chi phí trên điện thoại, nên preset mobile tắt hẳn hiệu ứng.
 - **Kiểm chứng:** `postEffectsPreset.test.ts` khóa giá trị theo preset; `npm test` 936 test đạt; typecheck đạt. Trong trình duyệt: `setQuality` bật và tắt đổi màu xóa nền đúng (sRGB 0.0588 khi tắt, tuyến tính 0.0048 khi bật); không có lỗi console; ở gần, thấy bóng tối nhẹ dưới gian hàng và thùng.
+
+## D-084 — Vật liệu: biến thể màu theo model, vải cho mái gian hàng
+
+- **Chọn:** Mỗi model hub nhận một trong ba tông cho gỗ và đá: ×1.0, ×1.07, ×0.93. Tông được chọn từ checksum của id (`_variant_index` trong `build_assets.py`), nên build lại vẫn ra đúng tông đó. Các vật liệu đổi tông là `MAT_WoodWarm_A`, `MAT_WoodDark_A`, `MAT_WoodLight_A`, `MAT_StoneDark_A`, `MAT_StoneLight_A`, `MAT_StonePale_A` và `MAT_Cloth_A`. Giấy, sơn mài, iron, ngói và phần phát sáng giữ màu gốc. Mái gian hàng đổi từ terracotta sang `MAT_Cloth_A` (#B8523A, nhám 0.95), để mái đọc được là vải.
+- **Lý do:** Art Bible §6 yêu cầu biến thể màu nhẹ, để các model không giống hệt nhau. Chọn theo id để không phải lập danh sách tay.
+- **Đánh đổi:** Biến thể chỉ đổi độ sáng, chưa đổi sắc độ. Vải chưa có nếp gấp hình học: thêm nếp gấp sẽ đổi bounds của mái, mà test kích thước khóa bounds. Chưa có texture vân gỗ.
+- **Kiểm chứng:** 94 model hub được build lại; kích thước giữ nguyên; `npm test` 938 test đạt (có `lanternSway.test.ts`).
+
+## D-085 — Chuyển động nhẹ: đèn đung đưa, môi trường xanh ngọc ở Ánh Linh
+
+- **Chọn:** 13 đèn (6 đèn gian hàng, 4 đầu đèn góc, đèn trung tâm, đèn cổng, đèn xưởng) được treo dưới một trục đặt cách đỉnh đèn 0.05 m. Đèn đung đưa như con lắc quanh trục đó: ±3° cho đèn nhỏ, ±1.5° cho đèn từ 0.6 m trở lên, chu kỳ khoảng 5–6 s và lệch pha theo từng đèn (`LanternSway`). Ambient ánh sáng nội suy từ `#4A5685` sang `#2F5F6E` theo `spiritAmount`, nên chuyển tiếp cùng nhịp với glyph (`SpiritAmbient`). Đom đóm sáng hơn ở Ánh Linh (`Fireflies.setSpiritAmount`).
+- **Lý do:** Art Bible §4 yêu cầu môi trường đổi nhẹ khi vào Ánh Linh, và §5 yêu cầu đèn đung đưa chậm. Góc nhỏ để đọc được là gió thổi, không phải đồ vật lắc.
+- **Đánh đổi:** Mái vải và biển cờ không đung đưa. Mái vải cần tách khỏi cột; biển cờ có trục ở đế nên xoay cả cột. Chỉ ambient đổi màu; đèn chính, glyph và vật liệu giữ màu. Mỗi đèn có thêm một trục (13 entity). Chưa đo chi phí. Màu nền trời không đổi, vì nền do camera frame quản lý (D-083).
+- **Kiểm chứng:** Trong trình duyệt: 13 trục có góc Z đổi theo thời gian (đo qua `app.update`). Ambient đi từ (0.290, 0.337, 0.522) sang (0.184, 0.373, 0.431) qua hai bước trung gian. Ảnh Ánh Linh có ambient xanh ngọc. Test: `lanternSway.test.ts` khóa biên độ và dt = 0.
+
+## D-086 — NPC nhìn quanh khi rảnh
+
+- **Chọn:** Thân và model của mỗi NPC nằm trong một entity `look`, là con của root. Khi rảnh, `look` quay quanh ±10° theo sóng chậm (0.5 rad/s), làm mượt bằng `dampToward` với tốc độ 2. Khi người chơi trong 4.5 m, mục tiêu về 0 và root quay về người chơi như trước (`faceToward`), nên NPC đang chào giữ mắt nhìn người chơi.
+- **Lý do:** Art Bible §5 và Giai đoạn 8 yêu cầu NPC có chuyển động nhẹ khi rảnh, để đọc là người đang sống. Chuyển động này không cần clip mới.
+- **Đánh đổi:** Chưa có hoạt ảnh chào và cử động tay: GLB chỉ có clip `idle`. Nhìn quanh là xoay cả thân, chưa có đầu riêng. Chưa có tương tác với quầy.
+- **Kiểm chứng:** Trong trình duyệt: góc nhìn quanh của Bà Nghiêm đổi từ 2.01° sang −9.34° sau 12 bước 0.25 s khi người chơi ở xa. `npm test` 938 test đạt.

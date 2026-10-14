@@ -8,6 +8,8 @@ import { InteractionSystem } from '../engine/interaction/InteractionSystem';
 import { SpiritBurst } from '../engine/fx/SpiritBurst';
 import { Fireflies, type FireflyAnchor } from '../engine/fx/Fireflies';
 import { PostEffects } from '../engine/render/PostEffects';
+import { LanternSway } from '../engine/scene/LanternSway';
+import { SpiritAmbient } from '../engine/scene/SpiritAmbient';
 import { NpcRenderer } from '../engine/npc/NpcRenderer';
 import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
@@ -78,6 +80,9 @@ export class GameApp {
   private readonly fx: SpiritBurst;
   private readonly fireflies: Fireflies;
   private readonly postEffects: PostEffects;
+  /** Built in start(), once the hub's models exist. */
+  private lanternSway: LanternSway | null = null;
+  private spiritAmbient: SpiritAmbient | null = null;
   private readonly player: PlayerController;
   private readonly camera: CameraController;
   /** Fades the roofs that hide the player. Built in start, once the hub's roof entities exist. */
@@ -291,7 +296,8 @@ export class GameApp {
     this.app.setCanvasFillMode(pc.FILLMODE_NONE);
     this.app.setCanvasResolution(pc.RESOLUTION_AUTO);
     this.resize();
-    buildHubBlockout(this.app, this.assetLoader);
+    this.lanternSway = buildHubBlockout(this.app, this.assetLoader);
+    this.spiritAmbient = new SpiritAmbient(this.app, this.app.scene.ambientLight);
     this.npcs.attachModels(this.assetLoader);
     this.player.attachModel(this.assetLoader);
     this.world.attachModels();
@@ -318,6 +324,10 @@ export class GameApp {
     this.sessionState.updateLantern(dt);
     this.fx.update(dt);
     this.fireflies.update(dt);
+    this.lanternSway?.update(dt);
+    const spirit = this.sessionState.lantern.snapshot.spiritAmount;
+    this.spiritAmbient?.update(spirit);
+    this.fireflies.setSpiritAmount(spirit);
     this.player.update(dt, frame.move, this.camera.yawRadians);
     this.camera.update(dt, this.player.groundPosition, frame.yawDelta, frame.zoomDelta);
     const { x, z } = this.player.groundPosition;

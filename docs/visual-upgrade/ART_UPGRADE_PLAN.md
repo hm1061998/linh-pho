@@ -21,9 +21,9 @@ Nhánh làm việc: `visual-upgrade/stage-1-camera` (từ `dev`). Chưa commit, 
 | 3. Prop density | 29 prop trang trí; mỗi gian hàng có ba prop phụ | Xong, một phần (prop còn nhỏ) | D-077 |
 | 4. Modular asset kit | Kit nhà hai biến thể (tường vôi, tường ván), mái cong (2), đèn thùng bát giác (12), prop mới (29); hiên và hàng ngói (D-082); chưa có lan can chạm | Xong, một phần | D-079, D-081, D-082 |
 | 5. Lighting | Năm đèn omni ấm không đổ bóng; AO và bloom ở preset cao | Xong, một phần | D-078, D-083 |
-| 6. Material polish | Sơn mài cho cổng, iron cho đai thùng; chưa có texture hay biến thể màu | Một phần | D-079 |
-| 7. Atmosphere & VFX | Đom đóm (14 hạt), tắt khi giảm hiệu ứng; chưa có đung đưa đèn và mái | Một phần | D-079 |
-| 8. NPC & animation | NPC quay về người chơi trong 4.5 m; chưa có hoạt ảnh chào | Một phần | D-079 |
+| 6. Material polish | Biến thể gỗ và đá cho 94 model hub (ba tông); vải cho mái gian hàng; sơn mài cho cổng; iron cho đai thùng; ngói hai màu. Chưa có texture | Xong, một phần | D-079, D-084 |
+| 7. Atmosphere & VFX | 13 đèn đung đưa dưới trục; ambient chuyển sang xanh ngọc ở Ánh Linh; đom đóm sáng hơn ở Ánh Linh. Mái vải và biển cờ chưa đung đưa | Xong, một phần | D-079, D-085 |
+| 8. NPC & animation | NPC quay về người chơi trong 4.5 m; NPC nhìn quanh khi rảnh. Chưa có clip chào hay cử động tay | Xong, một phần | D-079, D-086 |
 | 9. QA & tối ưu | Test, build, số liệu tĩnh, gameplay mô phỏng; chưa đo FPS | Một phần | Xem báo cáo |
 
 ## 3. Việc còn lại (theo thứ tự ưu tiên đề xuất)
@@ -33,7 +33,7 @@ Nhánh làm việc: `visual-upgrade/stage-1-camera` (từ `dev`). Chưa commit, 
 3. ~~Xem lại gian hàng 5 ở phía tây làn~~ Đã dời lên đông bắc quảng trường (D-080).
 4. Thêm đèn treo dây và cụm đèn treo (chưa có trong layout), và phông nền có tầng kiến trúc xa (cần asset ngoài hoặc model mới).
 5. Lan can chạm và cửa sổ chạm. Ngói hiện chỉ xen hai màu, chưa có texture.
-6. Hoạt ảnh chào cho NPC và đung đưa nhẹ cho đèn và mái vải.
+6. Hoạt ảnh chào và cử động tay cho NPC (cần clip mới trong GLB). Đung đưa mái vải cần tách mái khỏi cột.
 7. Đo chi phí AO và bloom trên điện thoại, rồi quyết định có bật ở preset mobile không.
 
 ## 4. Rủi ro gameplay khi sắp xếp lại layout

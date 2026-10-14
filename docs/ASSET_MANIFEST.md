@@ -97,6 +97,8 @@ Mái và đèn đã thay model, giữ nguyên kích thước: `ENV_House_Shop_Ro
 
 Nhà tiệm và xưởng (`ENV_House_Shop_*`, `ENV_House_Workshop_*`) dùng kit nhà chung (D-081): đế đá, cột gỗ sẫm, dầm đỉnh, cửa sổ lưới, diềm mái và bờm nóc. Tường nhà tiệm là vôi (`MAT_Lime_A`), tường xưởng là ván (`MAT_WoodLight_A`). Cửa tiệm là cửa hai cánh có lưới. Mọi kích thước vẫn khớp hộp trong `hubLayout.ts`. Nhà tiệm có hiên trong hộp (D-082), và mái có hàng ngói xen màu (`MAT_Tile_A`).
 
+Mỗi model hub có một trong ba tông cho gỗ và đá, chọn theo id (D-084). Mái gian hàng dùng vải `MAT_Cloth_A`. Đèn treo và đèn trên cột được đặt dưới một trục trong code, nên đung đưa quanh trục đó (D-085). Trục không nằm trong GLB, nên kích thước và pivot của GLB không đổi.
+
 ---
 
 ## 4. Nhân vật và animation
