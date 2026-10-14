@@ -2,6 +2,7 @@ import { shouldQueueAction } from './interactPolicy';
 import { KeyBindings } from './keyBindings';
 import { KeyboardState } from './KeyboardState';
 import { addMoveInputs, applyDeadzone, clampMagnitude, NO_MOVE, type MoveInput } from './moveInput';
+import { QueuedPress } from './QueuedPress';
 
 /** Everything the player asked for since the last frame. Read once per update, then reset. */
 export interface InputFrame {
@@ -25,6 +26,8 @@ const WHEEL_ZOOM_PER_PIXEL = 0.05;
 const PINCH_ZOOM_PER_PIXEL = 0.15;
 /** Approximate line height used when a browser reports wheel deltas in lines instead of pixels. */
 const WHEEL_LINE_HEIGHT_PX = 16;
+/** How long a press waits for the next frame before it is dropped. Frames come every ~16 ms, so this only matters after a stall. */
+const PRESS_TTL_MS = 250;
 
 interface ScreenPoint {
   readonly x: number;
@@ -53,8 +56,8 @@ export class InputService {
   private pendingYaw = 0;
   private pendingZoom = 0;
   private pinchDistance: number | null = null;
-  private interactQueued = false;
-  private lanternQueued = false;
+  private readonly interactPress = new QueuedPress(PRESS_TTL_MS);
+  private readonly lanternPress = new QueuedPress(PRESS_TTL_MS);
 
   constructor(canvas: HTMLCanvasElement, bindings: KeyBindings = new KeyBindings()) {
     this.canvas = canvas;
@@ -107,14 +110,14 @@ export class InputService {
   /** Queues one interact press. Also called by the touch interact button. */
   pressInteract(): void {
     if (!this.isBlocked) {
-      this.interactQueued = true;
+      this.interactPress.queue(performance.now());
     }
   }
 
   /** Queues one lantern toggle. Also called by the touch lantern button. */
   pressLantern(): void {
     if (!this.isBlocked) {
-      this.lanternQueued = true;
+      this.lanternPress.queue(performance.now());
     }
   }
 
@@ -123,17 +126,19 @@ export class InputService {
     const blocked = this.isBlocked;
     const keyboard = this.keys.moveVector();
     const move = blocked ? NO_MOVE : addMoveInputs(keyboard, applyDeadzone(this.stick));
+    // Take both presses every frame, even when blocked, so a stale one cannot fire later.
+    const now = performance.now();
+    const interactTaken = this.interactPress.take(now);
+    const lanternTaken = this.lanternPress.take(now);
     const frame: InputFrame = {
       move,
       yawDelta: blocked ? 0 : this.pendingYaw,
       zoomDelta: blocked ? 0 : this.pendingZoom,
-      interactPressed: !blocked && this.interactQueued,
-      lanternPressed: !blocked && this.lanternQueued,
+      interactPressed: !blocked && interactTaken,
+      lanternPressed: !blocked && lanternTaken,
     };
     this.pendingYaw = 0;
     this.pendingZoom = 0;
-    this.interactQueued = false;
-    this.lanternQueued = false;
     return frame;
   }
 
@@ -152,8 +157,8 @@ export class InputService {
     this.pinchDistance = null;
     this.pendingYaw = 0;
     this.pendingZoom = 0;
-    this.interactQueued = false;
-    this.lanternQueued = false;
+    this.interactPress.clear();
+    this.lanternPress.clear();
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
@@ -174,10 +179,10 @@ export class InputService {
     event.preventDefault();
     const press = { code: event.code, repeat: event.repeat, defaultPrevented: handledByUi };
     if (shouldQueueAction(this.bindingsTable.codesFor('interact'), press, this.isBlocked)) {
-      this.interactQueued = true;
+      this.interactPress.queue(performance.now());
     }
     if (shouldQueueAction(this.bindingsTable.codesFor('lantern'), press, this.isBlocked)) {
-      this.lanternQueued = true;
+      this.lanternPress.queue(performance.now());
     }
     this.keys.press(event.code);
   };

@@ -492,3 +492,10 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Minigame có ba ổ nhưng công thức chỉ trừ hai tre, nên thanh thứ ba được lắp mà không tốn nguyên liệu. Lỗi này lộ ra khi chơi thử Q00 → Q02 (`docs/QA_REPORT.md` mục 9). Chọn khung hai ổ vì công thức và số pickup tre (6) đã được GDD dùng ở mục Q00 và dòng 57.
 - **Đánh đổi:** GDD B5.1 (dòng 69) vẫn ghi «3 vị trí snap». Tài liệu thiết kế cần được cập nhật cho khớp. `assemblyGame.test.ts` kiểm tra số ổ bằng số tre trong công thức, nên hai số không lệch lại được mà không báo lỗi.
 - **Kiểm chứng:** `assemblyGame.test.ts`, `craftLayout.test.ts` và `craftMinigame.test.ts` cập nhật theo hai ổ; typecheck và 772 test đạt. Trong trình duyệt: panel chỉ có «Ô 1» và «Ô 2»; gắn hai thanh xong thì craft hoàn thành, kho trừ đúng 2 tre, 1 giấy, 1 dây và có Đèn Mộc; huỷ giữa chừng trả đủ nguyên liệu và xoá stage; thanh tre ở ổ 0 nằm tại (0.18, 0.16, 0), đúng bán kính vòng và đáy ổ.
+
+## D-074 — Phím đang chờ hết hạn sau 250 ms
+
+- **Chọn:** Lần nhấn tương tác và đổi đèn được xếp hàng cùng thời điểm. Khung hình kế tiếp chỉ xử lý nếu lần nhấn còn trong 250 ms; quá hạn thì bỏ. Logic nằm trong `QueuedPress` (`src/engine/input/QueuedPress.ts`), không dùng DOM nên test được trong Node. `InputService` dùng nó cho cả bàn phím và nút cảm ứng.
+- **Lý do:** Hàng đợi cũ không có hạn. Khi khung hình bị chậm, một lần nhấn cũ có thể mở hội thoại hoặc nhặt đồ khi người chơi đã đi chỗ khác. Đây là kết quả điều tra phím E trong `docs/QA_REPORT.md` mục 9.
+- **Đánh đổi:** Một lần nhấn mà khung hình chậm hơn 250 ms bị bỏ, người chơi phải nhấn lại. Trong pane, nơi khung hình chỉ chạy khi có thao tác, E sẽ bị bỏ thay vì được xử lý muộn. Chọn 250 ms vì đủ cho một khung hình chậm và đủ ngắn để không kích hoạt nhầm. Đây là giá trị đề xuất, chưa đo trên máy thật.
+- **Kiểm chứng:** `queuedPress.test.ts` (7 test: biên thời gian, nhấn lại làm mới, huỷ). Trong trình duyệt (dev, gọi `app.tick` thủ công): nhấn E rồi chạy khung hình ngay thì hội thoại Bà Nghiêm mở; nhấn E, giả lập đã chờ 400 ms rồi chạy khung hình thì không mở. Typecheck đạt; `npm test` 50 file, 779 test đạt; build đạt.
