@@ -60,7 +60,36 @@ PALETTE = {
     "MAT_Lime_A": ("#D9BF8C", 0.9, None, 0.0),
     # Roof tiles: a darker, redder course alternates with the terracotta, so the slope reads as rows of tiles.
     "MAT_Tile_A": ("#9C4A36", 0.85, None, 0.0),
+    # Stage 6: a matte cloth for the stall awnings, redder and rougher than the old terracotta, so it reads as fabric.
+    "MAT_Cloth_A": ("#B8523A", 0.95, None, 0.0),
 }
+
+
+# ---- Material variants (Stage 6) ---------------------------------------------------------------------------------
+# Each hub model takes one of three tints of its wood and stone, chosen by its id, so neighbouring pieces do not all
+# match (Art Bible §6). The choice is a checksum of the id, so a rebuild gives the same tint. Only these names are
+# tinted. Paper, lacquer, iron, the glow and the roof tiles keep their colour.
+TINTABLE = {
+    "MAT_WoodWarm_A", "MAT_WoodDark_A", "MAT_WoodLight_A", "MAT_StoneDark_A", "MAT_StoneLight_A", "MAT_StonePale_A",
+    "MAT_Cloth_A",
+}
+TINT_FACTORS = (1.0, 1.07, 0.93)  # brightness of the three tints: the original, a lighter one, a darker one
+_variant = 0  # the tint of the asset being built; build() sets it
+
+
+def _variant_index(asset_id: str) -> int:
+    """0 for the original colours. Hub models take 0, 1 or 2 from a checksum of their id; other models keep 0."""
+    if not asset_id.startswith("hub."):
+        return 0
+    import zlib
+
+    return zlib.crc32(asset_id.encode("utf-8")) % len(TINT_FACTORS)
+
+
+def _tinted_hex(hex_color: str, factor: float) -> str:
+    h = hex_color.lstrip("#")
+    channels = [min(255, max(0, round(int(h[i:i + 2], 16) * factor))) for i in (0, 2, 4)]
+    return "#%02X%02X%02X" % tuple(channels)
 
 
 def _srgb_to_linear(channel: float) -> float:
@@ -73,12 +102,19 @@ def _hex_to_linear(hex_color: str) -> tuple[float, float, float, float]:
 
 
 def material(name: str) -> bpy.types.Material:
-    """Returns the named palette material, creating it once. Shader nodes are looked up by type, not by name."""
-    existing = bpy.data.materials.get(name)
+    """Returns the named palette material, creating it once. Shader nodes are looked up by type, not by name. A tintable
+    name becomes its tinted variant for the asset being built (see _variant_index)."""
+    key = name
+    if _variant and name in TINTABLE:
+        key = f"{name}__v{_variant}"
+        if key not in PALETTE:
+            base_hex, base_roughness, base_emission_hex, base_emission_strength = PALETTE[name]
+            PALETTE[key] = (_tinted_hex(base_hex, TINT_FACTORS[_variant]), base_roughness, base_emission_hex, base_emission_strength)
+    existing = bpy.data.materials.get(key)
     if existing is not None:
         return existing
-    hex_color, roughness, emission_hex, emission_strength = PALETTE[name]
-    mat = bpy.data.materials.new(name)
+    hex_color, roughness, emission_hex, emission_strength = PALETTE[key]
+    mat = bpy.data.materials.new(key)
     mat.use_nodes = True
     bsdf = next(node for node in mat.node_tree.nodes if node.type == "BSDF_PRINCIPLED")
     bsdf.inputs["Base Color"].default_value = _hex_to_linear(hex_color)
@@ -700,7 +736,7 @@ def _game_pole(name: str, mat: str, diameter: float, height: float):
 
 
 def _stall_table(name: str):
-    wood, cloth = "MAT_WoodWarm_A", "MAT_Terracotta_A"
+    wood, cloth = "MAT_WoodWarm_A", "MAT_Cloth_A"
     shape = Shape([wood, cloth])
     shape.box(wood, (0.0, 0.0, 0.41), (2.4, 1.2, 0.08))  # top, from z 0.37 to 0.45
     for x in (-1.05, 1.05):
@@ -712,7 +748,7 @@ def _stall_table(name: str):
 
 def _stall_canopy(name: str):
     # A striped awning: 14 strips across 2.8 m, alternating terracotta and paper. The strips fill the box exactly.
-    cloth, paper = "MAT_Terracotta_A", "MAT_Paper_A"
+    cloth, paper = "MAT_Cloth_A", "MAT_Paper_A"
     shape = Shape([cloth, paper])
     strips = 14
     width = 2.8 / strips
@@ -1259,9 +1295,11 @@ def _cleanup(objects, actions) -> None:
 
 def build(asset_ids: list[str], keep: bool = False) -> str:
     """Builds, exports and saves the source of each id. Returns one report line per asset."""
+    global _variant
     lines = []
     for asset_id in asset_ids:
         stem, builder = ASSETS[asset_id]
+        _variant = _variant_index(asset_id)
         objects, actions = builder()
         _export(stem, objects, actions)
         lines.append(f"{asset_id} -> {stem}.glb | tris {_triangles(objects)} | {_gltf_extent(objects)}")
