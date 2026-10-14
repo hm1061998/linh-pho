@@ -88,12 +88,28 @@ const PICKUPS: readonly ModelSpec[] = [
   { id: 'pickup.wood_scrap', node: 'PICKUP_WoodScrap', size: [0.2, 0.15, 0.2], pivot: 'floor', triangleBudget: 300 },
 ];
 
+/**
+ * Stations, the shop lamp's pedestal and lantern, the three glyph tablets, and the shop fittings (GDD B3, B5, C3). Each
+ * stands on the floor, centred on its pivot. Sizes come from assets_src/build_assets.py.
+ */
+const WORLD: readonly ModelSpec[] = [
+  { id: 'station.workbench', node: 'STATION_Workbench', size: [1.2, 1.03, 0.8], pivot: 'floor', triangleBudget: 300 },
+  { id: 'station.engraving', node: 'STATION_Engraving', size: [0.9, 0.8, 0.6], pivot: 'floor', triangleBudget: 300 },
+  { id: 'placement.pedestal', node: 'PLACEMENT_Pedestal', size: [0.8, 1.0, 0.8], pivot: 'floor', triangleBudget: 100 },
+  { id: 'item.wooden_lantern', node: 'ITEM_WoodenLantern', size: [0.36, 0.36, 0.36], pivot: 'floor', triangleBudget: 400 },
+  { id: 'glyph.gate', node: 'GLYPH_Gate', size: [0.7, 1.0, 0.152], pivot: 'floor', triangleBudget: 200 },
+  { id: 'glyph.bridge', node: 'GLYPH_Bridge', size: [0.7, 1.0, 0.152], pivot: 'floor', triangleBudget: 300 },
+  { id: 'glyph.signboard', node: 'GLYPH_Signboard', size: [0.7, 1.0, 0.152], pivot: 'floor', triangleBudget: 200 },
+  { id: 'shop.counter', node: 'SHOP_Counter', size: [1.2, 0.9, 0.6], pivot: 'floor', triangleBudget: 100 },
+  { id: 'shop.plinth', node: 'SHOP_Plinth', size: [1.1, 0.05, 1.1], pivot: 'floor', triangleBudget: 200 },
+];
+
 /** The playable character: 1.70 m tall, feet on the floor, with its idle and walk loops (GDD E2). */
 const PLAYER: readonly ModelSpec[] = [
   { id: 'player.hero', node: 'PLAYER_Hero', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 8000, animations: ['idle', 'walk'] },
 ];
 
-const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT, ...PICKUPS, ...PLAYER];
+const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT, ...PICKUPS, ...WORLD, ...PLAYER];
 
 function readGlbJson(path: string): GltfJson {
   const bytes = readFileSync(path);

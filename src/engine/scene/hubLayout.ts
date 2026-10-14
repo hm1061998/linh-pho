@@ -104,6 +104,9 @@ export const HUB_PROPS: readonly BlockoutProp[] = [
   walkable(box('ENV_Plaza', [0, 0.04, 0], [12, 0.08, 12], STONE)),
   solid(box('ENV_River_West', [-11.55, 0.03, 23], [36.9, 0.06, 6], WATER)),
   solid(box('ENV_River_East', [19.55, 0.03, 23], [20.9, 0.06, 6], WATER)),
+  // The river's north bank, in two pieces either side of the bridge. It is only a visual edge: the water is what blocks.
+  box('ENV_River_Bank_West', [-11.55, 0.06, 19.75], [36.9, 0.12, 0.5], STONE),
+  box('ENV_River_Bank_East', [19.55, 0.06, 19.75], [20.9, 0.12, 0.5], STONE),
 
   // F — Cầu: wooden bridge over the river (landmark #2). Deck is walkable; rails block the sides.
   walkable(box('ENV_Bridge_Deck', [8, 0.25, 23], [2.2, 0.25, 8.4], WOOD)),
@@ -149,4 +152,9 @@ export const HUB_PROPS: readonly BlockoutProp[] = [
   solid(sphere('ENV_Bush_East', [21, 0.8, 11], [2.4, 1.6, 2.4], FOLIAGE)),
   solid(sphere('ENV_Bush_West', [-23, 0.7, -6], [2.0, 1.4, 2.0], FOLIAGE)),
   solid(sphere('ENV_Bush_North', [3, 0.6, -20], [1.8, 1.2, 1.8], FOLIAGE)),
+
+  // Street dressing: a hand cart by the east bush, and a pot by the shop door and one by the counter.
+  solid(box('PROP_Cart', [16.5, 0.4, 9], [2.0, 0.8, 1.2], WOOD_WARM)),
+  solid(cylinder('PROP_Pot_1', [-19.5, 0.3, 13.8], [0.6, 0.6, 0.6], TERRACOTTA)),
+  solid(cylinder('PROP_Pot_2', [-11.2, 0.3, 14.6], [0.6, 0.6, 0.6], TERRACOTTA)),
 ];

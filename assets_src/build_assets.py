@@ -51,6 +51,8 @@ PALETTE = {
     "MAT_Hemp_A": ("#B89A5E", 0.8, None, 0.0),
     "MAT_Indigo_A": ("#3F5FA8", 0.6, None, 0.0),
     "MAT_Foliage_A": ("#3E6B4F", 0.9, None, 0.0),
+    "MAT_StoneLight_A": ("#B8A98A", 0.85, None, 0.0),
+    "MAT_StonePale_A": ("#9C8F78", 0.9, None, 0.0),
 }
 
 
@@ -102,9 +104,14 @@ class Shape:
         matrix = Matrix.Translation(center) @ Matrix.Diagonal((size[0], size[1], size[2], 1.0))
         self._add(bmesh.ops.create_cube, mat, size=1.0, matrix=matrix)
 
-    def cylinder(self, mat: str, center, radius: float, depth: float, segments: int = 16, radius2=None) -> None:
-        """A cylinder along Z, or a cone when radius2 differs from radius."""
+    def cylinder(self, mat: str, center, radius: float, depth: float, segments: int = 16, radius2=None, axis: str = "z") -> None:
+        """A cylinder along the given axis ('z' up, 'y' or 'x' lying down), or a cone when radius2 differs from radius."""
         top = radius if radius2 is None else radius2
+        turn = {
+            "z": Matrix.Identity(4),
+            "y": Matrix.Rotation(math.radians(90.0), 4, "X"),  # Z becomes Y
+            "x": Matrix.Rotation(math.radians(90.0), 4, "Y"),  # Z becomes X
+        }[axis]
         self._add(
             bmesh.ops.create_cone,
             mat,
@@ -114,7 +121,7 @@ class Shape:
             radius1=radius,
             radius2=top,
             depth=depth,
-            matrix=Matrix.Translation(center),
+            matrix=Matrix.Translation(center) @ turn,
         )
 
     def sphere(self, mat: str, center, radius: float, scale=(1.0, 1.0, 1.0), u: int = 16, v: int = 8) -> None:
@@ -671,6 +678,213 @@ ASSETS.update(
         "craft.bamboo_rib": ("craft_bamboo_rib", craft_bamboo_rib),
         "craft.engraving_lantern": ("craft_engraving_lantern", craft_engraving_lantern),
         "player.hero": ("player_hero", player_hero),
+    }
+)
+
+
+# ---- Stations, placements, glyphs, shop fittings and the plaza (GDD B3, B5, C3, E2) ------------------------------------
+# Built in Blender coordinates: Z is up and the floor is z = 0. Each piece is centred on x and y, so its pivot is the
+# middle of its floor, and the game stands it on the ground at its position.
+
+
+def station_workbench():
+    """The assembly bench (GDD B5.1): a wooden table with three bamboo ribs standing on top, ready for the frame."""
+    wood, dark, bamboo = "MAT_WoodWarm_A", "MAT_WoodDark_A", "MAT_Bamboo_A"
+    shape = Shape([wood, dark, bamboo])
+    shape.box(wood, (0.0, 0.0, 0.74), (1.2, 0.8, 0.06))  # top, z 0.71 to 0.77
+    for x in (-0.54, 0.54):
+        for y in (-0.34, 0.34):
+            shape.box(dark, (x, y, 0.355), (0.06, 0.06, 0.71))  # legs, z 0 to 0.71
+    for x in (-0.25, 0.0, 0.25):
+        shape.cylinder(bamboo, (x, 0.0, 0.9), 0.018, 0.26, segments=10)  # ribs, z 0.77 to 1.03
+    return [shape.finish("STATION_Workbench")], []
+
+
+def station_engraving():
+    """The engraving table (GDD B5.2): a low table with a sheet of paper, an ink stone and a brush."""
+    wood, dark, paper, ink = "MAT_WoodWarm_A", "MAT_WoodDark_A", "MAT_Paper_A", "MAT_Ink_A"
+    shape = Shape([wood, dark, paper, ink])
+    shape.box(wood, (0.0, 0.0, 0.575), (0.9, 0.6, 0.05))  # top, z 0.55 to 0.6
+    for x in (-0.38, 0.38):
+        for y in (-0.24, 0.24):
+            shape.box(dark, (x, y, 0.275), (0.06, 0.06, 0.55))  # legs, z 0 to 0.55
+    shape.box(paper, (-0.08, 0.0, 0.6025), (0.5, 0.4, 0.005))  # paper, z 0.6 to 0.605
+    shape.box(ink, (0.25, -0.12, 0.62), (0.14, 0.14, 0.04))  # ink stone, z 0.6 to 0.64
+    shape.cylinder(dark, (0.25, 0.1, 0.72), 0.012, 0.16, segments=8)  # brush, standing on the paper, z 0.64 to 0.8
+    return [shape.finish("STATION_Engraving")], []
+
+
+def placement_pedestal():
+    """The stone pedestal in front of the shop (GDD C3, Q00). A wooden socket on top takes the lantern."""
+    stone, dark = "MAT_StoneDark_A", "MAT_WoodDark_A"
+    shape = Shape([stone, dark])
+    shape.box(stone, (0.0, 0.0, 0.06), (0.8, 0.8, 0.12))  # base, z 0 to 0.12
+    shape.box(stone, (0.0, 0.0, 0.52), (0.56, 0.56, 0.8))  # column, z 0.12 to 0.92
+    shape.box(dark, (0.0, 0.0, 0.96), (0.7, 0.7, 0.08))  # socket, z 0.92 to 1.0
+    return [shape.finish("PLACEMENT_Pedestal")], []
+
+
+def item_wooden_lantern():
+    """Đèn Mộc (GDD C3): a wooden frame round a paper shade that glows. 0.36 m across, standing on its base."""
+    dark, paper = "MAT_WoodDark_A", "MAT_PaperGlow_A"
+    shape = Shape([dark, paper])
+    shape.cylinder(dark, (0.0, 0.0, 0.01), 0.18, 0.02, segments=16)  # base ring, z 0 to 0.02
+    shape.cylinder(dark, (0.0, 0.0, 0.35), 0.18, 0.02, segments=16)  # top ring, z 0.34 to 0.36
+    shape.cylinder(paper, (0.0, 0.0, 0.18), 0.15, 0.3, segments=16)  # shade, z 0.03 to 0.33
+    for angle in (45.0, 135.0, 225.0, 315.0):  # four ribs at the edge of the shade
+        x, y = 0.15 * math.cos(math.radians(angle)), 0.15 * math.sin(math.radians(angle))
+        shape.cylinder(dark, (x, y, 0.18), 0.012, 0.32, segments=6)
+    return [shape.finish("ITEM_WoodenLantern")], []
+
+
+# The stone is 0.14 m deep and sits 6 mm back, so its marks, 12 mm deep and proud of its face, end 6 mm past the centre.
+# That keeps the whole tablet centred on its pivot, the way the other pieces are.
+GLYPH_FRONT_M = 0.07
+GLYPH_DEPTH_M = 0.012
+GLYPH_STONE_Y_M = -0.006
+
+
+def _glyph(name: str, mark):
+    """A standing stone tablet, 0.7 m wide and 1.0 m tall, with a jade mark proud of its front (+Y) face."""
+    stone, jade = "MAT_StoneDark_A", "MAT_Jade_A"
+    shape = Shape([stone, jade])
+    shape.box(stone, (0.0, GLYPH_STONE_Y_M, 0.5), (0.7, 0.14, 1.0))  # the stone, z 0 to 1.0
+    mark(shape, jade)
+    return [shape.finish(name)], []
+
+
+def _mark_gate(shape: Shape, jade: str) -> None:
+    """The gate: two posts and a lintel across the top."""
+    for x in (-0.2, 0.2):
+        shape.box(jade, (x, GLYPH_FRONT_M, 0.5), (0.05, GLYPH_DEPTH_M, 0.5))  # posts, z 0.25 to 0.75
+    shape.box(jade, (0.0, GLYPH_FRONT_M, 0.77), (0.45, GLYPH_DEPTH_M, 0.05))  # lintel, z 0.745 to 0.795
+
+
+def _mark_bridge(shape: Shape, jade: str) -> None:
+    """The bridge: an arch of blocks on a base line."""
+    cz, radius = 0.2, 0.25
+    for i in range(9):  # nine blocks along the upper half of a circle, from one end to the other
+        a = math.radians(180.0 * i / 8)
+        shape.box(jade, (radius * math.cos(a), GLYPH_FRONT_M, cz + radius * math.sin(a)), (0.05, GLYPH_DEPTH_M, 0.05))
+    shape.box(jade, (0.0, GLYPH_FRONT_M, 0.2), (0.56, GLYPH_DEPTH_M, 0.04))  # base line, z 0.18 to 0.22
+
+
+def _mark_signboard(shape: Shape, jade: str) -> None:
+    """The signboard: a framed panel."""
+    shape.box(jade, (0.0, GLYPH_FRONT_M, 0.73), (0.42, GLYPH_DEPTH_M, 0.04))  # top bar
+    shape.box(jade, (0.0, GLYPH_FRONT_M, 0.27), (0.42, GLYPH_DEPTH_M, 0.04))  # bottom bar
+    for x in (-0.21, 0.21):
+        shape.box(jade, (x, GLYPH_FRONT_M, 0.5), (0.04, GLYPH_DEPTH_M, 0.5))  # side bars, z 0.25 to 0.75
+
+
+def glyph_gate():
+    return _glyph("GLYPH_Gate", _mark_gate)
+
+
+def glyph_bridge():
+    return _glyph("GLYPH_Bridge", _mark_bridge)
+
+
+def glyph_signboard():
+    return _glyph("GLYPH_Signboard", _mark_signboard)
+
+
+def shop_counter():
+    """The shop counter (GDD C3), where orders are taken. 1.2 m wide, with a plank top and a dark front trim."""
+    wood, dark = "MAT_WoodWarm_A", "MAT_WoodDark_A"
+    shape = Shape([wood, dark])
+    shape.box(wood, (0.0, 0.0, 0.42), (1.12, 0.52, 0.84))  # body, z 0 to 0.84
+    shape.box(dark, (0.0, 0.0, 0.87), (1.2, 0.6, 0.06))  # top, z 0.84 to 0.9
+    shape.box(dark, (0.0, -0.28, 0.42), (1.2, 0.04, 0.84))  # front trim, full height
+    return [shape.finish("SHOP_Counter")], []
+
+
+def shop_plinth():
+    """The round plinth a shop piece stands on. 1.1 m across, 5 cm high."""
+    dark = "MAT_WoodDark_A"
+    shape = Shape([dark])
+    shape.cylinder(dark, (0.0, 0.0, 0.025), 0.55, 0.05, segments=24)
+    return [shape.finish("SHOP_Plinth")], []
+
+
+def _game_rail(name: str, mat: str, size):
+    """A bridge rail (docs/ASSET_MANIFEST.md 3b): two rails and seven posts, centred in its box. Sizes in game axes."""
+    width, height, length = size
+    shape = Shape([mat])
+    for z in (height / 2 - 0.03, -height / 2 + 0.03):  # top and bottom rails, 6 cm thick
+        shape.box(mat, (0.0, 0.0, z), (width, length, 0.06))
+    for i in range(7):  # posts, evenly spaced, the first and last just inside the ends
+        y = -length / 2 + 0.06 + i * (length - 0.12) / 6
+        shape.box(mat, (0.0, y, 0.0), (0.12, 0.12, height))
+    return [shape.finish(name)], []
+
+
+def _game_plaza(name: str):
+    """The plaza paving (GDD E3): six by six slabs in two stone tones over a dark bed. Size 12 × 0.08 × 12, centred."""
+    bed, light, pale = "MAT_StoneDark_A", "MAT_StoneLight_A", "MAT_StonePale_A"
+    shape = Shape([bed, light, pale])
+    shape.box(bed, (0.0, 0.0, 0.0), (12.0, 12.0, 0.06))  # the bed, z -0.03 to 0.03
+    for i in range(6):
+        for j in range(6):
+            mat = light if (i + j) % 2 == 0 else pale
+            shape.box(mat, (-5.0 + 2.0 * i, -5.0 + 2.0 * j, 0.0), (1.94, 1.94, 0.08))  # slabs, 6 cm grout between them
+    return [shape.finish(name)], []
+
+
+ASSETS.update(
+    {
+        "station.workbench": ("station_workbench", station_workbench),
+        "station.engraving": ("station_engraving", station_engraving),
+        "placement.pedestal": ("placement_pedestal", placement_pedestal),
+        "item.wooden_lantern": ("item_wooden_lantern", item_wooden_lantern),
+        "glyph.gate": ("glyph_gate", glyph_gate),
+        "glyph.bridge": ("glyph_bridge", glyph_bridge),
+        "glyph.signboard": ("glyph_signboard", glyph_signboard),
+        "shop.counter": ("shop_counter", shop_counter),
+        "shop.plinth": ("shop_plinth", shop_plinth),
+    }
+)
+
+def hub_prop_cart():
+    """A hand cart (GDD E3 mục 7): a wooden bed with rails, two tall wheels, and rolls of paper on the bed.
+
+    Built in game axes, centred on its box: 2.0 m long along X, 1.2 m wide along Z, 0.8 m high.
+    Blender has Z up and Y as the depth, so game Z is Blender Y and game Y is Blender Z.
+    """
+    wood, dark, paper = "MAT_WoodWarm_A", "MAT_WoodDark_A", "MAT_Paper_A"
+    shape = Shape([wood, dark, paper])
+    lift = -0.4  # centres the cart on z = 0, which is the middle of its 0.8 m height
+    shape.box(wood, (0.0, 0.0, 0.5 + lift), (2.0, 1.0, 0.06))  # bed, 0.47 to 0.53
+    for y in (-0.47, 0.47):
+        shape.box(dark, (0.0, y, 0.6 + lift), (2.0, 0.06, 0.14))  # side rails
+    for x in (-0.97, 0.97):
+        shape.box(dark, (x, 0.0, 0.6 + lift), (0.06, 1.0, 0.14))  # end boards
+    for y in (-0.57, 0.57):
+        shape.cylinder(dark, (0.0, y, 0.4 + lift), 0.4, 0.06, segments=20, axis="y")  # wheels, 0.8 m across
+    for y in (-0.25, 0.0, 0.25):
+        shape.cylinder(paper, (0.0, y, 0.65 + lift), 0.12, 1.6, segments=12, axis="x")  # rolls of paper on the bed
+    return [shape.finish("PROP_Cart")], []
+
+
+def _hub_pot(name: str):
+    """A terracotta pot with a bush in it (GDD E3 mục 7). Centred on its box: 0.6 m across and 0.6 m high."""
+    clay, foliage = "MAT_Terracotta_A", "MAT_Foliage_A"
+    shape = Shape([clay, foliage])
+    shape.cylinder(clay, (0.0, 0.0, -0.12), 0.28, 0.36, segments=20)  # the pot, from -0.30 to 0.06
+    shape.sphere(foliage, (0.0, 0.0, 0.06), 0.3, scale=(1.0, 1.0, 0.8), u=16, v=10)  # the bush, top at 0.30
+    return [shape.finish(name)], []
+
+
+ASSETS.update(
+    {
+        "hub.ENV_Plaza": ("env_plaza", partial(_game_plaza, "ENV_Plaza")),
+        "hub.ENV_Bridge_RailWest": ("env_bridge_rail_west", partial(_game_rail, "ENV_Bridge_RailWest", "MAT_WoodDark_A", (0.15, 0.6, 8.4))),
+        "hub.ENV_Bridge_RailEast": ("env_bridge_rail_east", partial(_game_rail, "ENV_Bridge_RailEast", "MAT_WoodDark_A", (0.15, 0.6, 8.4))),
+        "hub.PROP_Cart": ("prop_cart", hub_prop_cart),
+        "hub.PROP_Pot_1": ("prop_pot_1", partial(_hub_pot, "PROP_Pot_1")),
+        "hub.PROP_Pot_2": ("prop_pot_2", partial(_hub_pot, "PROP_Pot_2")),
+        "hub.ENV_River_Bank_West": ("env_river_bank_west", partial(_game_box, "ENV_River_Bank_West", "MAT_StoneLight_A", (36.9, 0.12, 0.5))),
+        "hub.ENV_River_Bank_East": ("env_river_bank_east", partial(_game_box, "ENV_River_Bank_East", "MAT_StoneLight_A", (20.9, 0.12, 0.5))),
     }
 )
 
