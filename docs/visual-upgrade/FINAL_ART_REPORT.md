@@ -19,7 +19,7 @@ Chưa đạt mục tiêu hình ảnh của IMAGE A. Chất lượng model vẫn 
 | Quảng trường | Vuông trống, gian hàng đối xứng | Có làn từ cầu tới đèn trung tâm, hai gian hàng hai bên làn |
 | Mật độ prop | Vài cụm đơn lẻ | Mỗi gian hàng có ba prop phụ; thêm 29 prop trang trí |
 | Đèn | Quả cầu vàng, không chiếu sáng | Thùng bát giác có nan; năm đèn omni ấm tại landmark |
-| Mái nhà | Hình hộp phẳng | Mép nâng về phía góc |
+| Nhà và mái | Hình hộp phẳng | Khung gỗ sẫm, tường vôi hoặc ván, cửa sổ lưới, cửa hai cánh, mép mái cong (D-081) |
 | Vật liệu | Gỗ đồng đều, cổng màu gỗ | Cổng sơn mài đỏ nâu; dải đai thùng bằng sắt |
 | Sinh khí | Tĩnh | Đom đóm trôi quanh đèn; NPC quay về người chơi khi lại gần |
 
@@ -28,11 +28,11 @@ Chưa đạt mục tiêu hình ảnh của IMAGE A. Chất lượng model vẫn 
 | Tiêu chí | Điểm | Bằng chứng |
 |---|---|---|
 | Camera & composition | 3/5 | 40 m, 40°. Vẫn nhìn từ trên, mép nền 60 m còn thấy ở góc |
-| Architecture quality | 2/5 | Mái cong, đèn thùng; nhà vẫn là hình hộp với cửa sổ đơn giản |
+| Architecture quality | 3/5 | Kit nhà với khung gỗ, cửa sổ lưới, cửa hai cánh, mái cong có diềm; chưa có hiên và ngói riêng |
 | Props & environment density | 3/5 | 29 prop mới, mỗi gian hàng ba prop; rìa hub vẫn thưa |
 | Lighting & atmosphere | 3/5 | Năm đèn omni ấm, không đổ bóng; chưa có AO, bloom |
 | Material consistency | 2/5 | Hai vật liệu mới; chưa có texture, chưa có biến thể màu |
-| Vietnamese visual identity | 2/5 | Mái cong, cổng sơn mài, đèn lồng. Chưa có nhà kiểu Việt riêng |
+| Vietnamese visual identity | 3/5 | Mái cong, khung gỗ sẫm, tường vôi, cửa lưới, cổng sơn mài, đèn lồng. Chưa có hiên và ngói riêng |
 | Gameplay readability | 3/5 | Đèn trung tâm và làn đọc được; chưa có chỉ dẫn trong thế giới cho nhiệm vụ |
 | Runtime performance | Chưa đo | Xem mục 5 |
 
@@ -42,8 +42,8 @@ Chưa đạt mục tiêu hình ảnh của IMAGE A. Chất lượng model vẫn 
 - **Layout:** `src/engine/scene/hubLayout.ts` (gian hàng 3, 5, 6; xe hàng; 29 prop trang trí). Anchor NPC, trạm, glyph, quầy, đặt đèn và pickup không đổi.
 - **Ánh sáng:** `src/engine/scene/buildHubBlockout.ts` (`LANDMARK_LIGHTS`, năm đèn omni).
 - **VFX và NPC:** `src/engine/fx/Fireflies.ts` (mới); `src/engine/npc/NpcRenderer.ts` (quay mặt khi lại gần); `src/app/GameApp.ts` (nối đom đóm, giảm hiệu ứng, cập nhật NPC).
-- **Model:** `assets_src/build_assets.py` (builder mới: prop trang trí, mái cong, đèn thùng, gian hàng 5–6, vật liệu sơn mài và iron); `src/content/assets.json` (khai báo 39 model mới).
-- **GLB:** 39 file mới và 15 file có sẵn được sinh lại trong `public/assets/`. Mỗi file sinh kèm `.blend` nguồn trong `assets_src/`.
+- **Model:** `assets_src/build_assets.py` (builder mới: prop trang trí, mái cong, đèn thùng, gian hàng 5–6, kit nhà, vật liệu sơn mài và iron); `src/content/assets.json` (khai báo 39 model mới).
+- **GLB:** 39 file mới và 18 file có sẵn được sinh lại trong `public/assets/`. Mỗi file sinh kèm `.blend` nguồn trong `assets_src/`.
 - **Tài liệu:** `docs/DECISIONS.md` (D-075 đến D-079, D-013 được ghi chú đã thay đổi), `docs/ASSET_MANIFEST.md` (mục 3c), `docs/visual-upgrade/` (kế hoạch và báo cáo này).
 
 ## 5. Số liệu
@@ -63,7 +63,7 @@ Chưa đo:
 
 ## 6. Giới hạn và việc chưa làm
 
-- **Model:** nhà và gian hàng vẫn là hình hộp với chi tiết tối thiểu. Chưa có nhà kiểu Việt riêng, chưa có kit kiến trúc (hiên, lan can chạm, cửa nhiều cánh).
+- **Model:** nhà đã có kit (D-081) nhưng chưa có hiên, ngói riêng và lan can chạm. Gian hàng vẫn đơn giản.
 - **Nền và rìa hub:** mặt đất và mặt nước vẫn là hộp theo thiết kế. Nền xa là màu `#0F1A2A`, không có đường chân trời hay tầng kiến trúc xa. Rìa hub thưa.
 - **Đèn:** chưa có đèn treo dây và cụm đèn treo đúng như IMAGE A. Chưa có bóng tiếp xúc (AO) và bloom.
 - **Chuyển động:** chưa có hoạt ảnh chào cho NPC (chỉ quay mặt), chưa có đung đưa đèn và mái vải. Đom đóm là chấm sáng trơn.

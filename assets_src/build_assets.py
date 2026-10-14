@@ -56,6 +56,8 @@ PALETTE = {
     # Stage 6: lacquer on the old gate (red-brown, glossier than wood) and iron bands on barrels.
     "MAT_Lacquer_A": ("#7A2A22", 0.35, None, 0.0),
     "MAT_Iron_A": ("#3A3F48", 0.5, None, 0.0),
+    # House kit: lime plaster for the shop walls, an old ochre-white wall.
+    "MAT_Lime_A": ("#D9BF8C", 0.9, None, 0.0),
 }
 
 
@@ -265,18 +267,84 @@ def furniture_hanging_lamp():
 # still measures exactly the blockout size.
 
 
+# ---- House kit (Stage 4, Vietnamese fantasy house) --------------------------------------------------------------
+# The shop and the workshop share one set of modules: a plinth, corner posts, a tie beam, lattice windows, a roof with
+# curved eaves, a fascia along the eaves and a ridge board. The two variants differ in the wall only: lime plaster for
+# the shop, plank boards for the workshop. Every module sits inside the blockout box of its piece in hubLayout.ts, so the
+# sizes stay the same and no anchor moves. Coordinates are game coordinates (Y up), centred on the box; _gbox converts.
+
+HOUSE_POST_M = 0.3
+HOUSE_WALL_FACE_M = 2.95  # the wall face, measured from the centre; posts and window frames reach the box edge at 3.0
+
+
+def _lantern_parts(shape: Shape, mat: str, c, width: float, height: float) -> None:
+    """An octagonal paper lantern centred on c, added to a shared Shape. Same form as _game_lantern."""
+    r_mid = width / 2.0
+    r_end = r_mid * 0.8
+    shape.cylinder(mat, (c[0], -c[2], c[1] - height / 4.0), r_end, height / 2.0, segments=8, radius2=r_mid)
+    shape.cylinder(mat, (c[0], -c[2], c[1] + height / 4.0), r_mid, height / 2.0, segments=8, radius2=r_end)
+
+
+def _house_posts(shape: Shape, mat: str, half_w: float, half_h: float, half_d: float) -> None:
+    """Four corner posts from floor to top. Their outer faces are the corners of the box."""
+    for x in (-half_w + HOUSE_POST_M / 2, half_w - HOUSE_POST_M / 2):
+        for z in (-half_d + HOUSE_POST_M / 2, half_d - HOUSE_POST_M / 2):
+            _gbox(shape, mat, (x, 0.0, z), (HOUSE_POST_M, 2.0 * half_h, HOUSE_POST_M))
+
+
+def _house_window(shape: Shape, frame: str, glass: str, x: float, y: float, w: float, h: float, facing: int) -> None:
+    """A lattice window on a long wall. `facing` is +1 for the front wall, -1 for the back. The frame stands just proud."""
+    z = facing * (HOUSE_WALL_FACE_M + 0.02)
+    _gbox(shape, glass, (x, y, facing * (HOUSE_WALL_FACE_M + 0.005)), (w - 0.16, h - 0.16, 0.01))
+    _gbox(shape, frame, (x, y + h / 2 - 0.04, z), (w, 0.08, 0.04))  # top bar
+    _gbox(shape, frame, (x, y - h / 2 + 0.04, z), (w, 0.08, 0.04))  # bottom bar
+    _gbox(shape, frame, (x - w / 2 + 0.04, y, z), (0.08, h, 0.04))  # left bar
+    _gbox(shape, frame, (x + w / 2 - 0.04, y, z), (0.08, h, 0.04))  # right bar
+    _gbox(shape, frame, (x, y, z), (0.05, h - 0.16, 0.04))  # lattice, vertical
+    _gbox(shape, frame, (x, y, z), (w - 0.16, 0.05, 0.04))  # lattice, horizontal
+
+
+def _eave_fascia(shape: Shape, mat: str, eaves_half, z_eaves: float, lift: float, steps: int = 8) -> None:
+    """A dark band along the front and back eaves, on the same curve as curved_hip_roof. It stays inside the roof box.
+    The roof's height is game Y (Blender Z), so the band's height is y and its depth is z."""
+    bx, by = eaves_half
+    width = 2.0 * bx / steps
+    for depth in (-by + 0.05, by - 0.05):
+        for i in range(steps):
+            xm = -bx + width * (i + 0.5)
+            height = z_eaves + lift * (abs(xm) / bx) ** 3 + 0.035
+            _gbox(shape, mat, (xm, height, depth), (width, 0.07, 0.1))
+
+
+def _ridge_cap(shape: Shape, mat: str, ridge_half: float, z_ridge: float) -> None:
+    """A dark ridge board along the top of the roof, just inside the top of the box (its top is at height z_ridge)."""
+    _gbox(shape, mat, (0.0, z_ridge - 0.04, 0.0), (2.0 * ridge_half + 0.2, 0.08, 0.12))
+
+
 def hub_env_house_shop_body():
-    shape = Shape(["MAT_Paper_A", "MAT_Window_A"])
-    shape.box("MAT_Paper_A", (0.0, 0.0, 0.0), (8.0, 5.96, 4.0))
-    for x in (-2.2, 2.2):  # both long faces; the door on the front stays clear between them
-        for side in (1, -1):
-            shape.box("MAT_Window_A", (x, side * 2.99, 0.2), (1.2, 0.02, 1.3))
+    """The shop: lime-plaster walls on a dark plinth, dark corner posts and a tie beam, lattice windows on both long walls,
+    and a small lantern on the front wall beside the door. The box is 8 × 4 × 6 m."""
+    wood, stone, lime = "MAT_WoodDark_A", "MAT_StoneDark_A", "MAT_Lime_A"
+    shape = Shape([lime, stone, wood, "MAT_Window_A", "MAT_LanternGlow_A"])
+    _gbox(shape, stone, (0.0, -1.825, 0.0), (8.0, 0.35, 6.0))  # plinth, y -2.0 .. -1.65
+    _gbox(shape, lime, (0.0, -0.025, 0.0), (7.4, 3.25, 5.9))  # walls, y -1.65 .. 1.6
+    _gbox(shape, wood, (0.0, 1.8, 0.0), (8.0, 0.4, 6.0))  # tie beam, y 1.6 .. 2.0
+    _house_posts(shape, wood, 4.0, 2.0, 3.0)
+    for x in (-2.2, 2.2):  # both long walls; the door on the front stays clear between them
+        for facing in (1, -1):
+            _house_window(shape, wood, "MAT_Window_A", x, 0.2, 1.2, 1.3, facing)
+    # A lantern hangs on a hook beside the door (the door is at x = 0). It stays inside the box.
+    _gbox(shape, wood, (-1.2, 0.95, 2.9), (0.06, 0.06, 0.1))
+    _lantern_parts(shape, "MAT_LanternGlow_A", (-1.2, 0.75, 2.85), 0.3, 0.3)
     return [shape.finish("ENV_House_Shop_Body")], []
 
 
 def hub_env_house_shop_roof():
-    shape = Shape(["MAT_Terracotta_A"])
+    wood = "MAT_WoodDark_A"
+    shape = Shape(["MAT_Terracotta_A", wood])
     shape.curved_hip_roof("MAT_Terracotta_A", (4.6, 3.6), 2.4, -0.4, 0.4, lift=0.25)
+    _eave_fascia(shape, wood, (4.6, 3.6), -0.4, 0.25)
+    _ridge_cap(shape, wood, 2.4, 0.4)
     return [shape.finish("ENV_House_Shop_Roof")], []
 
 
@@ -293,18 +361,45 @@ def hub_prop_signboard_shop():
 
 
 def hub_env_house_workshop_body():
-    shape = Shape(["MAT_WoodLight_A", "MAT_Window_A"])
-    shape.box("MAT_WoodLight_A", (0.0, 0.0, 0.0), (7.0, 5.96, 3.5))
-    for x in (-2.0, 2.0):
-        for side in (1, -1):
-            shape.box("MAT_Window_A", (x, side * 2.99, 0.0), (1.0, 0.02, 1.1))
+    """The workshop: plank walls on a dark plinth, dark corner posts and a tie beam, plank joints, and lattice windows on
+    both long walls. The box is 7 × 3.5 × 6 m."""
+    wood, stone, plank = "MAT_WoodDark_A", "MAT_StoneDark_A", "MAT_WoodLight_A"
+    shape = Shape([plank, stone, wood, "MAT_Window_A"])
+    _gbox(shape, stone, (0.0, -1.6, 0.0), (7.0, 0.3, 6.0))  # plinth, y -1.75 .. -1.45
+    _gbox(shape, plank, (0.0, 0.0, 0.0), (6.4, 2.9, 5.9))  # planks, y -1.45 .. 1.45
+    _gbox(shape, wood, (0.0, 1.6, 0.0), (7.0, 0.3, 6.0))  # tie beam, y 1.45 .. 1.75
+    _house_posts(shape, wood, 3.5, 1.75, 3.0)
+    for k in range(-3, 4):  # plank joints every 0.8 m, on both long walls
+        for facing in (1, -1):
+            _gbox(shape, wood, (k * 0.8, 0.0, facing * HOUSE_WALL_FACE_M), (0.05, 2.9, 0.04))
+    for x in (-1.8, 1.8):
+        for facing in (1, -1):
+            _house_window(shape, wood, "MAT_Window_A", x, 0.1, 1.0, 1.0, facing)
     return [shape.finish("ENV_House_Workshop_Body")], []
 
 
 def hub_env_house_workshop_roof():
-    shape = Shape(["MAT_Terracotta_A"])
+    wood = "MAT_WoodDark_A"
+    shape = Shape(["MAT_Terracotta_A", wood])
     shape.curved_hip_roof("MAT_Terracotta_A", (4.1, 3.4), 2.6, -0.35, 0.35, lift=0.22)
+    _eave_fascia(shape, wood, (4.1, 3.4), -0.35, 0.22)
+    _ridge_cap(shape, wood, 2.6, 0.35)
     return [shape.finish("ENV_House_Workshop_Roof")], []
+
+
+def _house_door(name: str):
+    """The shop door: two leaves in a frame, 1.4 m wide, 2.4 m high and 0.12 m deep, centred on its box."""
+    frame, wood = "MAT_WoodDark_A", "MAT_WoodWarm_A"
+    shape = Shape([frame, wood])
+    _gbox(shape, frame, (0.0, 1.15, 0.0), (1.4, 0.1, 0.12))  # head
+    _gbox(shape, frame, (0.0, -1.15, 0.0), (1.4, 0.1, 0.12))  # sill
+    for x in (-0.65, 0.65):
+        _gbox(shape, frame, (x, 0.0, 0.0), (0.1, 2.4, 0.12))  # jambs
+    for x in (-0.36, 0.36):  # two leaves, 0.66 m wide, with a gap in the middle
+        _gbox(shape, wood, (x, 0.0, 0.0), (0.66, 2.2, 0.06))
+        for y in (0.6, 0.0, -0.6):  # lattice bars across each leaf
+            _gbox(shape, frame, (x, y, 0.035), (0.56, 0.05, 0.03))
+    return [shape.finish(name)], []
 
 
 def hub_prop_workbench_workshop():
@@ -590,7 +685,7 @@ def _hub_detail() -> dict:
         detail[name] = partial(_game_box, name, "MAT_Lacquer_A", (0.8, 4.5, 0.8))
     detail["ENV_Gate_Beam"] = partial(_game_box, "ENV_Gate_Beam", "MAT_Terracotta_A", (6.6, 0.6, 1.0))
     detail["PROP_Lantern_Gate"] = partial(_game_lantern, "PROP_Lantern_Gate", "MAT_LanternGlow_A", (0.7, 0.7, 0.7))
-    detail["ENV_House_Shop_Door"] = partial(_game_box, "ENV_House_Shop_Door", "MAT_WoodDark_A", (1.4, 2.4, 0.12))
+    detail["ENV_House_Shop_Door"] = partial(_house_door, "ENV_House_Shop_Door")
     detail["ENV_Bush_East"] = partial(_game_ellipsoid, "ENV_Bush_East", "MAT_Foliage_A", (2.4, 1.6, 2.4))
     detail["ENV_Bush_West"] = partial(_game_ellipsoid, "ENV_Bush_West", "MAT_Foliage_A", (2.0, 1.4, 2.0))
     detail["ENV_Bush_North"] = partial(_game_ellipsoid, "ENV_Bush_North", "MAT_Foliage_A", (1.8, 1.2, 1.8))

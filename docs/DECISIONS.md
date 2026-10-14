@@ -550,3 +550,10 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Ở D-077, gian hàng 5 đứng phía tây làn và chặn đường chéo từ tây nam quảng trường tới cầu. Dời lên đông bắc, làn từ góc đông nam quảng trường tới cầu thông. Cột x = 13 có thêm một gian hàng (cùng với gian hàng 3 và 6).
 - **Đánh đổi:** Phía tây làn trống hẳn, nên phần này của quảng trường bớt chi tiết. Đường chéo từ tây nam tới cầu vẫn bị lan can cầu và mép sông chặn. Đây là hình học có sẵn, không do dời gian hàng; người chơi đi qua làn đông nam.
 - **Kiểm chứng:** `typecheck` đạt; `npm test` 935 test đạt. Trong trình duyệt (cổng 5174): đi từ quảng trường qua làn đông nam tới cầu và sang bờ bên kia đều đến đích (48, 97 và 28 bước).
+
+## D-081 — Kit nhà kiểu Việt: tường vôi và tường ván, dùng chung module
+
+- **Chọn:** Hai biến thể nhà dựng từ cùng một bộ module trong `build_assets.py`: đế đá, cột góc (`_house_posts`), dầm đỉnh, cửa sổ lưới (`_house_window`), diềm mái (`_eave_fascia`), bờm nóc (`_ridge_cap`), mái cong (`curved_hip_roof`). Nhà tiệm có tường vôi (`MAT_Lime_A`, #D9BF8C), cửa hai cánh có lưới (`_house_door`) và một đèn treo cạnh cửa. Xưởng có tường ván (`MAT_WoodLight_A`) với mạch ghép mỗi 0.8 m. Mọi module nằm trong đúng hộp kích thước trong `hubLayout.ts`, nên không dời anchor (quầy, ô trưng bày, đặt đèn, glyph) và không đổi collider.
+- **Lý do:** Art Bible §1 yêu cầu khung gỗ sẫm, tường vôi cũ, mái cong và cửa gỗ nhiều cánh. Dùng chung module để nhân ra khu khác sau này mà không viết lại từng nhà.
+- **Đánh đổi:** Chưa có hiên, vì hiên làm hộp nhà rộng ra và buộc dời anchor quầy và ô trưng bày. Chưa có ngói riêng: mái vẫn một màu đất nung. Đèn treo chỉ là khối đèn trên tường, nằm trong hộp nên nhô ra rất ít. Chưa có chi tiết chạm trên cửa sổ.
+- **Kiểm chứng:** Năm GLB build lại. Kích thước khớp: nhà tiệm 8×4×6, xưởng 7×3.5×6, mái 9.2×0.8×7.2 và 8.2×0.7×6.8, cửa 1.4×2.4×0.12. `npm test` 935 test đạt. Trong trình duyệt ở 40 m: hai nhà có khung gỗ, cửa sổ lưới, mái có diềm và bờm nóc.
