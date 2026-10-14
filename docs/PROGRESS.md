@@ -300,7 +300,7 @@ Lưu ý quan trọng về môi trường kiểm thử: pane trình duyệt đang
 12. **Đèn Vân Linh chưa có vật trong thế giới** (V5). Chỉ có trong bàn khắc và kho.
 
 ## Việc tiếp theo
-- **Phase tiếp theo: Season 1 «Đêm Khai Phố»** (GDD mục J), xem [SEASON_1.md](SEASON_1.md). Đang chờ bốn quyết định nội dung trước khi viết quest.
+- **Phase tiếp theo: Season 1 «Đêm Khai Phố»** (GDD mục J), xem [SEASON_1.md](SEASON_1.md). Đã chốt ba trong bốn quyết định Season 1; đang chờ đề cương quest và game mini thứ hai.
 - **Đã xong các module 00–12, và các mục G và V trong [COMPLETION.md](COMPLETION.md), trừ V5.** Phần còn lại cần thiết bị thật, người thật hoặc pháp lý: FPS thật, Android, iOS, Firefox, Safari, trình đọc màn hình thật, playtest, và chính sách riêng tư đã duyệt.
 - **Trước khi gọi là "chơi thử được":** Làm các việc trong mục 8 của `docs/QA_REPORT.md`. Đo FPS thật trên desktop và Android, thử cảm ứng và xoay ngang trên điện thoại, thử Firefox và Safari. Cần thiết bị thật, nên không làm được trong môi trường này.
 - **Song song:** đối chiếu 83 model với `docs/ASSET_MANIFEST.md` (kích thước, số tam giác, tên node).

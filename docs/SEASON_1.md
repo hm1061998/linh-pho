@@ -43,8 +43,8 @@ Mỗi module là một commit trên `dev`, cập nhật [PROGRESS.md](PROGRESS.m
 | Module | Việc | Chặn bởi |
 |---|---|---|
 | S1-M0 | Mở phase (tài liệu này) | — |
-| S1-M1 | Chốt bốn quyết định nội dung bên dưới | Chủ dự án |
-| S1-M2 | Đề cương 8 quest: người giao, mục tiêu, thưởng, mở khoá. Duyệt trước khi viết dữ liệu | S1-M1 |
+| S1-M1 | Chốt quyết định nội dung. Còn mở: game mini thứ hai | Chủ dự án |
+| S1-M2 | Đề cương 8 quest: người giao, mục tiêu, thưởng, mở khoá. Chủ dự án viết, tôi kiểm tra với schema trước khi viết dữ liệu | S1-M1 |
 | S1-M3 | Dữ liệu Q03–Q05: quest, thoại, công thức, điểm nhặt, trạm, đơn, cùng test | S1-M2 |
 | S1-M4 | Q06–Q07 và mini-game 1 (domain, giao diện, test) | S1-M2 và quyết định mini-game |
 | S1-M5 | Q08–Q10 và mini-game 2 | S1-M4 |
@@ -53,11 +53,11 @@ Mỗi module là một commit trên `dev`, cập nhật [PROGRESS.md](PROGRESS.m
 
 Mục mini-game: giữ mẫu của B5. Phần logic nằm trong `domain/minigame`, phần hiển thị 3D là một `CraftStage` đọc snapshot, và input là HTML (D-071).
 
-## Quyết định cần chủ dự án
+## Quyết định
 
-Chưa có quyết định nào trong bốn mục này thì không viết được S1-M2.
+Đã chốt ngày 14/10/2026:
 
-1. **Season 1 dừng ở cấp tiệm nào?** Khuyến nghị: L2. L3 «Góc Ký Ức» mở chương 2, mà GDD xếp sau MVP.
-2. **Hai mini-game mới là gì?** GDD đã có Nhuộm Giấy (B5.3, post-MVP, «phối màu/sắp họa tiết»). Chưa có ứng viên thứ hai.
-3. **Ai viết nội dung quest và thoại?** Khuyến nghị: chủ dự án viết đề cương và duyệt; tôi làm dữ liệu, code và test.
-4. **«Mảnh Ký Ức» có trong Season 1 không?** Khuyến nghị: chưa. Thêm tiền mới kéo theo UI, save và cách kiếm, nên để sau khi đã có nội dung.
+1. **Dừng ở L2.** L3 «Góc Ký Ức» mở chương 2, mà GDD xếp sau MVP.
+2. **Mini-game:** Nhuộm Giấy (B5.3) là game thứ nhất. Game thứ hai chưa chọn, cần chốt trước S1-M4.
+3. **Nội dung:** chủ dự án viết đề cương quest và thoại. Tôi làm dữ liệu, code và test.
+4. **Mảnh Ký Ức:** chưa đưa vào Season 1. Thêm tiền mới kéo theo UI, save và cách kiếm, nên để sau khi đã có nội dung.
