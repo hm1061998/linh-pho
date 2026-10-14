@@ -17,7 +17,7 @@ export function startStates(
   root: Entity,
   clips: Readonly<Record<string, AnimTrack>>,
   start: string,
-): { set(state: string): void } {
+): { set(state: string, speed?: number): void } {
   root.addComponent('anim', { activate: true });
   const anim = root.anim;
   for (const [name, track] of Object.entries(clips)) {
@@ -26,12 +26,16 @@ export function startStates(
   let current = start;
   anim?.baseLayer?.play(start);
   return {
-    set(state: string): void {
-      if (state === current || !anim || !(state in clips)) {
+    set(state: string, speed = 1): void {
+      if (!anim || !(state in clips)) {
+        return;
+      }
+      anim.speed = speed;
+      if (state === current) {
         return;
       }
       current = state;
-      anim.baseLayer?.play(state);
+      anim.baseLayer?.transition(state, 0.2);
     },
   };
 }

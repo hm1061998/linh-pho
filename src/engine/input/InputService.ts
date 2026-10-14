@@ -8,6 +8,8 @@ import { QueuedPress } from './QueuedPress';
 export interface InputFrame {
   /** Walk intent, camera space. Keyboard and joystick combined, length at most 1. */
   readonly move: MoveInput;
+  /** Hold either Shift key to run; cleared on blur, pause and dialogue. */
+  readonly sprintHeld: boolean;
   /** Camera yaw change in radians from a horizontal drag on the canvas. */
   readonly yawDelta: number;
   /** Camera distance change in meters since the last frame. Negative zooms in. */
@@ -132,6 +134,7 @@ export class InputService {
     const lanternTaken = this.lanternPress.take(now);
     const frame: InputFrame = {
       move,
+      sprintHeld: !blocked && (this.keys.isPressed('ShiftLeft') || this.keys.isPressed('ShiftRight')),
       yawDelta: blocked ? 0 : this.pendingYaw,
       zoomDelta: blocked ? 0 : this.pendingZoom,
       interactPressed: !blocked && interactTaken,
@@ -170,7 +173,7 @@ export class InputService {
     if (event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
-    if (!this.bindingsTable.boundCodes().has(event.code)) {
+    if (!this.bindingsTable.boundCodes().has(event.code) && event.code !== 'ShiftLeft' && event.code !== 'ShiftRight') {
       return;
     }
     // Read before our own preventDefault below, so "already handled by UI" means handled by someone else.

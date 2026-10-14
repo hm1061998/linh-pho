@@ -2,6 +2,8 @@
 
 Cập nhật: 2026-10-14. Tài liệu này là hợp đồng giữa code và Blender. Mọi model 3D phải khớp với dòng tương ứng ở đây trước khi nhập vào game.
 
+**Model mới từ người dùng:** xem [SUPPLIED_MODELS.md](SUPPLIED_MODELS.md) cho pipeline Blender và các thay đổi thay thế quy định blockout bên dưới: Bấc cao 0,50 m, giữ tỉ lệ, tối đa 4.500 tam giác; đèn đặt cao 0,50 m, giữ tỉ lệ, tối đa 2.500 tam giác. Đèn treo và đèn bàn khắc giữ kích thước/pivot cũ, ngân sách tăng lên 2.500 tam giác. Nhân vật dùng Nhan_Vat; ba NPC dùng Ba_NGhiem, Co_Lam và Ong_Do tương ứng, giữ chiều cao 1,70 m và clip theo manifest.
+
 **Tình trạng hiện tại:** 122 model production trong `public/assets/`, làm trong Blender bằng `assets_src/build_assets.py` (nguồn `.blend` trong `assets_src/`): 5 nội thất (mục 2), 94 vật trong hub (mục 3, 3b và 3c), 4 NPC có clip `idle` (mục 4). `src/tests/furnitureModels.test.ts` kiểm tra kích thước, pivot, ngân sách tam giác, tên node và clip của từng file. Vật còn lại (mặt đất và mặt nước) vẫn là khối hộp từ `src/engine/scene/hubLayout.ts`, theo chủ đích (D-072). **Test GLB** do code sinh (`dev.test_crate`, xem mục 7) chỉ dùng để kiểm tra bộ nạp, không phải asset thật.
 
 ---

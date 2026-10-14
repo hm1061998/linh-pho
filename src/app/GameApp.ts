@@ -328,7 +328,7 @@ export class GameApp {
     const spirit = this.sessionState.lantern.snapshot.spiritAmount;
     this.spiritAmbient?.update(spirit);
     this.fireflies.setSpiritAmount(spirit);
-    this.player.update(dt, frame.move, this.camera.yawRadians);
+    this.player.update(dt, frame.move, this.camera.yawRadians, frame.sprintHeld);
     this.camera.update(dt, this.player.groundPosition, frame.yawDelta, frame.zoomDelta);
     const { x, z } = this.player.groundPosition;
     this.roofs?.update(dt, this.camera.position, { x, y: HUB_WORLD.surfaceHeightAt({ x, z }) + PLAYER_HEAD_HEIGHT_M, z });

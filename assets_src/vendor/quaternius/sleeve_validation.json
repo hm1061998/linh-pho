@@ -1,0 +1,16 @@
+{
+  "walk": {
+    "edgeCount": 925,
+    "maxStretch": 1.8601145862581858,
+    "p95Stretch": 1.0321059166909854,
+    "armSwingDegrees": 48.000006458363565,
+    "maxElbowDegrees": 7.999857357830142
+  },
+  "run": {
+    "edgeCount": 925,
+    "maxStretch": 2.036541383529258,
+    "p95Stretch": 1.0268470366780629,
+    "armSwingDegrees": 63.70198469036653,
+    "maxElbowDegrees": 25.990647348630013
+  }
+}

@@ -44,7 +44,7 @@ const FURNITURE: readonly ModelSpec[] = [
   { id: 'furniture.lantern_shelf', node: 'PROP_LanternShelf', size: [1.6, 1.1, 0.5], pivot: 'floor', triangleBudget: 1500 },
   { id: 'furniture.bamboo_vase', node: 'PROP_BambooVase', size: [0.5, 0.9, 0.5], pivot: 'floor', triangleBudget: 800 },
   { id: 'furniture.paper_painting', node: 'PROP_PaperPainting', size: [1.0, 0.8, 0.08], pivot: 'floor', triangleBudget: 600 },
-  { id: 'furniture.hanging_lamp', node: 'PROP_HangingLamp', size: [0.5, 0.545, 0.5], pivot: 'hang', triangleBudget: 1200 },
+  { id: 'furniture.hanging_lamp', node: 'PROP_HangingLamp', size: [0.5, 0.545, 0.5], pivot: 'hang', triangleBudget: 2500 },
 ];
 
 /**
@@ -68,14 +68,14 @@ const NPCS: readonly ModelSpec[] = [
   { id: 'npc.npc_ba_nghiem', node: 'NPC_BaNghiem', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 6000, animations: ['idle'] },
   { id: 'npc.npc_co_lam', node: 'NPC_CoLam', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 6000, animations: ['idle'] },
   { id: 'npc.npc_ong_do', node: 'NPC_OngDo', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 6000, animations: ['idle'] },
-  { id: 'npc.npc_bac', node: 'NPC_Bac', size: [0.36, 0.36, 0.36], pivot: 'centre', triangleBudget: 1200, animations: ['idle'] },
+  { id: 'npc.npc_bac', node: 'NPC_Bac', size: [null, 0.5, null], pivot: 'centre', triangleBudget: 4500, animations: ['idle'] },
 ];
 
 /** The craft stage (GDD B5). Sizes come from assets_src/build_assets.py; the engine places the parts with craftLayout.ts. */
 const CRAFT: readonly ModelSpec[] = [
   { id: 'craft.lantern_frame', node: 'CRAFT_LanternFrame', size: [0.36, 0.56, 0.36], pivot: 'floor', triangleBudget: 1500 },
   { id: 'craft.bamboo_rib', node: 'CRAFT_BambooRib', size: [0.034, 0.38, 0.036], pivot: 'floor', triangleBudget: 300 },
-  { id: 'craft.engraving_lantern', node: 'CRAFT_EngravingLantern', size: [0.36, 0.5, 0.36], pivot: 'floor', triangleBudget: 1500 },
+  { id: 'craft.engraving_lantern', node: 'CRAFT_EngravingLantern', size: [0.36, 0.5, 0.36], pivot: 'floor', triangleBudget: 2500 },
 ];
 
 /** The six materials the player collects (GDD B4). Each lies on the ground, centred on its own origin. */
@@ -96,7 +96,7 @@ const WORLD: readonly ModelSpec[] = [
   { id: 'station.workbench', node: 'STATION_Workbench', size: [1.2, 1.03, 0.8], pivot: 'floor', triangleBudget: 300 },
   { id: 'station.engraving', node: 'STATION_Engraving', size: [0.9, 0.8, 0.6], pivot: 'floor', triangleBudget: 300 },
   { id: 'placement.pedestal', node: 'PLACEMENT_Pedestal', size: [0.8, 1.0, 0.8], pivot: 'floor', triangleBudget: 100 },
-  { id: 'item.wooden_lantern', node: 'ITEM_WoodenLantern', size: [0.36, 0.36, 0.36], pivot: 'floor', triangleBudget: 400 },
+  { id: 'item.wooden_lantern', node: 'ITEM_WoodenLantern', size: [null, 0.5, null], pivot: 'floor', triangleBudget: 2500 },
   { id: 'glyph.gate', node: 'GLYPH_Gate', size: [0.7, 1.0, 0.152], pivot: 'floor', triangleBudget: 200 },
   { id: 'glyph.bridge', node: 'GLYPH_Bridge', size: [0.7, 1.0, 0.152], pivot: 'floor', triangleBudget: 300 },
   { id: 'glyph.signboard', node: 'GLYPH_Signboard', size: [0.7, 1.0, 0.152], pivot: 'floor', triangleBudget: 200 },
@@ -106,7 +106,7 @@ const WORLD: readonly ModelSpec[] = [
 
 /** The playable character: 1.70 m tall, feet on the floor, with its idle and walk loops (GDD E2). */
 const PLAYER: readonly ModelSpec[] = [
-  { id: 'player.hero', node: 'PLAYER_Hero', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 8000, animations: ['idle', 'walk'] },
+  { id: 'player.hero', node: 'PLAYER_Hero', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 8000, animations: ['idle', 'walk', 'run'] },
 ];
 
 const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT, ...PICKUPS, ...WORLD, ...PLAYER];

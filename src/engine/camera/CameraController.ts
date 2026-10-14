@@ -8,9 +8,9 @@ export interface CameraConfig {
   /** Tilt above the horizon in degrees. The GDD asks for 40–50°. */
   readonly pitchDeg: number;
   readonly fovDeg: number;
-  /** Opening distance in meters. At 70 m the NPCs are only a few pixels tall, so the game opens closer (D-075). */
+  /** Opening distance in meters, close enough to read the character and its steps. */
   readonly defaultDistance: number;
-  /** Closest zoom in meters. At 40° the camera stays about 19 m above the ground, clear of roofs (max 4.8 m). */
+  /** Closest zoom in meters. Including focus height, the camera remains above the roofs at 40°. */
   readonly minDistance: number;
   readonly maxDistance: number;
   /** How fast the focus point catches up with the player, in 1/s. */
@@ -23,9 +23,9 @@ export interface CameraConfig {
 export const CAMERA_CONFIG: CameraConfig = {
   pitchDeg: 40,
   fovDeg: 50,
-  defaultDistance: 40,
-  minDistance: 30,
-  maxDistance: 90,
+  defaultDistance: 14,
+  minDistance: 9,
+  maxDistance: 60,
   followRate: 6,
   zoomRate: 8,
   clearColor: '#0F1A2A',
@@ -112,7 +112,8 @@ export class CameraController {
 
   private applyTransform(): void {
     const offset = orbitOffset(this.yaw, degToRad(this.config.pitchDeg), this.distance);
-    this.entity.setPosition(this.focus.x + offset.x, offset.y, this.focus.z + offset.z);
-    this.entity.lookAt(this.focus.x, 0, this.focus.z);
+    const focusHeight = 0.85;
+    this.entity.setPosition(this.focus.x + offset.x, focusHeight + offset.y, this.focus.z + offset.z);
+    this.entity.lookAt(this.focus.x, focusHeight, this.focus.z);
   }
 }

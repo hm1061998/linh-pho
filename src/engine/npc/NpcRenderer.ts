@@ -103,7 +103,7 @@ export class NpcRenderer {
   /**
    * Replaces each placeholder whose model has loaded, and starts the model's idle loop. Call once, after the models have
    * loaded. An NPC without a loaded model keeps its placeholder. A model faces -Z (docs/ASSET_MANIFEST.md section 1), so
-   * a human turns half a turn to face +Z, which is the direction `faceToward` aims the root.
+   * each model turns half a turn to face +Z, which is the direction `faceToward` aims the root.
    */
   attachModels(assets: AssetLoader): void {
     for (const [id, view] of this.views) {
@@ -113,9 +113,7 @@ export class NpcRenderer {
         continue;
       }
       view.body.destroy();
-      if (!view.isSpirit) {
-        model.setLocalEulerAngles(0, 180, 0);
-      }
+      model.setLocalEulerAngles(0, 180, 0);
       view.look.addChild(model);
       const track = assets.trackFor(modelId, 'idle');
       if (track) {

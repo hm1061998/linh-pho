@@ -1,0 +1,32 @@
+{
+  "idle": {
+    "sourceClip": "custom_relaxed_idle",
+    "frames": 61,
+    "durationSeconds": 2.5,
+    "sourceDurationSeconds": 2.5,
+    "groundCorrectionRange": [
+      -1.7695128917694092e-08,
+      -1.7695128917694092e-08
+    ]
+  },
+  "walk": {
+    "sourceClip": "Walk_Formal_Loop",
+    "frames": 33,
+    "durationSeconds": 1.3333333333333333,
+    "sourceDurationSeconds": 1.3333333333333333,
+    "groundCorrectionRange": [
+      -0.025380831211805344,
+      0.003102268557995558
+    ]
+  },
+  "run": {
+    "sourceClip": "Jog_Fwd_Loop",
+    "frames": 24,
+    "durationSeconds": 0.9583333333333334,
+    "sourceDurationSeconds": 0.9333333174387614,
+    "groundCorrectionRange": [
+      -0.036019161343574524,
+      0
+    ]
+  }
+}

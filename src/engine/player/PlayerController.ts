@@ -7,6 +7,7 @@ import { colorFromHex } from '../scene/colorFromHex';
 import { clampCircleToBounds, moveWithCollision, type GroundPoint, type WalkableWorld } from './collision';
 import { dampFactor, worldMoveDirection } from './movement';
 import { PLAYER_CONFIG, type PlayerConfig } from './playerConfig';
+import { locomotionState, type LocomotionState } from './locomotion';
 
 const BODY_COLOR = '#F5ECD7';
 const FACING_COLOR = '#BC744E';
@@ -14,8 +15,6 @@ const FACING_COLOR = '#BC744E';
 const STOP_SPEED = 0.01;
 /** Below this speed the facing direction is not updated, so standing still keeps the last heading. */
 const TURN_SPEED = 0.1;
-/** Above this speed (m/s) the character plays its walk loop instead of idle. */
-const WALK_SPEED = 0.3;
 
 /**
  * The playable character (GDD E2). It starts as a capsule with a nose marker that shows facing. When its model has loaded,
@@ -27,7 +26,10 @@ export class PlayerController {
   private readonly world: WalkableWorld;
   private readonly config: PlayerConfig;
   private readonly placeholder: pc.Entity[];
-  private animator: { set(state: string): void } | null = null;
+  private animator: { set(state: string, speed?: number): void } | null = null;
+  private movementState: LocomotionState = 'idle';
+  private hasRunClip = false;
+  private animationSpeed = 1;
   private position: GroundPoint;
   private velocity: GroundPoint = { x: 0, z: 0 };
   /** Heading in radians around +Y. 0 faces +Z (south); the capsule's nose points along it. */
@@ -82,8 +84,10 @@ export class PlayerController {
     this.root.addChild(model);
     const idle = assets.trackFor('player.hero', 'idle');
     const walk = assets.trackFor('player.hero', 'walk');
+    const run = assets.trackFor('player.hero', 'run');
     if (idle && walk) {
-      this.animator = startStates(model, { idle, walk }, 'idle');
+      this.hasRunClip = run !== null;
+      this.animator = startStates(model, run ? { idle, walk, run } : { idle, walk }, 'idle');
     }
   }
 
@@ -104,11 +108,12 @@ export class PlayerController {
    * Advances the player one step. `move` is camera-space intent. `cameraYaw` is the camera's yaw, so
    * "forward" always means away from the camera. `dt` is already clamped by the engine (0.1 s max).
    */
-  update(dt: number, move: MoveInput, cameraYaw: number): void {
-    const { walkSpeed, accelerationRate, turnRate, radius } = this.config;
+  update(dt: number, move: MoveInput, cameraYaw: number, sprintHeld = false): void {
+    const { walkSpeed, runSpeed, accelerationRate, turnRate, radius } = this.config;
 
     const direction = worldMoveDirection(move, cameraYaw);
-    const target = { x: direction.x * walkSpeed, z: direction.z * walkSpeed };
+    const movementSpeed = sprintHeld ? runSpeed : walkSpeed;
+    const target = { x: direction.x * movementSpeed, z: direction.z * movementSpeed };
     const blend = dampFactor(accelerationRate, dt);
     this.velocity = {
       x: this.velocity.x + (target.x - this.velocity.x) * blend,
@@ -119,6 +124,7 @@ export class PlayerController {
     }
 
     const delta = { x: this.velocity.x * dt, z: this.velocity.z * dt };
+    const previous = this.position;
     const moved = moveWithCollision(this.position, delta, radius, this.world.solids);
     this.position = clampCircleToBounds(moved, radius, this.world.bounds);
 
@@ -127,7 +133,17 @@ export class PlayerController {
       this.facingYaw += shortestAngleDelta(this.facingYaw, targetYaw) * dampFactor(turnRate, dt);
     }
 
-    this.animator?.set(this.speed > WALK_SPEED ? 'walk' : 'idle');
+    // Animate actual travel, so feet stop when pushing against a wall. Separate start/stop
+    // thresholds prevent repeated transitions near the edge of the joystick dead zone.
+    if (dt > 0) {
+      const travelSpeed = Math.hypot(this.position.x - previous.x, this.position.z - previous.z) / dt;
+      this.movementState = locomotionState(travelSpeed, walkSpeed, this.movementState, sprintHeld, this.hasRunClip);
+        // Keep the brisk walk readable at the faster map traversal speed.
+        const referenceSpeed = this.movementState === 'run' ? 4.51 : 1.3;
+      const cadence = this.movementState !== 'idle' ? Math.max(0.25, Math.min(1.9, travelSpeed / referenceSpeed)) : 1;
+      this.animationSpeed += (cadence - this.animationSpeed) * dampFactor(10, dt);
+      this.animator?.set(this.movementState, this.animationSpeed);
+    }
     this.applyTransform();
   }
 
