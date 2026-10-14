@@ -23,7 +23,7 @@ Không nằm trong định nghĩa (cần thiết bị hoặc người khác, mô
 | G3 | Vẽ Nét Sáng 3D: đường sáng chạy quanh đèn 3D theo thứ tự chạm | GDD B5.2 | xong (D-071). Đường sáng là các đoạn thẳng ngắn, chưa có hạt |
 | G4 | «Chuyện Đằng Sau»: thẻ đọc được sau nhiệm vụ, tách Sự thật văn hoá và Hư cấu, người chơi tự chọn đọc | GDD B6 | xong (D-070). Còn: biên tập để đủ 50–100 từ mỗi thẻ |
 | G5 | Nhật ký (phím J): nhiệm vụ đang làm và thẻ đã đọc | GDD B2 | xong (D-070) |
-| G6 | Roof fade: mái che nhân vật được làm mờ | GDD B2, E1 | chưa |
+| G6 | Roof fade: mái che nhân vật được làm mờ | GDD B2, E1 | xong (D-072): mái còn 30% khi đứng giữa camera và đầu nhân vật; `roofFade.test.ts`; trong trình duyệt mái tiệm 0.3 khi đứng sau, 1 khi ra |
 
 ## Đồ hoạ
 
@@ -31,12 +31,12 @@ Không nằm trong định nghĩa (cần thiết bị hoặc người khác, mô
 |---|---|---|---|
 | V1 | Nhân vật người chơi: model, Idle và Walk | GDD E2, Art bible §5 | xong: model cùng bộ xương với NPC, idle khi đứng và walk khi đi (đo được góc xương đùi thay đổi khi đi, đứng yên khi dừng) |
 | V2 | Pickup cho 6 loại vật liệu: tre, giấy dó, mực, màu lam, dây gai, gỗ vụn | GDD B4 | xong: 6 model thay hộp, gốc ở đáy giữa, kích thước và vật liệu kiểm bằng `furnitureModels.test.ts`; trong trình duyệt mỗi pickup có model đúng vị trí, hộp chỉ còn khi model chưa nạp |
-| V3 | Bàn nghề, bàn khắc, điểm trạm | GDD E2 | chưa (đang là hộp) |
-| V4 | Chân đèn trước tiệm và vật đặt lên đó | GDD C3 Q00 | chưa |
-| V5 | Đèn Mộc và Đèn Vân Linh (2 mẫu craftable) | GDD E2 | chưa |
-| V6 | Ba glyph Đèn Soi Linh | GDD B3 | chưa (đang là đĩa) |
-| V7 | Modular kit còn thiếu: nền gạch quảng trường, bờ sông 2 đoạn, xe hàng, 2 chậu | GDD E3 mục 7 | chưa |
-| V8 | Cảnh từ camera mặc định: NPC đọc được rõ hơn nền | GDD E3 «visual acceptance» | chưa kiểm |
+| V3 | Bàn nghề, bàn khắc, điểm trạm | GDD E2 | xong: hai bàn là model (`station_workbench`, `station_engraving`), thay vạch sáng cũ. Kiểm trong trình duyệt: mỗi trạm chứa đúng model |
+| V4 | Chân đèn trước tiệm và vật đặt lên đó | GDD C3 Q00 | xong: bệ đá có ổ gỗ (`placement_pedestal`). Đèn hiện trên bệ khi đã đặt, không còn đầu đèn hình cầu |
+| V5 | Đèn Mộc và Đèn Vân Linh (2 mẫu craftable) | GDD E2 | một phần: Đèn Mộc có model và hiện trên bệ (`item_wooden_lantern`). Đèn Vân Linh chưa có vật trong thế giới, chỉ có trong bàn khắc và kho; đây là giới hạn đã biết |
+| V6 | Ba glyph Đèn Soi Linh | GDD B3 | xong: ba bia đá có dấu ngọc (`glyph_gate`, `glyph_bridge`, `glyph_signboard`). Chỉ dấu ngọc sáng theo lớp spirit. Bia là vật không chặn đường |
+| V7 | Modular kit còn thiếu: nền gạch quảng trường, bờ sông 2 đoạn, xe hàng, 2 chậu | GDD E3 mục 7 | xong: nền gạch, bờ sông hai đoạn, xe hàng (chặn), hai chậu (chặn). Lan can cầu cũng là model. Mặt đất và nước vẫn là diorama |
+| V8 | Cảnh từ camera mặc định: NPC đọc được rõ hơn nền | GDD E3 «visual acceptance» | xong (chủ quan): vầng sáng dưới chân mỗi NPC. Đã xem ở camera mặc định trong trình duyệt; chưa có người thứ hai xác nhận |
 
 ## Kiểm chứng
 

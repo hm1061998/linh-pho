@@ -60,7 +60,7 @@ Mục tiêu ngân sách tam giác cho hub: dưới 60 000 tam giác trên màn h
 
 ### 3b. Phần còn lại của hub
 
-Các vật sau không có trong bảng mục 3, nhưng đã được làm thành GLB để hub nhìn tốt hơn. Quy tắc giống mục 3: gốc ở tâm khối blockout, kích thước lấy từ `hubLayout.ts`, và `src/tests/furnitureModels.test.ts` kiểm tra từng file. Mặt đất, sông, lan can cầu và cột bên lề vẫn là blockout.
+Các vật sau không có trong bảng mục 3, nhưng đã được làm thành GLB để hub nhìn tốt hơn. Quy tắc giống mục 3: gốc ở tâm khối blockout, kích thước lấy từ `hubLayout.ts`, và `src/tests/furnitureModels.test.ts` kiểm tra từng file. Mặt đất và mặt sông vẫn là blockout (diorama). Mọi vật khác trong hub đều có model.
 
 | Nhóm | Vật (id trong `hubLayout.ts`) | Số lượng |
 |---|---|---|
@@ -71,6 +71,8 @@ Các vật sau không có trong bảng mục 3, nhưng đã được làm thành
 | Cửa tiệm | `ENV_House_Shop_Door` | 1 |
 | Bụi cây | `ENV_Bush_East`, `_West`, `_North` | 3 |
 | Vật nhặt được (GDD B4) | `pickup.bamboo`, `pickup.paper`, `pickup.rope`, `pickup.ink`, `pickup.indigo`, `pickup.wood_scrap` (gốc ở đáy giữa, đặt trên mặt đất) | 6 |
+| Trạm, bệ, glyph, quầy (GDD B3, B5, C3) | `station.workbench`, `station.engraving`, `placement.pedestal`, `item.wooden_lantern`, `glyph.gate`, `glyph.bridge`, `glyph.signboard`, `shop.counter`, `shop.plinth` (gốc ở đáy giữa, đặt trên mặt đất) | 9 |
+| Bổ sung cho vật trên (GDD E3 mục 7) | `hub.ENV_Plaza` (nền gạch), `hub.ENV_Bridge_RailWest`, `hub.ENV_Bridge_RailEast` (lan can cầu), `hub.ENV_River_Bank_West`, `hub.ENV_River_Bank_East` (bờ sông), `hub.PROP_Cart` (xe hàng), `hub.PROP_Pot_1`, `hub.PROP_Pot_2` (chậu); gốc ở tâm khối, kích thước lấy từ `hubLayout.ts` | 8 |
 
 ---
 
@@ -138,8 +140,10 @@ Mỗi model khi xong: đặt vào `assets/` (ngoài repo nếu quá lớn), thê
 
 | Asset | Có GLB | Đã kiểm tra trên desktop | Đã kiểm tra trên Android |
 |---|---|---|---|
-| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 66 file | chưa thử |
+| Năm nội thất (mục 2) | có | nạp trong dev; production tải đủ 83 file | chưa thử |
 | 47 vật trong hub (mục 3 và 3b) | có | nạp trong dev; cầu và tiệm sáng đúng khi bật cờ; gian hàng, cổng và đèn góc đã kiểm tra ở 30 m | chưa thử |
 | Sáu vật nhặt được (mục 3b) | có | nạp trong dev; mỗi pickup hiện model thay cho hộp, đúng vị trí và vật liệu; đã xem bó tre và cuộn giấy trong trình duyệt | chưa thử |
-| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 66 file | chưa thử |
+| Trạm, bệ, glyph, quầy, Đèn Mộc (mục 3b) | có | nạp trong dev; mỗi vật chứa đúng model, thay placeholder khi nạp; glyph chỉ dấu ngọc sáng | chưa thử |
+| Nền, lan can, bờ sông, xe, chậu (mục 3b) | có | nạp trong dev; hub có đủ model trừ mặt đất và mặt sông; mái mờ khi che nhân vật (D-072) | chưa thử |
+| Bốn NPC và `idle` (mục 4) | có | nạp và `idle` chạy trong dev; production tải đủ 83 file | chưa thử |
 | `dev.test_crate` (mục 7) | sinh bằng code | đã nạp trong Chrome (dev) | chưa thử |
