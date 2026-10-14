@@ -11,12 +11,14 @@ export type QualityPreset = Exclude<QualityChoice, 'auto'>;
 export interface QualityProfile {
   /** The highest device-pixel ratio the canvas renders at. Lower means cheaper frames, softer image. */
   readonly pixelRatioCap: number;
+  /** Ambient occlusion and bloom (see render/PostEffects.ts). Off where their cost has not been measured. */
+  readonly postEffects: boolean;
 }
 
 export const QUALITY_PROFILES: Readonly<Record<QualityPreset, QualityProfile>> = {
-  low: { pixelRatioCap: 1 },
-  mobile: { pixelRatioCap: 1.5 },
-  high: { pixelRatioCap: 2 },
+  low: { pixelRatioCap: 1, postEffects: false },
+  mobile: { pixelRatioCap: 1.5, postEffects: false },
+  high: { pixelRatioCap: 2, postEffects: true },
 };
 
 /** The preset to use. An explicit choice always wins. `auto` follows the device: touch-first gets the mobile preset. */

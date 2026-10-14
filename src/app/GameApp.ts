@@ -7,6 +7,7 @@ import { InputService } from '../engine/input/InputService';
 import { InteractionSystem } from '../engine/interaction/InteractionSystem';
 import { SpiritBurst } from '../engine/fx/SpiritBurst';
 import { Fireflies, type FireflyAnchor } from '../engine/fx/Fireflies';
+import { PostEffects } from '../engine/render/PostEffects';
 import { NpcRenderer } from '../engine/npc/NpcRenderer';
 import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
@@ -76,6 +77,7 @@ export class GameApp {
   private readonly assetLoader: AssetLoader;
   private readonly fx: SpiritBurst;
   private readonly fireflies: Fireflies;
+  private readonly postEffects: PostEffects;
   private readonly player: PlayerController;
   private readonly camera: CameraController;
   /** Fades the roofs that hide the player. Built in start, once the hub's roof entities exist. */
@@ -108,6 +110,7 @@ export class GameApp {
     this.fireflies = new Fireflies(app.root, FIREFLY_ANCHORS);
     this.player = new PlayerController(app.root, HUB_WORLD);
     this.camera = new CameraController(app.root, this.player.groundPosition, HUB_WORLD.bounds);
+    this.postEffects = new PostEffects(app, this.camera.component);
 
     this.registerTargets();
 
@@ -119,6 +122,7 @@ export class GameApp {
       () => this.craftStage.dispose(),
       () => this.player.dispose(),
       () => this.camera.dispose(),
+      () => this.postEffects.dispose(),
       this.sessionState.events.on('panel.opened', () => this.inputService.pushBlocker(PANEL_BLOCKER)),
       this.sessionState.events.on('panel.closed', () => this.inputService.popBlocker(PANEL_BLOCKER)),
       this.sessionState.events.on('changed', () => this.syncWorld()),
@@ -228,6 +232,7 @@ export class GameApp {
   /** Applies a quality preset. The canvas is re-sized at once, so the change shows without a reload. */
   setQuality(profile: QualityProfile): void {
     this.app.graphicsDevice.maxPixelRatio = clampPixelRatio(window.devicePixelRatio, profile.pixelRatioCap);
+    this.postEffects.setEnabled(profile.postEffects);
     this.resize();
   }
 

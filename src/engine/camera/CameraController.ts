@@ -72,6 +72,15 @@ export class CameraController {
     return this.distance;
   }
 
+  /** The camera component, for effects that run on the camera frame (see render/PostEffects.ts). */
+  get component(): pc.CameraComponent {
+    const camera = this.entity.camera;
+    if (!camera) {
+      throw new Error('CAM_Main has no camera component');
+    }
+    return camera;
+  }
+
   /** Where the camera stands in the world. Returns a copy, so a caller cannot move the camera through it. */
   get position(): pc.Vec3 {
     return this.entity.getPosition().clone();
