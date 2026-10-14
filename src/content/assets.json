@@ -60,6 +60,7 @@
     { "id": "craft.lantern_frame", "source": { "kind": "url", "url": "/assets/craft_lantern_frame.glb" }, "idleAnimation": null },
     { "id": "craft.bamboo_rib", "source": { "kind": "url", "url": "/assets/craft_bamboo_rib.glb" }, "idleAnimation": null },
     { "id": "craft.engraving_lantern", "source": { "kind": "url", "url": "/assets/craft_engraving_lantern.glb" }, "idleAnimation": null },
+    { "id": "player.hero", "source": { "kind": "url", "url": "/assets/player_hero.glb" }, "idleAnimation": "idle" },
     { "id": "dev.test_crate", "source": { "kind": "generated", "generator": "crate" }, "idleAnimation": "idle" }
   ]
 }

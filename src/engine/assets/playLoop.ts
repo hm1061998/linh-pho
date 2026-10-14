@@ -8,3 +8,30 @@ export function playLoop(root: Entity, name: string, track: AnimTrack): void {
   root.addComponent('anim', { activate: true });
   root.anim?.assignAnimation(name, track, undefined, 1, true);
 }
+
+/**
+ * Plays several looping clips on one model, and switches between them. `set` with the clip already playing does nothing,
+ * so it can be called every frame.
+ */
+export function startStates(
+  root: Entity,
+  clips: Readonly<Record<string, AnimTrack>>,
+  start: string,
+): { set(state: string): void } {
+  root.addComponent('anim', { activate: true });
+  const anim = root.anim;
+  for (const [name, track] of Object.entries(clips)) {
+    anim?.assignAnimation(name, track, undefined, 1, true);
+  }
+  let current = start;
+  anim?.baseLayer?.play(start);
+  return {
+    set(state: string): void {
+      if (state === current || !anim || !(state in clips)) {
+        return;
+      }
+      current = state;
+      anim.baseLayer?.play(state);
+    },
+  };
+}

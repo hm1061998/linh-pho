@@ -1,5 +1,7 @@
 import * as pc from 'playcanvas';
 import { radToDeg, shortestAngleDelta } from '../../shared/utils/math';
+import type { AssetLoader } from '../assets/AssetLoader';
+import { startStates } from '../assets/playLoop';
 import type { MoveInput } from '../input/moveInput';
 import { colorFromHex } from '../scene/colorFromHex';
 import { clampCircleToBounds, moveWithCollision, type GroundPoint, type WalkableWorld } from './collision';
@@ -12,16 +14,20 @@ const FACING_COLOR = '#BC744E';
 const STOP_SPEED = 0.01;
 /** Below this speed the facing direction is not updated, so standing still keeps the last heading. */
 const TURN_SPEED = 0.1;
+/** Above this speed (m/s) the character plays its walk loop instead of idle. */
+const WALK_SPEED = 0.3;
 
 /**
- * Placeholder walking character: a capsule with a small nose marker that shows facing.
- * Movement is in the XZ plane. Height comes from `world.surfaceHeightAt`.
- * Real GLB model and animations replace the capsule in Module 09.
+ * The playable character (GDD E2). It starts as a capsule with a nose marker that shows facing. When its model has loaded,
+ * `attachModel` replaces both, and the model plays idle or walk by speed. Movement is in the XZ plane. Height comes from
+ * `world.surfaceHeightAt`.
  */
 export class PlayerController {
   private readonly root: pc.Entity;
   private readonly world: WalkableWorld;
   private readonly config: PlayerConfig;
+  private readonly placeholder: pc.Entity[];
+  private animator: { set(state: string): void } | null = null;
   private position: GroundPoint;
   private velocity: GroundPoint = { x: 0, z: 0 };
   /** Heading in radians around +Y. 0 faces +Z (south); the capsule's nose points along it. */
@@ -52,10 +58,33 @@ export class PlayerController {
     nose.setLocalScale(0.12, 0.12, 0.3);
     nose.setLocalPosition(0, config.height * 0.75, config.radius + 0.1);
 
+    this.placeholder = [body, nose];
     this.root.addChild(body);
     this.root.addChild(nose);
     parent.addChild(this.root);
     this.applyTransform();
+  }
+
+  /**
+   * Replaces the placeholder with the character model, once it has loaded, and starts its idle loop. The model faces -Z, so
+   * it turns half a turn to face the direction the root points. Without a loaded model, the placeholder stays.
+   */
+  attachModel(assets: AssetLoader): void {
+    const model = assets.instantiateLoaded('player.hero');
+    if (!model) {
+      return;
+    }
+    for (const entity of this.placeholder) {
+      entity.destroy();
+    }
+    this.placeholder.length = 0;
+    model.setLocalEulerAngles(0, 180, 0);
+    this.root.addChild(model);
+    const idle = assets.trackFor('player.hero', 'idle');
+    const walk = assets.trackFor('player.hero', 'walk');
+    if (idle && walk) {
+      this.animator = startStates(model, { idle, walk }, 'idle');
+    }
   }
 
   /** Current ground position. Returns a copy. */
@@ -98,6 +127,7 @@ export class PlayerController {
       this.facingYaw += shortestAngleDelta(this.facingYaw, targetYaw) * dampFactor(turnRate, dt);
     }
 
+    this.animator?.set(this.speed > WALK_SPEED ? 'walk' : 'idle');
     this.applyTransform();
   }
 

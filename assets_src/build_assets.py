@@ -343,7 +343,21 @@ def _idle_human(arm: bpy.types.Object) -> bpy.types.Action:
     return action
 
 
-def _human(node: str, tunic_hex: str, *, long_tunic: bool, hair: str, hat: bool = False, beard: bool = False, head_z: float = 1.605):
+def _walk_human(arm: bpy.types.Object) -> bpy.types.Action:
+    """A one-second walk loop (24 frames): the legs swing against each other, and the arms swing against the legs."""
+    arm.animation_data_create()
+    action = bpy.data.actions.new("walk")
+    arm.animation_data.action = action
+    for frame, phase in ((1, 0.0), (7, 1.0), (13, 0.0), (19, -1.0), (25, 0.0)):
+        for bone, degrees in (("UpperLeg.L", 25.0), ("UpperLeg.R", -25.0), ("UpperArm.L", -18.0), ("UpperArm.R", 18.0)):
+            pose = arm.pose.bones[bone]
+            pose.rotation_mode = "XYZ"
+            pose.rotation_euler = (math.radians(degrees * phase), 0.0, 0.0)
+            pose.keyframe_insert(data_path="rotation_euler", frame=frame)
+    return action
+
+
+def _human(node: str, tunic_hex: str, *, long_tunic: bool, hair: str, hat: bool = False, beard: bool = False, head_z: float = 1.605, with_walk: bool = False):
     """A stylised person, 1.70 m to the top of the head (1.70 m with the hat), feet on y = 0."""
     tunic = "MAT_Tunic_" + node
     PALETTE[tunic] = (tunic_hex, 0.8, None, 0.0)
@@ -389,7 +403,10 @@ def _human(node: str, tunic_hex: str, *, long_tunic: bool, hair: str, hat: bool 
         leg = 0.1 * side
         add("Leg", "UpperLeg.L" if side > 0 else "UpperLeg.R", ["MAT_Trousers_A"], lambda s, x=leg: s.cylinder("MAT_Trousers_A", (x, 0.0, 0.475), 0.07, 0.75, segments=12))
         add("Shoe", "UpperLeg.L" if side > 0 else "UpperLeg.R", ["MAT_Shoe_A"], lambda s, x=leg: s.box("MAT_Shoe_A", (x, 0.03, 0.03), (0.1, 0.2, 0.06)))
-    return [arm, *parts], [_idle_human(arm)]
+    actions = [_idle_human(arm)]
+    if with_walk:
+        actions.append(_walk_human(arm))
+    return [arm, *parts], actions
 
 
 def npc_ba_nghiem():
@@ -403,6 +420,11 @@ def npc_co_lam():
 def npc_ong_do():
     # The hat sits on the head, so the head is lower to keep the whole figure at 1.70 m.
     return _human("NPC_OngDo", "#5A6B8C", long_tunic=False, hair="short", hat=True, beard=True, head_z=1.505)
+
+
+def player_hero():
+    """The playable character (GDD E2, art bible BLENDER-P04): the same rig as the people, with idle and walk loops."""
+    return _human("PLAYER_Hero", "#3E6B4F", long_tunic=False, hair="short", with_walk=True)
 
 
 def npc_bac():
@@ -583,6 +605,7 @@ ASSETS.update(
         "craft.lantern_frame": ("craft_lantern_frame", craft_lantern_frame),
         "craft.bamboo_rib": ("craft_bamboo_rib", craft_bamboo_rib),
         "craft.engraving_lantern": ("craft_engraving_lantern", craft_engraving_lantern),
+        "player.hero": ("player_hero", player_hero),
     }
 )
 

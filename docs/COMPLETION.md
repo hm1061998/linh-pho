@@ -29,7 +29,7 @@ Không nằm trong định nghĩa (cần thiết bị hoặc người khác, mô
 
 | Mã | Mục | Nguồn | Trạng thái |
 |---|---|---|---|
-| V1 | Nhân vật người chơi: model, Idle và Walk | GDD E2, Art bible §5 | chưa (đang là capsule) |
+| V1 | Nhân vật người chơi: model, Idle và Walk | GDD E2, Art bible §5 | xong: model cùng bộ xương với NPC, idle khi đứng và walk khi đi (đo được góc xương đùi thay đổi khi đi, đứng yên khi dừng) |
 | V2 | Pickup cho 6 loại vật liệu: tre, giấy dó, mực, màu lam, dây gai, gỗ vụn | GDD B4 | chưa (đang là hộp) |
 | V3 | Bàn nghề, bàn khắc, điểm trạm | GDD E2 | chưa (đang là hộp) |
 | V4 | Chân đèn trước tiệm và vật đặt lên đó | GDD C3 Q00 | chưa |

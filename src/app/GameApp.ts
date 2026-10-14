@@ -273,6 +273,7 @@ export class GameApp {
     this.resize();
     buildHubBlockout(this.app, this.assetLoader);
     this.npcs.attachModels(this.assetLoader);
+    this.player.attachModel(this.assetLoader);
     this.attachLifecycle();
     this.app.on('update', this.tick);
     this.cleanups.push(() => this.app.off('update', this.tick));

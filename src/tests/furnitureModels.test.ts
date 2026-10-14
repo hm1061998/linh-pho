@@ -78,7 +78,12 @@ const CRAFT: readonly ModelSpec[] = [
   { id: 'craft.engraving_lantern', node: 'CRAFT_EngravingLantern', size: [0.36, 0.5, 0.36], pivot: 'floor', triangleBudget: 1500 },
 ];
 
-const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT];
+/** The playable character: 1.70 m tall, feet on the floor, with its idle and walk loops (GDD E2). */
+const PLAYER: readonly ModelSpec[] = [
+  { id: 'player.hero', node: 'PLAYER_Hero', size: [null, 1.7, null], pivot: 'floor', triangleBudget: 8000, animations: ['idle', 'walk'] },
+];
+
+const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT, ...PLAYER];
 
 function readGlbJson(path: string): GltfJson {
   const bytes = readFileSync(path);
