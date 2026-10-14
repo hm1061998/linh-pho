@@ -95,7 +95,7 @@ for index, adjacent in enumerate(neighbours):
 rows, columns = np.array(rows), np.array(columns)
 counts = np.maximum(1, np.bincount(rows, minlength=len(weights)))[:, None]
 mask = np.array([abs(v.co.x) > .17 and .78 < v.co.z < 1.46 for v in mesh.data.vertices])
-for _ in range(48):
+for _ in range(160):
     average = np.zeros_like(weights)
     np.add.at(average, rows, weights[columns])
     average /= counts
@@ -135,7 +135,7 @@ pelvis_reference = (facing @ donor.matrix_world @ donor.data.bones['pelvis'].mat
 leg_scale = .73 / (donor.data.bones['thigh_l'].length + donor.data.bones['calf_l'].length)
 actions = []
 report = {}
-for exported, source_name in [('idle', 'Idle_Loop'), ('walk', 'Walk_Formal_Loop'), ('run', 'Jog_Fwd_Loop')]:
+for exported, source_name in [('idle', 'Idle_Loop'), ('walk', 'Walk_Loop'), ('run', 'Jog_Fwd_Loop')]:
     donor_action, slot = clips[source_name]
     donor.animation_data.action = donor_action
     donor.animation_data.action_slot = slot
@@ -163,60 +163,12 @@ for exported, source_name in [('idle', 'Idle_Loop'), ('walk', 'Walk_Formal_Loop'
             rotation = donor_rotation @ reference[name].inverted() @ original.matrix_local.to_quaternion()
             if exported == 'walk' and name in ['Pelvis', 'Spine', 'Head']:
                 rotation = original.matrix_local.to_quaternion().slerp(rotation, .55 if name == 'Pelvis' else .35)
-            if exported in ['walk', 'run'] and name.startswith(('UpperArm', 'Forearm')):
-                # A pendulum swing matched to the leg cycle, not the donor's guarded
-                # elbow pose. Keep wrist/cloth rotation around the anatomical elbow.
-                neutral = (pose.parent.matrix @ original.parent.matrix_local.inverted() @ original.matrix_local).to_quaternion()
-                phase = 2 * math.pi * frame / end + (0 if name.endswith('.L') else math.pi)
-                if name.startswith('UpperArm'):
-                    angle = -(24 if exported == 'walk' else 32) * math.cos(phase)
-                else:
-                    angle = (6 if exported == 'walk' else 22) + (2 if exported == 'walk' else 4) * math.sin(phase)
-                rotation = neutral @ Quaternion((1, 0, 0), math.radians(angle))
             if pose.parent:
                 head = (pose.parent.matrix @ original.parent.matrix_local.inverted() @ original.matrix_local).translation
             else:
                 head = original.head_local + offset
             pose.rotation_mode = 'QUATERNION'
             pose.matrix = Matrix.LocRotScale(head, rotation, Vector((1, 1, 1)))
-            bpy.context.view_layer.update()
-        if exported in ['walk', 'run']:
-            # Retain the donor's sagittal stride, but solve each leg into a narrow
-            # lane. Copying its hip roll directly onto this rig splays the feet.
-            centre = target.pose.bones['Pelvis'].head.x
-            for side, sign in [('L', 1), ('R', -1)]:
-                upper = target.pose.bones['UpperLeg.' + side]
-                lower = target.pose.bones['LowerLeg.' + side]
-                foot = target.pose.bones['Foot.' + side]
-                hip = upper.head.copy()
-                ankle = foot.head.copy()
-                ankle.x = centre + sign * .095
-                delta = ankle - hip
-                a, b = upper.length, lower.length
-                distance = min(delta.length, a + b - .0001)
-                direction = delta.normalized()
-                ankle = hip + direction * distance
-                along = (a * a - b * b + distance * distance) / (2 * distance)
-                forward = Vector((0, -direction.z, direction.y)).normalized()
-                knee = hip + direction * along + forward * math.sqrt(max(0, a * a - along * along))
-                foot_rotation = foot.matrix.to_quaternion()
-                for bone, head, tail in [(upper, hip, knee), (lower, knee, ankle)]:
-                    old_direction = (bone.tail - bone.head).normalized()
-                    rotation = old_direction.rotation_difference((tail - head).normalized()) @ bone.matrix.to_quaternion()
-                    bone.matrix = Matrix.LocRotScale(head, rotation, Vector((1, 1, 1)))
-                    bpy.context.view_layer.update()
-                toe = foot_rotation @ Vector((0, 1, 0))
-                straight = Vector((0, toe.y, toe.z)).normalized()
-                foot_rotation = toe.rotation_difference(straight) @ foot_rotation
-                foot.matrix = Matrix.LocRotScale(ankle, foot_rotation, Vector((1, 1, 1)))
-                bpy.context.view_layer.update()
-        if exported == 'idle':
-            # A quiet merchant/traveller stance, not the donor's bent-knee ready pose.
-            for bone in target.pose.bones:
-                bone.matrix_basis = Matrix.Identity(4)
-            breathing = math.sin(2 * math.pi * frame / end)
-            target.pose.bones['Spine'].rotation_quaternion = Quaternion((1, 0, 0), math.radians(.35) * breathing)
-            target.pose.bones['Head'].rotation_quaternion = Quaternion((1, 0, 0), math.radians(-.25) * breathing)
             bpy.context.view_layer.update()
         # Ground the retargeted shoe soles; character and donor have different leg proportions.
         evaluated = mesh.evaluated_get(bpy.context.evaluated_depsgraph_get())
@@ -241,7 +193,7 @@ for exported, source_name in [('idle', 'Idle_Loop'), ('walk', 'Walk_Formal_Loop'
     track.strips.new(exported, 0, action)
     track.mute = True
     actions.append(action)
-    report[exported] = {'sourceClip': 'custom_relaxed_idle' if exported == 'idle' else source_name, 'frames': end + 1, 'durationSeconds': end / 24, 'sourceDurationSeconds': duration_frames / 24, 'groundCorrectionRange': [min(grounding), max(grounding)]}
+    report[exported] = {'sourceClip': source_name, 'frames': end + 1, 'durationSeconds': end / 24, 'sourceDurationSeconds': duration_frames / 24, 'groundCorrectionRange': [min(grounding), max(grounding)]}
 for obj in donor_objects:
     bpy.data.objects.remove(obj, do_unlink=True)
 for bone in target.pose.bones:

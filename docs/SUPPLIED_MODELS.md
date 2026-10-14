@@ -28,3 +28,7 @@ Camera chơi mặc định 14 m (trước đây 40 m), zoom 9–60 m, góc 40°,
 Cập nhật chân và tốc độ: giải IK hai đoạn cho walk/run, cổ chân theo hai làn cách nhau 19 cm, giữ quỹ đạo nâng chân và chỉnh mũi giày hướng tiến. Đi 2,2 m/s, Shift chạy 5,4 m/s; cadence walk lấy mốc 1,3 m/s để giữ nhịp bước vừa phải. Test kiểm tra khoảng cách ngang hai cổ chân nhỏ hơn 23 cm trong toàn clip walk.
 
 Biên độ vung vai tăng lên ±24° khi đi, ±32° khi chạy; khuỷu vẫn thả lỏng như bản trước. Làm mềm trọng số áo 48 lượt để hỗ trợ biên độ lớn; kiểm tra toàn chu kỳ: biên độ 48°/63,7°, p95 giãn cạnh áo 1,032/1,027.
+
+Cập nhật theo yêu cầu giữ động tác gốc: walk dùng Walk_Loop, run dùng Jog_Fwd_Loop. Bỏ pendulum tay tự tạo và IK ép chân hẹp; tay/chân lấy chuyển động source qua retarget theo tỉ lệ rig. Giữ idle thư giãn và tốc độ đi/chạy 2,2/5,4 m/s. Trọng số áo được làm mềm 160 lượt để hỗ trợ khuỷu gập của Jog mà không sửa khung chuyển động. Mô tả chỉnh tay/chân ở các mục trước đã được thay thế bởi cấu hình này.
+
+Đứng yên hiện dùng Idle_Loop gốc Quaternius qua retarget, thay thế idle thở tự tạo. Bộ ba hiện tại: Idle_Loop / Walk_Loop / Jog_Fwd_Loop. Kiểm tra biến dạng áo áp dụng cho cả idle, walk và run.

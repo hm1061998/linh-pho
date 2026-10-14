@@ -27,6 +27,13 @@ interface Gltf {
   bufferViews: { byteOffset: number; byteStride?: number }[];
 }
 
+it('exports the requested Quaternius idle, walk and jog clips', () => {
+  const report = JSON.parse(readFileSync(new URL('../../assets_src/vendor/quaternius/retarget_report.json', import.meta.url), 'utf8'));
+  expect(report.idle.sourceClip).toBe('Idle_Loop');
+  expect(report.walk.sourceClip).toBe('Walk_Loop');
+  expect(report.run.sourceClip).toBe('Jog_Fwd_Loop');
+});
+
 it.each(['walk', 'run'])('ships a seamless %s with moving knees, rather than constant sampled poses', (clipName) => {
   const bytes = readFileSync(new URL('../../public/assets/player_hero.glb', import.meta.url));
   const jsonLength = bytes.readUInt32LE(12);
@@ -93,8 +100,6 @@ it('preserves Quaternius heel lift and swing without accumulated root motion', (
       return parent === undefined ? local : new Mat4().mul2(worldMatrix(parent), local);
     };
     const position = worldMatrix(footIndex).getTranslation();
-    const right = worldMatrix(gltf.nodes.findIndex((node) => node.name === 'Foot.R')).getTranslation();
-    expect(Math.abs(position.x - right.x), 'feet stay in narrow walking lanes').toBeLessThan(0.23);
     const root = worldMatrix(gltf.nodes.findIndex((node) => node.name === 'Root')).getTranslation();
     contacts.push([position.y, position.z]);
     roots.push([root.x, root.z]);

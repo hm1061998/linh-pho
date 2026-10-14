@@ -17,3 +17,7 @@ Run retarget after `adapt_supplied_models.py` and `compact_supplied_sources.py` 
 Latest stance correction: two-bone IK places ankles in 19 cm walking lanes and removes outward toe direction while preserving sagittal gait and heel lift. Runtime brisk walking cadence uses a 1.3 m/s reference; jogging retains 4.51 m/s. These are gameplay cadence settings, not a guarantee of physically exact foot contact.
 
 Arm swing update: walk ±24 degrees, jog ±32 degrees; elbow angles unchanged. Sleeve weights use 48 topology smoothing passes. Exported validation reports 48/63.7 degrees of swing and passes the existing cloth deformation bounds.
+
+Current production override: walk = Walk_Loop; run = Jog_Fwd_Loop. Both use donor arm and leg rotations through rest-pose retargeting. Removed custom arm pendulum and narrow-lane leg IK. Sleeve weight smoothing is now 160 passes to accommodate donor elbow flexion; validation retains cloth stretch bounds and records arm motion without enforcing custom angle limits. Prior swing/lane descriptions above are historical.
+
+Idle update: exported idle now retargets Idle_Loop directly; the custom breathing override has been removed. Current sources are Idle_Loop, Walk_Loop, Jog_Fwd_Loop. Cloth validation covers all three clips.

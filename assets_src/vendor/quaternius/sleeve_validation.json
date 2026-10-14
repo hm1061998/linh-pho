@@ -1,16 +1,23 @@
 {
+  "idle": {
+    "edgeCount": 925,
+    "maxStretch": 1.1675018867417926,
+    "p95Stretch": 1.000003795945868,
+    "armSwingDegrees": 4.7344775312226846,
+    "maxElbowDegrees": 47.622117704796146
+  },
   "walk": {
     "edgeCount": 925,
-    "maxStretch": 1.8601145862581858,
-    "p95Stretch": 1.0321059166909854,
-    "armSwingDegrees": 48.000006458363565,
-    "maxElbowDegrees": 7.999857357830142
+    "maxStretch": 1.3214803251144085,
+    "p95Stretch": 1.0000045567561693,
+    "armSwingDegrees": 33.30317423254531,
+    "maxElbowDegrees": 49.134519662522905
   },
   "run": {
     "edgeCount": 925,
-    "maxStretch": 2.036541383529258,
-    "p95Stretch": 1.0268470366780629,
-    "armSwingDegrees": 63.70198469036653,
-    "maxElbowDegrees": 25.990647348630013
+    "maxStretch": 1.8664286908791556,
+    "p95Stretch": 1.0000035110242536,
+    "armSwingDegrees": 27.595262836567464,
+    "maxElbowDegrees": 102.88696437383727
   }
 }

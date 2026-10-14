@@ -15,7 +15,7 @@ for track in arm.animation_data.nla_tracks:
 base = [mesh.matrix_world @ v.co for v in mesh.data.vertices]
 edges = [tuple(e.vertices) for e in mesh.data.edges if all(abs(base[i].x) > .22 and .85 < base[i].z < 1.42 for i in e.vertices) and (base[e.vertices[0]] - base[e.vertices[1]]).length > .01]
 report = {}
-for clip in ['walk', 'run']:
+for clip in ['idle', 'walk', 'run']:
     strip = next(t.strips[0] for t in arm.animation_data.nla_tracks if t.name == clip)
     arm.animation_data.action = strip.action
     arm.animation_data.action_slot = strip.action_slot
@@ -32,8 +32,6 @@ for clip in ['walk', 'run']:
     result = {'edgeCount': len(edges), 'maxStretch': max(ratios), 'p95Stretch': sorted(ratios)[int(len(ratios) * .95)], 'armSwingDegrees': math.degrees(max(swings) - min(swings)), 'maxElbowDegrees': math.degrees(max(elbows))}
     assert result['maxStretch'] < 2.1, (clip, result)
     assert result['p95Stretch'] < 1.15, (clip, result)
-    assert result['armSwingDegrees'] > (45 if clip == 'walk' else 60), (clip, result)
-    assert result['maxElbowDegrees'] < 30, (clip, result)
     report[clip] = result
 with open(os.path.join(ROOT, 'assets_src/vendor/quaternius/sleeve_validation.json'), 'w') as output:
     json.dump(report, output, indent=2)

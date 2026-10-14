@@ -1,22 +1,22 @@
 {
   "idle": {
-    "sourceClip": "custom_relaxed_idle",
+    "sourceClip": "Idle_Loop",
     "frames": 61,
     "durationSeconds": 2.5,
     "sourceDurationSeconds": 2.5,
     "groundCorrectionRange": [
-      -1.7695128917694092e-08,
-      -1.7695128917694092e-08
+      -0.0042343949899077415,
+      -0.002948514651507139
     ]
   },
   "walk": {
-    "sourceClip": "Walk_Formal_Loop",
+    "sourceClip": "Walk_Loop",
     "frames": 33,
     "durationSeconds": 1.3333333333333333,
     "sourceDurationSeconds": 1.3333333333333333,
     "groundCorrectionRange": [
-      -0.025380831211805344,
-      0.003102268557995558
+      -0.02789909765124321,
+      0.0015479852445423603
     ]
   },
   "run": {
@@ -25,7 +25,7 @@
     "durationSeconds": 0.9583333333333334,
     "sourceDurationSeconds": 0.9333333174387614,
     "groundCorrectionRange": [
-      -0.036019161343574524,
+      -0.03593935817480087,
       0
     ]
   }
