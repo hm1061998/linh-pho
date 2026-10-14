@@ -30,7 +30,7 @@ Nhánh làm việc: `visual-upgrade/stage-1-camera` (từ `dev`). Chưa commit, 
 
 1. Đo FPS trên máy thật (desktop và điện thoại). Pane không vẽ khung liên tục nên không đo được ở đó.
 2. Kiểm tra mái che nhân vật ở góc 40° (`RoofFader`) khi đi sau nhà tiệm và xưởng.
-3. Xem lại gian hàng 5 ở phía tây làn, vì nó chặn đường chéo từ quảng trường tới cầu.
+3. ~~Xem lại gian hàng 5 ở phía tây làn~~ Đã dời lên đông bắc quảng trường (D-080).
 4. Thêm đèn treo dây và cụm đèn treo (chưa có trong layout), và phông nền có tầng kiến trúc xa (cần asset ngoài hoặc model mới).
 5. Nhà kiểu Việt mới (kit nhà: hiên, cửa nhiều cánh, cửa sổ chạm), mái có ngói riêng.
 6. Hoạt ảnh chào cho NPC và đung đưa nhẹ cho đèn và mái vải.

@@ -518,6 +518,8 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 
 ## D-077 — Làn từ cầu lên quảng trường, cụm gian hàng và prop trang trí
 
+- **Trạng thái:** Vị trí gian hàng 5 đã dời ở D-080. Các ý còn lại vẫn đúng.
+
 - **Chọn:** Gian hàng 3 dời về (13, 4), xe hàng về (13, 9). Thêm gian hàng 5 (3, 14) và 6 (13, 14) hai bên làn từ cầu lên quảng trường. Thêm 29 prop trang trí (thùng, giỏ, chum, ghế dài, thùng rượu, cờ, kệ cuộn giấy, bao vải, bó tre), đặt cạnh gian hàng, nhà tiệm, xưởng và quảng trường. Không dời NPC, trạm, glyph, quầy, nơi đặt đèn hay pickup.
 - **Lý do:** Quảng trường vuông trống và các gian hàng đối xứng khiến khu chợ giống bản đồ. Làn dẫn từ cầu vào đèn trung tâm để mắt người chơi đi theo.
 - **Đánh đổi:** Gian hàng 5 ở phía tây làn chặn đường chéo từ quảng trường tới cầu; người chơi phải đi vòng. Đường từ đông nam quảng trường qua cầu thì thông. Prop vẫn nhỏ ở khoảng cách mặc định; cần model tốt hơn (xem D-079).
@@ -541,3 +543,10 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Silhouette kiến trúc và đèn cần đọc được ở khoảng cách mặc định. Chuyển động nhẹ tạo cảm giác có người sống trong khu chợ.
 - **Đánh đổi:** Chưa có hoạt ảnh chào, NPC chỉ quay mặt. Đom đóm là chấm sáng trơn, chưa có texture. Đèn thùng chỉ 8 cạnh, chưa có nan chi tiết hơn. Mái chưa có ngói riêng, vẫn là một màu đất nung.
 - **Kiểm chứng:** Test model đạt. Trong trình duyệt: đom đóm hiện; cổng đổi sang sơn mài; Bà Nghiêm xoay từ 14° sang 51° khi người chơi lại gần (góc tới người chơi là 51°), hội thoại đóng; mô phỏng tương tác E mở hội thoại `dlg_ba_nghiem` và đặt cờ `met_ba_nghiem`.
+
+## D-080 — Gian hàng 5 dời lên phía đông bắc quảng trường
+
+- **Chọn:** `PROP_Stall_5` từ (3, 14) lên (13, −10). Bốn prop đi kèm dời theo: giỏ 6 (15, −11), thùng 5 (13, −12.4), chum 6 (15.6, −8.4). GLB không đổi, vì chỉ đổi vị trí.
+- **Lý do:** Ở D-077, gian hàng 5 đứng phía tây làn và chặn đường chéo từ tây nam quảng trường tới cầu. Dời lên đông bắc, làn từ góc đông nam quảng trường tới cầu thông. Cột x = 13 có thêm một gian hàng (cùng với gian hàng 3 và 6).
+- **Đánh đổi:** Phía tây làn trống hẳn, nên phần này của quảng trường bớt chi tiết. Đường chéo từ tây nam tới cầu vẫn bị lan can cầu và mép sông chặn. Đây là hình học có sẵn, không do dời gian hàng; người chơi đi qua làn đông nam.
+- **Kiểm chứng:** `typecheck` đạt; `npm test` 935 test đạt. Trong trình duyệt (cổng 5174): đi từ quảng trường qua làn đông nam tới cầu và sang bờ bên kia đều đến đích (48, 97 và 28 bước).

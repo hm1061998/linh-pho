@@ -67,7 +67,7 @@ Chưa đo:
 - **Nền và rìa hub:** mặt đất và mặt nước vẫn là hộp theo thiết kế. Nền xa là màu `#0F1A2A`, không có đường chân trời hay tầng kiến trúc xa. Rìa hub thưa.
 - **Đèn:** chưa có đèn treo dây và cụm đèn treo đúng như IMAGE A. Chưa có bóng tiếp xúc (AO) và bloom.
 - **Chuyển động:** chưa có hoạt ảnh chào cho NPC (chỉ quay mặt), chưa có đung đưa đèn và mái vải. Đom đóm là chấm sáng trơn.
-- **Gameplay:** gian hàng 5 ở phía tây làn chặn đường chéo từ quảng trường tới cầu; người chơi phải đi vòng. Chưa kiểm tra mái che nhân vật ở góc 40° khi đi sau mái.
+- **Gameplay:** đường chéo từ tây nam quảng trường tới cầu vẫn bị lan can cầu và mép sông chặn (hình học có sẵn). Người chơi đi qua làn đông nam. Chưa kiểm tra mái che nhân vật ở góc 40° khi đi sau mái.
 - **Kiểm thử gameplay:** đã mô phỏng đi bộ, tương tác với Bà Nghiêm, mở hội thoại và đặt cờ; không chơi hết chuỗi nhiệm vụ, chưa thử chế tác, mua hàng, lưu và tải.
 - **Di động:** chưa thử trên thiết bị thật.
 - **Góc nghiêng:** 40° là biên dưới GDD. Hạ thấp hơn cần sửa GDD (xem D-076).

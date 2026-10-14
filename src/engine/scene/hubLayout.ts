@@ -136,8 +136,9 @@ export const HUB_PROPS: readonly BlockoutProp[] = [
   ...stall(2, -9, -4),
   ...stall(3, 13, 4),
   ...stall(4, -9, 4),
-  // The lane from the bridge to the plaza: two stalls on either side lead the eye to the central lantern.
-  ...stall(5, 3, 14),
+  // The lane from the bridge to the plaza: stall 6 on the east side. Stall 5 sits north-east of the square, so the lane
+  // stays open from the plaza's south-east corner to the bridge (D-080).
+  ...stall(5, 13, -10),
   ...stall(6, 13, 14),
 
   // Big central lantern on the plaza (landmark #1).
@@ -194,9 +195,9 @@ export const HUB_PROPS: readonly BlockoutProp[] = [
   solid(box('PROP_Crate_4', [-11.0, 0.3, 5.5], [0.8, 0.6, 0.6], WOOD_WARM)),
   box('PROP_Jar_5', [-7.0, 0.275, 6.2], [0.5, 0.55, 0.5], TERRACOTTA),
   box('PROP_Basket_5', [-11.2, 0.2, 2.2], [0.56, 0.4, 0.56], STONE),
-  box('PROP_Basket_6', [2.0, 0.2, 16.6], [0.56, 0.4, 0.56], STONE),
-  solid(box('PROP_Crate_5', [4.0, 0.3, 16.0], [0.8, 0.6, 0.6], WOOD_WARM)),
-  box('PROP_Jar_6', [5.2, 0.275, 13.6], [0.5, 0.55, 0.5], TERRACOTTA),
+  box('PROP_Basket_6', [15.0, 0.2, -11.0], [0.56, 0.4, 0.56], STONE),
+  solid(box('PROP_Crate_5', [13.0, 0.3, -12.4], [0.8, 0.6, 0.6], WOOD_WARM)),
+  box('PROP_Jar_6', [15.6, 0.275, -8.4], [0.5, 0.55, 0.5], TERRACOTTA),
   box('PROP_Basket_7', [15.0, 0.2, 13.0], [0.56, 0.4, 0.56], STONE),
   solid(box('PROP_Crate_6', [15.4, 0.3, 15.6], [0.8, 0.6, 0.6], WOOD_WARM)),
   box('PROP_Jar_7', [15.6, 0.275, 11.8], [0.5, 0.55, 0.5], TERRACOTTA),
