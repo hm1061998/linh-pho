@@ -557,3 +557,17 @@ Ghi các quyết định có ảnh hưởng lâu dài. Mỗi mục: bối cảnh
 - **Lý do:** Art Bible §1 yêu cầu khung gỗ sẫm, tường vôi cũ, mái cong và cửa gỗ nhiều cánh. Dùng chung module để nhân ra khu khác sau này mà không viết lại từng nhà.
 - **Đánh đổi:** Chưa có hiên, vì hiên làm hộp nhà rộng ra và buộc dời anchor quầy và ô trưng bày. Chưa có ngói riêng: mái vẫn một màu đất nung. Đèn treo chỉ là khối đèn trên tường, nằm trong hộp nên nhô ra rất ít. Chưa có chi tiết chạm trên cửa sổ.
 - **Kiểm chứng:** Năm GLB build lại. Kích thước khớp: nhà tiệm 8×4×6, xưởng 7×3.5×6, mái 9.2×0.8×7.2 và 8.2×0.7×6.8, cửa 1.4×2.4×0.12. `npm test` 935 test đạt. Trong trình duyệt ở 40 m: hai nhà có khung gỗ, cửa sổ lưới, mái có diềm và bờm nóc.
+
+## D-082 — Hiên trong hộp nhà cũ, mái có hàng ngói
+
+- **Chọn:** Hiên nằm trong hộp nhà tiệm hiện tại (8 × 4 × 6). Tường trước lùi về z = 1.75, phần trước là hiên có cột góc và hai cột giữa (x = ±2.6). Cửa và biển hiệu dời về tường trước (z = 11.81 và 11.83 trong thế giới). Đèn treo nằm trong hiên, trên một tay đỡ từ tường. Mái có hàng ngói xen hai màu, `MAT_Terracotta_A` và `MAT_Tile_A` (#9C4A36), sáu hàng trên mỗi mặt (`tiled_hip_roof`). Hai mái dùng chung hàm.
+- **Lý do:** Mặt tiền cần hiên để đọc được là nhà chợ. Hàng ngói đọc được ở khoảng cách mặc định mà không cần texture.
+- **Đánh đổi:** Hộp va chạm vẫn 8 × 6 m, nên người chơi không vào được hiên. Quầy, ô trưng bày và chỗ đặt đèn nằm ngoài hộp nên không phải dời. Chưa có lan can chạm; ngói chỉ là hai màu xen kẽ.
+- **Kiểm chứng:** Kích thước khớp: nhà tiệm 8 × 4 × 6, mái 9.2 × 0.8 × 7.2 và 8.2 × 0.7 × 6.8, cửa 1.4 × 2.4 × 0.12. `npm test` 935 test đạt; `gameplayContent.test.ts` xác nhận anchor không bị chặn. Trong trình duyệt ở 40 m: hiên và hàng ngói hiện đúng.
+
+## D-083 — Bóng tiếp xúc (AO) và bloom qua CameraFrame, chỉ ở preset cao
+
+- **Chọn:** `PostEffects` (`src/engine/render/PostEffects.ts`) bọc `pc.CameraFrame` của PlayCanvas: SSAO kiểu `SSAOTYPE_COMBINE`, cường độ 0.5, bán kính 0.6 m; bloom cường độ 0.03; tone mapping `TONEMAP_LINEAR`. Bật theo preset: `QualityProfile.postEffects` là true ở `high`, false ở `low` và `mobile`. `GameApp.setQuality` gọi `setEnabled`.
+- **Lý do:** Art Bible §4 yêu cầu bóng tiếp xúc và lan sáng nhẹ quanh đèn, và không dùng shader riêng. `CameraFrame` có sẵn các pass này.
+- **Đánh đổi:** Tone mapping mặc định của frame làm nền và vàng nhạt đi, nên dùng LINEAR. Frame chạy HDR và áp gamma ở cuối, nên màu xóa nền phải chuyển sang tuyến tính khi bật; khi tắt thì trả về sRGB. Bóng tiếp xúc chỉ nhìn thấy nhẹ ở khoảng cách mặc định. Chưa đo chi phí trên điện thoại, nên preset mobile tắt hẳn hiệu ứng.
+- **Kiểm chứng:** `postEffectsPreset.test.ts` khóa giá trị theo preset; `npm test` 936 test đạt; typecheck đạt. Trong trình duyệt: `setQuality` bật và tắt đổi màu xóa nền đúng (sRGB 0.0588 khi tắt, tuyến tính 0.0048 khi bật); không có lỗi console; ở gần, thấy bóng tối nhẹ dưới gian hàng và thùng.

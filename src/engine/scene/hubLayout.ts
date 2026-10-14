@@ -116,8 +116,9 @@ export const HUB_PROPS: readonly BlockoutProp[] = [
   // E — Cửa Tiệm người chơi: house with a blank signboard (landmark #3).
   solid(box('ENV_House_Shop_Body', [-17, 2, 10], [8, 4, 6], PARCHMENT)),
   box('ENV_House_Shop_Roof', [-17, 4.4, 10], [9.2, 0.8, 7.2], TERRACOTTA),
-  box('ENV_House_Shop_Door', [-17, 1.2, 13.06], [1.4, 2.4, 0.12], WOOD_DARK),
-  box('PROP_Signboard_Shop', [-17, 3.25, 13.1], [4, 0.9, 0.15], PARCHMENT),
+  // The veranda sits in front of the shop, inside the same box. The door and the sign are on the front wall (z 11.75).
+  box('ENV_House_Shop_Door', [-17, 1.2, 11.81], [1.4, 2.4, 0.12], WOOD_DARK),
+  box('PROP_Signboard_Shop', [-17, 3.25, 11.83], [4, 0.9, 0.15], PARCHMENT),
 
   // C — Xưởng Lam: workshop house with a workbench and a hanging lantern.
   solid(box('ENV_House_Workshop_Body', [-17, 1.75, -15], [7, 3.5, 6], WOOD_WARM)),

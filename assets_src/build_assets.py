@@ -58,6 +58,8 @@ PALETTE = {
     "MAT_Iron_A": ("#3A3F48", 0.5, None, 0.0),
     # House kit: lime plaster for the shop walls, an old ochre-white wall.
     "MAT_Lime_A": ("#D9BF8C", 0.9, None, 0.0),
+    # Roof tiles: a darker, redder course alternates with the terracotta, so the slope reads as rows of tiles.
+    "MAT_Tile_A": ("#9C4A36", 0.85, None, 0.0),
 }
 
 
@@ -174,6 +176,56 @@ class Shape:
             face = self.bm.faces.new(vertices)
             face.material_index = index
 
+    def tiled_hip_roof(self, mats, eaves_half, ridge_half: float, z_eaves: float, z_ridge: float, lift: float, steps: int = 8, rows: int = 6) -> None:
+        """curved_hip_roof cut into courses of tiles. The slope is split into `rows` bands, alternating between the two
+        materials in `mats`. Vertices are shared where the bands meet, so the roof stays one closed surface and the
+        bounds stay those of curved_hip_roof."""
+        bx, by = eaves_half
+        slots = [self.slot[mats[0]], self.slot[mats[1]]]
+        cache = {}
+
+        def vertex(p):
+            key = (round(p[0], 6), round(p[1], 6), round(p[2], 6))
+            if key not in cache:
+                cache[key] = self.bm.verts.new(key)
+            return cache[key]
+
+        def lerp(a, b, t: float):
+            return tuple(a[k] + (b[k] - a[k]) * t for k in range(3))
+
+        def eave_z(x: float) -> float:
+            return z_eaves + lift * (abs(x) / bx) ** 3
+
+        def quad(points, slot: int) -> None:
+            verts = []
+            for p in points:
+                v = vertex(p)
+                if v not in verts:  # rows collapse at the ridge, so a band can have fewer than four corners
+                    verts.append(v)
+            if len(verts) < 3:
+                return
+            try:
+                face = self.bm.faces.new(verts)
+            except ValueError:  # the same face was already made from the other side
+                return
+            face.material_index = slot
+
+        xs = [-bx + 2.0 * bx * i / steps for i in range(steps + 1)]
+        ys = [-by + 2.0 * by * j / steps for j in range(steps + 1)]
+        grids = []
+        for sign in (-1, 1):  # the two long sides: the eave runs along x, the ridge is at the middle
+            edge = [(x, sign * by, eave_z(x)) for x in xs]
+            ridge = [(max(-ridge_half, min(ridge_half, x)), 0.0, z_ridge) for x in xs]
+            grids.append([[lerp(e, r, k / rows) for k in range(rows + 1)] for e, r in zip(edge, ridge)])
+        for sign in (-1, 1):  # the two hip ends: the eave runs along y, every point runs up to one ridge end
+            edge = [(sign * bx, y, eave_z(bx)) for y in ys]
+            ridge = [(sign * ridge_half, 0.0, z_ridge)] * (steps + 1)
+            grids.append([[lerp(e, r, k / rows) for k in range(rows + 1)] for e, r in zip(edge, ridge)])
+        for grid in grids:
+            for i in range(steps):
+                for k in range(rows):
+                    quad([grid[i][k], grid[i + 1][k], grid[i + 1][k + 1], grid[i][k + 1]], slots[k % 2])
+
     def finish(self, name: str) -> bpy.types.Object:
         bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces[:])
         mesh = bpy.data.meshes.new(name)
@@ -275,6 +327,7 @@ def furniture_hanging_lamp():
 
 HOUSE_POST_M = 0.3
 HOUSE_WALL_FACE_M = 2.95  # the wall face, measured from the centre; posts and window frames reach the box edge at 3.0
+HOUSE_VERANDA_WALL_M = 1.75  # the shop's front wall: the veranda sits in front of it, inside the same box (D-082)
 
 
 def _lantern_parts(shape: Shape, mat: str, c, width: float, height: float) -> None:
@@ -292,10 +345,11 @@ def _house_posts(shape: Shape, mat: str, half_w: float, half_h: float, half_d: f
             _gbox(shape, mat, (x, 0.0, z), (HOUSE_POST_M, 2.0 * half_h, HOUSE_POST_M))
 
 
-def _house_window(shape: Shape, frame: str, glass: str, x: float, y: float, w: float, h: float, facing: int) -> None:
-    """A lattice window on a long wall. `facing` is +1 for the front wall, -1 for the back. The frame stands just proud."""
-    z = facing * (HOUSE_WALL_FACE_M + 0.02)
-    _gbox(shape, glass, (x, y, facing * (HOUSE_WALL_FACE_M + 0.005)), (w - 0.16, h - 0.16, 0.01))
+def _house_window(shape: Shape, frame: str, glass: str, x: float, y: float, w: float, h: float, facing: int, face: float = HOUSE_WALL_FACE_M) -> None:
+    """A lattice window on a long wall. `facing` is +1 for the front wall, -1 for the back. `face` is that wall's distance
+    from the centre. The frame stands just proud of the wall."""
+    z = facing * (face + 0.02)
+    _gbox(shape, glass, (x, y, facing * (face + 0.005)), (w - 0.16, h - 0.16, 0.01))
     _gbox(shape, frame, (x, y + h / 2 - 0.04, z), (w, 0.08, 0.04))  # top bar
     _gbox(shape, frame, (x, y - h / 2 + 0.04, z), (w, 0.08, 0.04))  # bottom bar
     _gbox(shape, frame, (x - w / 2 + 0.04, y, z), (0.08, h, 0.04))  # left bar
@@ -323,26 +377,31 @@ def _ridge_cap(shape: Shape, mat: str, ridge_half: float, z_ridge: float) -> Non
 
 def hub_env_house_shop_body():
     """The shop: lime-plaster walls on a dark plinth, dark corner posts and a tie beam, lattice windows on both long walls,
-    and a small lantern on the front wall beside the door. The box is 8 × 4 × 6 m."""
+    a veranda across the front, and a small lantern hanging in the veranda beside the door. The box is 8 × 4 × 6 m, and
+    the veranda is inside it, so the box and the layout do not change (D-082)."""
     wood, stone, lime = "MAT_WoodDark_A", "MAT_StoneDark_A", "MAT_Lime_A"
     shape = Shape([lime, stone, wood, "MAT_Window_A", "MAT_LanternGlow_A"])
     _gbox(shape, stone, (0.0, -1.825, 0.0), (8.0, 0.35, 6.0))  # plinth, y -2.0 .. -1.65
-    _gbox(shape, lime, (0.0, -0.025, 0.0), (7.4, 3.25, 5.9))  # walls, y -1.65 .. 1.6
+    # Walls stop at the veranda: from z -2.95 (back) to z 1.75 (front wall). The veranda is the strip in front, z 1.75 .. 3.
+    _gbox(shape, lime, (0.0, -0.025, -0.6), (7.4, 3.25, 4.7))  # walls, y -1.65 .. 1.6
     _gbox(shape, wood, (0.0, 1.8, 0.0), (8.0, 0.4, 6.0))  # tie beam, y 1.6 .. 2.0
     _house_posts(shape, wood, 4.0, 2.0, 3.0)
-    for x in (-2.2, 2.2):  # both long walls; the door on the front stays clear between them
-        for facing in (1, -1):
-            _house_window(shape, wood, "MAT_Window_A", x, 0.2, 1.2, 1.3, facing)
-    # A lantern hangs on a hook beside the door (the door is at x = 0). It stays inside the box.
-    _gbox(shape, wood, (-1.2, 0.95, 2.9), (0.06, 0.06, 0.1))
-    _lantern_parts(shape, "MAT_LanternGlow_A", (-1.2, 0.75, 2.85), 0.3, 0.3)
+    # Veranda posts between the corner posts, on the front edge.
+    for x in (-2.6, 2.6):
+        _gbox(shape, wood, (x, 0.0, 2.85), (HOUSE_POST_M, 4.0, HOUSE_POST_M))
+    for x in (-2.2, 2.2):  # windows on the front wall (under the veranda) and on the back wall; the door sits at x = 0
+        _house_window(shape, wood, "MAT_Window_A", x, 0.2, 1.2, 1.3, 1, face=HOUSE_VERANDA_WALL_M)
+        _house_window(shape, wood, "MAT_Window_A", x, 0.2, 1.2, 1.3, -1)
+    # A lantern hangs in the veranda on an arm from the front wall, beside the door (x = -1.2).
+    _gbox(shape, wood, (-1.2, 0.95, 1.98), (0.05, 0.05, 0.45))
+    _lantern_parts(shape, "MAT_LanternGlow_A", (-1.2, 0.75, 2.2), 0.3, 0.3)
     return [shape.finish("ENV_House_Shop_Body")], []
 
 
 def hub_env_house_shop_roof():
     wood = "MAT_WoodDark_A"
-    shape = Shape(["MAT_Terracotta_A", wood])
-    shape.curved_hip_roof("MAT_Terracotta_A", (4.6, 3.6), 2.4, -0.4, 0.4, lift=0.25)
+    shape = Shape(["MAT_Terracotta_A", "MAT_Tile_A", wood])
+    shape.tiled_hip_roof(("MAT_Terracotta_A", "MAT_Tile_A"), (4.6, 3.6), 2.4, -0.4, 0.4, lift=0.25)
     _eave_fascia(shape, wood, (4.6, 3.6), -0.4, 0.25)
     _ridge_cap(shape, wood, 2.4, 0.4)
     return [shape.finish("ENV_House_Shop_Roof")], []
@@ -380,8 +439,8 @@ def hub_env_house_workshop_body():
 
 def hub_env_house_workshop_roof():
     wood = "MAT_WoodDark_A"
-    shape = Shape(["MAT_Terracotta_A", wood])
-    shape.curved_hip_roof("MAT_Terracotta_A", (4.1, 3.4), 2.6, -0.35, 0.35, lift=0.22)
+    shape = Shape(["MAT_Terracotta_A", "MAT_Tile_A", wood])
+    shape.tiled_hip_roof(("MAT_Terracotta_A", "MAT_Tile_A"), (4.1, 3.4), 2.6, -0.35, 0.35, lift=0.22)
     _eave_fascia(shape, wood, (4.1, 3.4), -0.35, 0.22)
     _ridge_cap(shape, wood, 2.6, 0.35)
     return [shape.finish("ENV_House_Workshop_Roof")], []

@@ -95,7 +95,7 @@ Hai gian hàng mới (5 và 6) nằm trên làn từ cầu lên quảng trườn
 
 Mái và đèn đã thay model, giữ nguyên kích thước: `ENV_House_Shop_Roof`, `ENV_House_Workshop_Roof` (mái cong), `PROP_Stall_1..6_Lantern`, `PROP_Lamp_Corner_*_Head`, `PROP_Lamp_Plaza_Head`, `PROP_Lantern_Gate`, `PROP_Lantern_Workshop` (thùng bát giác). Cổng cũ `ENV_Gate_Pillar_*` dùng vật liệu `MAT_Lacquer_A`, dải đai thùng dùng `MAT_Iron_A`.
 
-Nhà tiệm và xưởng (`ENV_House_Shop_*`, `ENV_House_Workshop_*`) dùng kit nhà chung (D-081): đế đá, cột gỗ sẫm, dầm đỉnh, cửa sổ lưới, diềm mái và bờm nóc. Tường nhà tiệm là vôi (`MAT_Lime_A`), tường xưởng là ván (`MAT_WoodLight_A`). Cửa tiệm là cửa hai cánh có lưới. Mọi kích thước vẫn khớp hộp trong `hubLayout.ts`. Chưa có hiên và ngói riêng.
+Nhà tiệm và xưởng (`ENV_House_Shop_*`, `ENV_House_Workshop_*`) dùng kit nhà chung (D-081): đế đá, cột gỗ sẫm, dầm đỉnh, cửa sổ lưới, diềm mái và bờm nóc. Tường nhà tiệm là vôi (`MAT_Lime_A`), tường xưởng là ván (`MAT_WoodLight_A`). Cửa tiệm là cửa hai cánh có lưới. Mọi kích thước vẫn khớp hộp trong `hubLayout.ts`. Nhà tiệm có hiên trong hộp (D-082), và mái có hàng ngói xen màu (`MAT_Tile_A`).
 
 ---
 

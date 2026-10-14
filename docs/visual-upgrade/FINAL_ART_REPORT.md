@@ -28,11 +28,11 @@ Chưa đạt mục tiêu hình ảnh của IMAGE A. Chất lượng model vẫn 
 | Tiêu chí | Điểm | Bằng chứng |
 |---|---|---|
 | Camera & composition | 3/5 | 40 m, 40°. Vẫn nhìn từ trên, mép nền 60 m còn thấy ở góc |
-| Architecture quality | 3/5 | Kit nhà với khung gỗ, cửa sổ lưới, cửa hai cánh, mái cong có diềm; chưa có hiên và ngói riêng |
+| Architecture quality | 3/5 | Kit nhà với hiên, khung gỗ, cửa sổ lưới, cửa hai cánh, mái cong có diềm và hàng ngói; chưa có lan can chạm |
 | Props & environment density | 3/5 | 29 prop mới, mỗi gian hàng ba prop; rìa hub vẫn thưa |
-| Lighting & atmosphere | 3/5 | Năm đèn omni ấm, không đổ bóng; chưa có AO, bloom |
+| Lighting & atmosphere | 3/5 | Năm đèn omni ấm không đổ bóng; AO và bloom ở preset cao (D-083). Chưa đo trên điện thoại |
 | Material consistency | 2/5 | Hai vật liệu mới; chưa có texture, chưa có biến thể màu |
-| Vietnamese visual identity | 3/5 | Mái cong, khung gỗ sẫm, tường vôi, cửa lưới, cổng sơn mài, đèn lồng. Chưa có hiên và ngói riêng |
+| Vietnamese visual identity | 3/5 | Mái cong, khung gỗ sẫm, tường vôi, cửa lưới, cổng sơn mài, đèn lồng, hiên, hàng ngói. Chưa có lan can chạm |
 | Gameplay readability | 3/5 | Đèn trung tâm và làn đọc được; chưa có chỉ dẫn trong thế giới cho nhiệm vụ |
 | Runtime performance | Chưa đo | Xem mục 5 |
 
@@ -41,6 +41,7 @@ Chưa đạt mục tiêu hình ảnh của IMAGE A. Chất lượng model vẫn 
 - **Camera:** `src/engine/camera/CameraController.ts` (góc 40°, khoảng cách 40 m).
 - **Layout:** `src/engine/scene/hubLayout.ts` (gian hàng 3, 5, 6; xe hàng; 29 prop trang trí). Anchor NPC, trạm, glyph, quầy, đặt đèn và pickup không đổi.
 - **Ánh sáng:** `src/engine/scene/buildHubBlockout.ts` (`LANDMARK_LIGHTS`, năm đèn omni).
+- **Hậu xử lý:** `src/engine/render/PostEffects.ts` (AO và bloom qua `CameraFrame`, chỉ ở preset cao); `src/engine/quality/qualityPresets.ts` (cờ `postEffects`); `src/tests/postEffectsPreset.test.ts`.
 - **VFX và NPC:** `src/engine/fx/Fireflies.ts` (mới); `src/engine/npc/NpcRenderer.ts` (quay mặt khi lại gần); `src/app/GameApp.ts` (nối đom đóm, giảm hiệu ứng, cập nhật NPC).
 - **Model:** `assets_src/build_assets.py` (builder mới: prop trang trí, mái cong, đèn thùng, gian hàng 5–6, kit nhà, vật liệu sơn mài và iron); `src/content/assets.json` (khai báo 39 model mới).
 - **GLB:** 39 file mới và 18 file có sẵn được sinh lại trong `public/assets/`. Mỗi file sinh kèm `.blend` nguồn trong `assets_src/`.
@@ -63,9 +64,9 @@ Chưa đo:
 
 ## 6. Giới hạn và việc chưa làm
 
-- **Model:** nhà đã có kit (D-081) nhưng chưa có hiên, ngói riêng và lan can chạm. Gian hàng vẫn đơn giản.
+- **Model:** nhà có kit (D-081), hiên và hàng ngói (D-082), nhưng chưa có lan can chạm. Gian hàng vẫn đơn giản.
 - **Nền và rìa hub:** mặt đất và mặt nước vẫn là hộp theo thiết kế. Nền xa là màu `#0F1A2A`, không có đường chân trời hay tầng kiến trúc xa. Rìa hub thưa.
-- **Đèn:** chưa có đèn treo dây và cụm đèn treo đúng như IMAGE A. Chưa có bóng tiếp xúc (AO) và bloom.
+- **Đèn:** chưa có đèn treo dây và cụm đèn treo đúng như IMAGE A. AO và bloom chỉ bật ở preset cao; chưa đo chi phí trên điện thoại.
 - **Chuyển động:** chưa có hoạt ảnh chào cho NPC (chỉ quay mặt), chưa có đung đưa đèn và mái vải. Đom đóm là chấm sáng trơn.
 - **Gameplay:** đường chéo từ tây nam quảng trường tới cầu vẫn bị lan can cầu và mép sông chặn (hình học có sẵn). Người chơi đi qua làn đông nam. Chưa kiểm tra mái che nhân vật ở góc 40° khi đi sau mái.
 - **Kiểm thử gameplay:** đã mô phỏng đi bộ, tương tác với Bà Nghiêm, mở hội thoại và đặt cờ; không chơi hết chuỗi nhiệm vụ, chưa thử chế tác, mua hàng, lưu và tải.

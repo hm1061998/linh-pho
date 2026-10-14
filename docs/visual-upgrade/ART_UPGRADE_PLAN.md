@@ -19,8 +19,8 @@ Nhánh làm việc: `visual-upgrade/stage-1-camera` (từ `dev`). Chưa commit, 
 | 1. Camera & composition | Khoảng cách 40 m, góc 40°; làn cầu–quảng trường | Xong, một phần | D-075, D-076, D-077 |
 | 2. Environment layout | Gian hàng 3 dời, thêm gian hàng 5–6, xe hàng dời; anchor không đổi | Xong, một phần | D-077 |
 | 3. Prop density | 29 prop trang trí; mỗi gian hàng có ba prop phụ | Xong, một phần (prop còn nhỏ) | D-077 |
-| 4. Modular asset kit | Kit nhà hai biến thể (tường vôi, tường ván), mái cong (2), đèn thùng bát giác (12), prop mới (29); chưa có hiên và ngói riêng | Một phần | D-079, D-081 |
-| 5. Lighting | Năm đèn omni ấm, không đổ bóng; chưa có AO, bloom | Một phần | D-078 |
+| 4. Modular asset kit | Kit nhà hai biến thể (tường vôi, tường ván), mái cong (2), đèn thùng bát giác (12), prop mới (29); hiên và hàng ngói (D-082); chưa có lan can chạm | Xong, một phần | D-079, D-081, D-082 |
+| 5. Lighting | Năm đèn omni ấm không đổ bóng; AO và bloom ở preset cao | Xong, một phần | D-078, D-083 |
 | 6. Material polish | Sơn mài cho cổng, iron cho đai thùng; chưa có texture hay biến thể màu | Một phần | D-079 |
 | 7. Atmosphere & VFX | Đom đóm (14 hạt), tắt khi giảm hiệu ứng; chưa có đung đưa đèn và mái | Một phần | D-079 |
 | 8. NPC & animation | NPC quay về người chơi trong 4.5 m; chưa có hoạt ảnh chào | Một phần | D-079 |
@@ -32,9 +32,9 @@ Nhánh làm việc: `visual-upgrade/stage-1-camera` (từ `dev`). Chưa commit, 
 2. Kiểm tra mái che nhân vật ở góc 40° (`RoofFader`) khi đi sau nhà tiệm và xưởng.
 3. ~~Xem lại gian hàng 5 ở phía tây làn~~ Đã dời lên đông bắc quảng trường (D-080).
 4. Thêm đèn treo dây và cụm đèn treo (chưa có trong layout), và phông nền có tầng kiến trúc xa (cần asset ngoài hoặc model mới).
-5. Hiên nhà và ngói riêng; cần mở rộng hộp nhà và dời anchor quầy. Cửa sổ chạm.
+5. Lan can chạm và cửa sổ chạm. Ngói hiện chỉ xen hai màu, chưa có texture.
 6. Hoạt ảnh chào cho NPC và đung đưa nhẹ cho đèn và mái vải.
-7. Bóng tiếp xúc (AO) cho bàn, quầy, chậu; bloom nhẹ cho đèn nếu đo thấy ổn.
+7. Đo chi phí AO và bloom trên điện thoại, rồi quyết định có bật ở preset mobile không.
 
 ## 4. Rủi ro gameplay khi sắp xếp lại layout
 
