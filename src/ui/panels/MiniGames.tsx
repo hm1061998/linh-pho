@@ -37,11 +37,27 @@ type AssemblyView = Extract<MiniGameView, { kind: 'assembly' }>;
 type EngravingView = Extract<MiniGameView, { kind: 'engraving' }>;
 
 export function MiniGame({ game, view }: { readonly game: GameApp; readonly view: MiniGameView }) {
+  // The lantern in the world turns a quarter at a time, so the player can see every side of it while fitting or engraving.
+  const turn = (
+    <button type="button" className="minigame-turn" onClick={() => game.craft.rotate(90)}>
+      {t('ui.minigame.turn')}
+    </button>
+  );
   if (view.kind === 'assembly') {
-    return <AssemblyGame game={game} view={view} />;
+    return (
+      <>
+        <AssemblyGame game={game} view={view} />
+        {turn}
+      </>
+    );
   }
   if (view.kind === 'engraving') {
-    return <EngravingGame game={game} view={view} />;
+    return (
+      <>
+        <EngravingGame game={game} view={view} />
+        {turn}
+      </>
+    );
   }
   // A confirm-only recipe completes when it begins, so there is nothing to draw.
   return null;

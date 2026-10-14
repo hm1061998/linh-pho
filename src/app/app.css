@@ -1175,3 +1175,19 @@ textarea,
   margin: 0;
   padding-left: 1.1rem;
 }
+
+/* While a craft is in progress, its card sits at the right, so the lantern in the world stays in view. On a narrow screen
+   the card stays centred, because there is no room beside it. */
+.panel-card.panel-card-craft {
+  left: auto;
+  right: 16px;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 720px) {
+  .panel-card.panel-card-craft {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+  }
+}

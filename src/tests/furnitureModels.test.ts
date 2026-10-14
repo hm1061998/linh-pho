@@ -71,7 +71,14 @@ const NPCS: readonly ModelSpec[] = [
   { id: 'npc.npc_bac', node: 'NPC_Bac', size: [0.36, 0.36, 0.36], pivot: 'centre', triangleBudget: 1200, animations: ['idle'] },
 ];
 
-const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS];
+/** The craft stage (GDD B5). Sizes come from assets_src/build_assets.py; the engine places the parts with craftLayout.ts. */
+const CRAFT: readonly ModelSpec[] = [
+  { id: 'craft.lantern_frame', node: 'CRAFT_LanternFrame', size: [0.36, 0.56, 0.36], pivot: 'floor', triangleBudget: 1500 },
+  { id: 'craft.bamboo_rib', node: 'CRAFT_BambooRib', size: [0.034, 0.38, 0.036], pivot: 'floor', triangleBudget: 300 },
+  { id: 'craft.engraving_lantern', node: 'CRAFT_EngravingLantern', size: [0.36, 0.5, 0.36], pivot: 'floor', triangleBudget: 1500 },
+];
+
+const MODELS: readonly ModelSpec[] = [...FURNITURE, ...HUB, ...NPCS, ...CRAFT];
 
 function readGlbJson(path: string): GltfJson {
   const bytes = readFileSync(path);

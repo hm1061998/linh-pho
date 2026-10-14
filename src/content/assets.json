@@ -57,6 +57,9 @@
     { "id": "hub.ENV_Bush_East", "source": { "kind": "url", "url": "/assets/env_bush_east.glb" }, "idleAnimation": null },
     { "id": "hub.ENV_Bush_West", "source": { "kind": "url", "url": "/assets/env_bush_west.glb" }, "idleAnimation": null },
     { "id": "hub.ENV_Bush_North", "source": { "kind": "url", "url": "/assets/env_bush_north.glb" }, "idleAnimation": null },
+    { "id": "craft.lantern_frame", "source": { "kind": "url", "url": "/assets/craft_lantern_frame.glb" }, "idleAnimation": null },
+    { "id": "craft.bamboo_rib", "source": { "kind": "url", "url": "/assets/craft_bamboo_rib.glb" }, "idleAnimation": null },
+    { "id": "craft.engraving_lantern", "source": { "kind": "url", "url": "/assets/craft_engraving_lantern.glb" }, "idleAnimation": null },
     { "id": "dev.test_crate", "source": { "kind": "generated", "generator": "crate" }, "idleAnimation": "idle" }
   ]
 }

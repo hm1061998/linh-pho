@@ -19,8 +19,8 @@ Không nằm trong định nghĩa (cần thiết bị hoặc người khác, mô
 | Mã | Mục | Nguồn | Trạng thái |
 |---|---|---|---|
 | G1 | Đủ 6 đơn hàng để tái chơi | GDD C3 | xong: 4 đơn thêm, mở lần lượt sau chương đầu (`replayOrders.test.ts`) |
-| G2 | Lắp Khung Đèn 3D: khung 3D tại bàn nghề, thanh tre cắm vào 3 ổ, hiệu ứng nam châm, tiếng tách, xoay vật thể | GDD B5.1 | chưa (hiện là HTML) |
-| G3 | Vẽ Nét Sáng 3D: đường sáng chạy quanh đèn 3D theo thứ tự chạm | GDD B5.2 | chưa (hiện là HTML) |
+| G2 | Lắp Khung Đèn 3D: khung 3D tại bàn nghề, thanh tre cắm vào 3 ổ, hiệu ứng nam châm, tiếng tách, xoay vật thể | GDD B5.1 | xong (D-071). Nam châm hiện là thanh rơi có giảm tốc; tiếng tách vẫn từ HTML |
+| G3 | Vẽ Nét Sáng 3D: đường sáng chạy quanh đèn 3D theo thứ tự chạm | GDD B5.2 | xong (D-071). Đường sáng là các đoạn thẳng ngắn, chưa có hạt |
 | G4 | «Chuyện Đằng Sau»: thẻ đọc được sau nhiệm vụ, tách Sự thật văn hoá và Hư cấu, người chơi tự chọn đọc | GDD B6 | xong (D-070). Còn: biên tập để đủ 50–100 từ mỗi thẻ |
 | G5 | Nhật ký (phím J): nhiệm vụ đang làm và thẻ đã đọc | GDD B2 | xong (D-070) |
 | G6 | Roof fade: mái che nhân vật được làm mờ | GDD B2, E1 | chưa |

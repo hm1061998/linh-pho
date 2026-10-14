@@ -209,6 +209,7 @@
   "ui.save.waiting": "The game is open in another tab. Close that tab to play here.",
   "ui.tracker.done": "done",
   "ui.tracker.todo": "not done",
+  "ui.minigame.turn": "Turn the lantern",
   "ui.story.label": "Behind the Story",
   "ui.story.fact": "Cultural fact",
   "ui.story.fiction": "Fiction in Linh Phố",

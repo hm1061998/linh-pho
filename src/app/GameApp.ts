@@ -10,6 +10,7 @@ import { NpcRenderer } from '../engine/npc/NpcRenderer';
 import { PlayerController } from '../engine/player/PlayerController';
 import { buildHubBlockout } from '../engine/scene/buildHubBlockout';
 import { HUB_WORLD } from '../engine/scene/hubCollision';
+import { CraftStage, type CraftStations } from '../engine/craft/CraftStage';
 import { WorldView } from '../engine/world/WorldView';
 import { AssetLoader } from '../engine/assets/AssetLoader';
 import { ASSET_MANIFEST, toAssetEntries } from '../engine/assets/manifest';
@@ -62,6 +63,7 @@ export class GameApp {
   private readonly interactionSystem: InteractionSystem;
   private readonly npcs: NpcRenderer;
   private readonly world: WorldView;
+  private readonly craftStage: CraftStage;
   private readonly assetLoader: AssetLoader;
   private readonly fx: SpiritBurst;
   private readonly player: PlayerController;
@@ -89,6 +91,7 @@ export class GameApp {
     this.npcs = new NpcRenderer(app.root, GAME_CONTENT.npcs, HUB_WORLD);
     this.assetLoader = new AssetLoader(app, toAssetEntries(ASSET_MANIFEST.entries));
     this.world = new WorldView(app.root, GAME_CONTENT, HUB_WORLD, this.assetLoader);
+    this.craftStage = new CraftStage(app.root, this.assetLoader, craftStationPositions());
     this.fx = new SpiritBurst(app.root);
     this.player = new PlayerController(app.root, HUB_WORLD);
     this.camera = new CameraController(app.root, this.player.groundPosition, HUB_WORLD.bounds);
@@ -99,6 +102,7 @@ export class GameApp {
       () => this.inputService.dispose(),
       () => this.npcs.dispose(),
       () => this.world.dispose(),
+      () => this.craftStage.dispose(),
       () => this.player.dispose(),
       () => this.camera.dispose(),
       this.sessionState.events.on('panel.opened', () => this.inputService.pushBlocker(PANEL_BLOCKER)),
@@ -192,6 +196,11 @@ export class GameApp {
   }
 
   /** Optional models, and their loading state. Every entry has a fallback, so none of them is required. */
+  /** The 3D lantern shown while a craft is in progress. The craft panel turns it with its rotate button. */
+  get craft(): CraftStage {
+    return this.craftStage;
+  }
+
   get assets(): AssetLoader {
     return this.assetLoader;
   }
@@ -288,6 +297,7 @@ export class GameApp {
     this.player.update(dt, frame.move, this.camera.yawRadians);
     this.camera.update(dt, this.player.groundPosition, frame.yawDelta, frame.zoomDelta);
     this.npcs.update(dt);
+    this.craftStage.update(dt);
     this.interactionSystem.update(this.player.groundPosition);
     if (frame.interactPressed) {
       this.interactionSystem.press();
@@ -298,6 +308,7 @@ export class GameApp {
   private syncWorld(): void {
     const snap = this.sessionState.snapshot();
     this.world.sync(snap);
+    this.craftStage.sync(snap);
     const spirit = snap.lantern.phase === 'spirit';
     for (const [id, kind] of this.targetKinds) {
       if (kind === 'glyph') {
@@ -418,4 +429,13 @@ export class GameApp {
     this.cleanups.push(() => document.removeEventListener('visibilitychange', applyVisibility));
     applyVisibility();
   }
+}
+
+/** Where the two craft stations stand, from content. A station missing from the content falls back to the origin. */
+function craftStationPositions(): CraftStations {
+  const at = (id: string) => {
+    const station = GAME_CONTENT.stations.find((candidate) => candidate.id === id);
+    return station ? { x: station.position.x, z: station.position.z } : { x: 0, z: 0 };
+  };
+  return { assembly: at('station_workbench'), engraving: at('station_engraving') };
 }

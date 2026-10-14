@@ -529,6 +529,64 @@ def _hub_detail() -> dict:
 ASSETS.update({f"hub.{name}": (name.lower(), builder) for name, builder in _hub_detail().items()})
 
 
+# ---- Craft models (GDD B5, art bible BLENDER-P03) ----------------------------------------------------------------
+# The craft stage is built in the game's own coordinates (Y up). The three sockets sit on a circle of radius
+# CRAFT_RING_M, at 0, 120 and 240 degrees from +X toward +Z. src/engine/craft/craftLayout.ts uses the same numbers.
+CRAFT_RING_M = 0.18
+CRAFT_SOCKET_ANGLES_DEG = (0.0, 120.0, 240.0)
+CRAFT_BOTTOM_RING_Y = 0.14  # the top of the stand: the frame and the lantern start here
+CRAFT_TOP_RING_Y = 0.56
+
+
+def _craft_socket_blender(angle_deg: float, height: float, radius: float = CRAFT_RING_M):
+    """A socket position in Blender coordinates: X stays X, game Z becomes -Y, and game Y becomes Z."""
+    angle = math.radians(angle_deg)
+    return (radius * math.cos(angle), -radius * math.sin(angle), height)
+
+
+def _craft_stand(shape: Shape) -> None:
+    """A round foot and a short pillar, so the piece stands on y = 0 and its top is CRAFT_BOTTOM_RING_Y."""
+    shape.cylinder("MAT_WoodDark_A", (0.0, 0.0, 0.03), 0.18, 0.06, segments=24)  # foot, y 0 to 0.06
+    shape.cylinder("MAT_WoodDark_A", (0.0, 0.0, 0.10), 0.04, 0.08, segments=12)  # pillar, y 0.06 to 0.14
+
+
+def craft_lantern_frame():
+    """The frame the player fills with three bamboo ribs. Its three sockets are the slots the ribs slide into."""
+    shape = Shape(["MAT_WoodDark_A", "MAT_Bamboo_A"])
+    _craft_stand(shape)
+    shape.cylinder("MAT_Bamboo_A", (0.0, 0.0, 0.15), CRAFT_RING_M, 0.02, segments=8)  # bottom ring, y 0.14 to 0.16
+    shape.cylinder("MAT_Bamboo_A", (0.0, 0.0, 0.55), CRAFT_RING_M, 0.02, segments=8)  # top ring, y 0.54 to 0.56
+    for angle in CRAFT_SOCKET_ANGLES_DEG:
+        # The slot sits just inside the ring, so the frame stays symmetric about its centre. The rib stands on its edge.
+        x, y, _ = _craft_socket_blender(angle, 0.0, radius=CRAFT_RING_M - 0.03)
+        shape.cylinder("MAT_WoodDark_A", (x, y, 0.165), 0.03, 0.01, segments=12)  # a dark slot on the bottom ring
+    return [shape.finish("CRAFT_LanternFrame")], []
+
+
+def craft_bamboo_rib():
+    """One bamboo rib for the frame. Its origin is at its bottom, so it stands in a socket."""
+    shape = Shape(["MAT_Bamboo_A"])
+    shape.cylinder("MAT_Bamboo_A", (0.0, 0.0, 0.19), 0.018, 0.38, segments=10)
+    return [shape.finish("CRAFT_BambooRib")], []
+
+
+def craft_engraving_lantern():
+    """The paper lantern the engraving marks go on. Its marks are drawn in the engine, on the ring at its middle."""
+    shape = Shape(["MAT_WoodDark_A", "MAT_PaperGlow_A"])
+    _craft_stand(shape)
+    shape.sphere("MAT_PaperGlow_A", (0.0, 0.0, 0.32), 0.18, u=24, v=16)  # body, y 0.14 to 0.50
+    return [shape.finish("CRAFT_EngravingLantern")], []
+
+
+ASSETS.update(
+    {
+        "craft.lantern_frame": ("craft_lantern_frame", craft_lantern_frame),
+        "craft.bamboo_rib": ("craft_bamboo_rib", craft_bamboo_rib),
+        "craft.engraving_lantern": ("craft_engraving_lantern", craft_engraving_lantern),
+    }
+)
+
+
 def _gltf_extent(objects) -> str:
     """Overall size in glTF axes: X = Blender X, Y = Blender Z, Z = -Blender Y."""
     points = [obj.matrix_world @ Vector(corner) for obj in objects for corner in obj.bound_box]

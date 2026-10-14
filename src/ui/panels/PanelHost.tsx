@@ -70,7 +70,14 @@ export function PanelHost({ game }: { readonly game: GameApp }) {
   }
   const panel = snap.panel;
   return (
-    <section ref={cardRef} tabIndex={-1} className="panel-card" role="dialog" aria-modal="true" aria-label={panelTitle(snap)}>
+    <section
+      ref={cardRef}
+      tabIndex={-1}
+      className={panel.kind === 'craft' ? 'panel-card panel-card-craft' : 'panel-card'}
+      role="dialog"
+      aria-modal="true"
+      aria-label={panelTitle(snap)}
+    >
       {panel.kind === 'craft' ? <CraftPanel game={game} stationId={panel.stationId} snap={snap} /> : null}
       {panel.kind === 'puzzle' ? <PuzzlePanel game={game} puzzleId={panel.puzzleId} snap={snap} /> : null}
       {panel.kind === 'shop' ? (
